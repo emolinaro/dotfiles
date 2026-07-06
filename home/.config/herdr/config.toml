@@ -1,0 +1,46 @@
+onboarding = false
+
+[keys]
+# Same prefix as default tmux
+prefix = "ctrl+b"
+
+# tmux windows -> Herdr tabs
+new_tab = "prefix+c"
+next_tab = "prefix+n"
+previous_tab = "prefix+p"
+switch_tab = "prefix+1..9"
+rename_tab = "prefix+comma"
+close_tab = "prefix+ampersand"
+
+# tmux panes
+focus_pane_left = ["prefix+h", "prefix+left"]
+focus_pane_down = ["prefix+j", "prefix+down"]
+focus_pane_up = ["prefix+k", "prefix+up"]
+focus_pane_right = ["prefix+l", "prefix+right"]
+
+# Herdr split names:
+# split_vertical = split to the right
+# split_horizontal = split downward
+#
+# These are the safe Herdr defaults, close to tmux muscle memory.
+# tmux uses prefix+% and prefix+", but shifted-symbol bindings can be terminal/version dependent.
+split_vertical = "prefix+v"
+split_horizontal = "prefix+minus"
+
+close_pane = "prefix+x"
+zoom = "prefix+z"
+copy_mode = "prefix+["
+resize_mode = "prefix+r"
+cycle_pane_next = "prefix+o"
+last_pane = "prefix+tab"
+
+# tmux session-style bindings
+detach = "prefix+d"
+
+# Herdr-specific workspace/navigation helpers
+workspace_picker = "prefix+w"
+goto = "prefix+g"
+new_workspace = "prefix+shift+n"
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+shift+d"
+toggle_sidebar = "prefix+b"
