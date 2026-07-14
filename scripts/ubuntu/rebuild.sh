@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 
 if [[ ! -r /etc/os-release ]]; then
   echo "Error: /etc/os-release is missing; Ubuntu 24.04 is required." >&2
