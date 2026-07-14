@@ -1,11 +1,14 @@
 # dotfiles
 
-My personal Mac setup, managed with nix-darwin and home-manager.
-One repo, one command, and a fresh Mac ends up configured the same way every time.
+My personal macOS and Ubuntu setup, managed with Nix and Home Manager.
+One repo, one command, and a fresh machine ends up configured the same way every time.
 
 ## What you get
 
-Running the switch builds:
+Both platforms get the shared shell, editor, CLI, and agent configuration. macOS
+also gets the desktop and system settings managed by nix-darwin and Homebrew.
+
+Running the platform-specific switch builds:
 
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
 - Homebrew apps (casks and CLI tools)
@@ -14,14 +17,17 @@ Running the switch builds:
 - Editor (Neovim config)
 - Terminal (WezTerm config)
 - Agent configs (Claude, Codex, opencode all share one AGENTS.md)
+- Codex extensions (gstack and Superpowers)
 
-## Prerequisites
+## Supported systems
 
-- Apple Silicon Mac, by default.
+- macOS on Apple Silicon, by default.
 - Intel Mac: change one line.
   In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
+- Headless Ubuntu 24.04 on x86_64 or ARM64. The Ubuntu bootstrap requires a
+  non-root user with sudo access and selects the correct architecture automatically.
 
-## Fresh-machine setup
+## Fresh macOS setup
 
 On a brand new Mac, from a bare clone of this repo:
 
@@ -58,7 +64,7 @@ nix build .#darwinConfigurations.mac.system --dry-run
 
 If you renamed the host label in "Make it yours", substitute your label for `mac` in these commands.
 
-## Daily use
+### Rebuild macOS
 
 Edit the config files in place, then apply:
 
@@ -69,6 +75,50 @@ Edit the config files in place, then apply:
 That's it.
 No separate build-and-copy step.
 
+## Fresh Ubuntu 24.04 setup
+
+Clone the repo as the user who will own the configuration, then run:
+
+```sh
+git clone https://github.com/emolinaro/dotfiles.git
+cd dotfiles
+./bootstrap.sh
+```
+
+The Ubuntu setup is headless. It uses apt only for Zsh, Docker Engine, Nix
+installer prerequisites, and the system libraries required by gstack's
+Chromium browser. Home Manager installs the Nix-managed Docker client and
+Compose tooling alongside Codex and the shared dotfiles.
+
+The bootstrap supports x86_64 and ARM64, uses the current username and home
+directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
+systemd, and adds the current user to the `docker` group. Start a new login
+session after it completes so the shell and Docker group changes take effect,
+then authenticate Codex manually:
+
+```sh
+codex login
+```
+
+### Rebuild Ubuntu
+
+Apply later changes with:
+
+```sh
+./rebuild.sh
+```
+
+The root scripts detect macOS or Ubuntu 24.04 and dispatch to the matching
+implementation. Platform scripts can also be run directly when needed:
+
+```sh
+./scripts/macos/rebuild.sh
+./scripts/ubuntu/rebuild.sh
+```
+
+Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
+shell. The rebuild restores it with sudo if it has been changed.
+
 ## Make it yours
 
 This repo is mine.
@@ -76,7 +126,7 @@ If you clone it, change these before you run `bootstrap.sh`:
 
 - **Username and home path** `molinaro` / `/Users/molinaro`, in four places: `flake.nix:26`, `configuration.nix:10-12`, `configuration.nix:30` (the `nix-homebrew.user` setting), and `home.nix:8-9`.
 - **Git identity**, in `home.nix:43-46` (`emolinaro` / `emil.molinaro@gmail.com`).
-- **Host label** `"mac"`, in three places: `flake.nix:18` (the `darwinConfigurations."mac"` name), `rebuild.sh:5` (the `#mac` at the end of the flake reference), and `bootstrap.sh`'s first-switch command (also `#mac`).
+- **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `scripts/macos/rebuild.sh` (the `#mac` at the end of the flake reference), and `scripts/macos/bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
