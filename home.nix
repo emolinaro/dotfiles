@@ -40,6 +40,9 @@ in
     EDITOR = "nvim";
     DOTFILES = "${config.home.homeDirectory}/.dotfiles";
     CDPATH = "${config.home.homeDirectory}/Documents/GITHUB";
+  } // lib.optionalAttrs isLinux {
+    # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
+    HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
   };
 
   programs.zsh = {
