@@ -18,6 +18,7 @@ Running the platform-specific switch builds:
 - Terminal (WezTerm config)
 - Agent configs (Claude, Codex, opencode all share one AGENTS.md)
 - Codex extensions (gstack and Superpowers)
+- Herdr workspace manager and shared configuration
 
 ## Supported systems
 
@@ -88,7 +89,9 @@ cd dotfiles
 The Ubuntu setup is headless. It uses apt only for Zsh, Docker Engine, Nix
 installer prerequisites, and the system libraries required by gstack's
 Chromium browser. Home Manager installs the Nix-managed Docker client and
-Compose tooling alongside Codex and the shared dotfiles.
+Compose tooling alongside Codex, Herdr, and the shared dotfiles. Herdr comes
+from its pinned upstream Nix flake on Ubuntu; macOS continues to install Herdr
+through its declared Homebrew cask.
 
 The bootstrap supports x86_64 and ARM64, uses the current username and home
 directory, changes the login shell to `/usr/bin/zsh`, enables Docker through

@@ -1,4 +1,4 @@
-{ config, homeDirectory, lib, pkgs, username, ... }:
+{ config, herdrPackage, homeDirectory, lib, pkgs, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -32,6 +32,7 @@ in
     pkgs.codex
     pkgs.docker-client
     pkgs.docker-compose
+    herdrPackage
   ] ++ [
     
     # the font everything renders in
@@ -316,7 +317,7 @@ in
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   };
-  home.file.".config/herdr" = lib.mkIf (!isLinux) {
+  home.file.".config/herdr" = {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   };
 
