@@ -20,6 +20,7 @@ in
     fzf       # fuzzy finder
     jq        # json on the command line
     git
+    kubectl
     lazygit
     neovim
     highlight
