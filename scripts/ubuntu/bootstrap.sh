@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Takes a fresh Ubuntu 24.04 server from nothing to a Home Manager config.
-# Run this once. After it finishes, use ./rebuild-ubuntu.sh for later changes.
+# Run this once. After it finishes, use ./rebuild.sh for later changes.
 set -euo pipefail
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 
 if [[ ! -r /etc/os-release ]]; then
   echo "Error: /etc/os-release is missing; Ubuntu 24.04 is required." >&2
@@ -76,4 +76,4 @@ else
   sudo usermod -aG docker "$DOTFILES_USERNAME"
 fi
 
-echo "==> Done. Start a new login session, run 'codex login', and use ./rebuild-ubuntu.sh for future changes."
+echo "==> Done. Start a new login session, run 'codex login', and use ./rebuild.sh for future changes."
