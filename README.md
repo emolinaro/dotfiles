@@ -111,6 +111,9 @@ Apply later changes with:
 The macOS and Ubuntu entry points are intentionally separate. Choose the script
 matching the machine instead of running both.
 
+Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
+shell. The rebuild restores it with sudo if it has been changed.
+
 ## Make it yours
 
 This repo is mine.
