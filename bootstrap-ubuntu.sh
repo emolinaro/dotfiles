@@ -61,7 +61,8 @@ nix run github:nix-community/home-manager/release-26.05 -- \
   switch --impure --flake "$HOME/.dotfiles#$HOME_TARGET"
 
 echo "==> Step 5: set Zsh as the login shell"
-if [[ "${SHELL:-}" != "/usr/bin/zsh" ]]; then
+CURRENT_LOGIN_SHELL="$(getent passwd "$DOTFILES_USERNAME" | cut -d: -f7)"
+if [[ "$CURRENT_LOGIN_SHELL" != "/usr/bin/zsh" ]]; then
   sudo chsh -s /usr/bin/zsh "$DOTFILES_USERNAME"
 else
   echo "    Zsh is already the login shell, skipping"
