@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -14,10 +14,13 @@ in
     fd        # fast find
     fzf       # fuzzy finder
     jq        # json on the command line
+    git
     lazygit
     neovim
     highlight
     tree
+    bun
+    coreutils # gstack uses gtimeout to bound nested Codex calls
     
     # the font everything renders in
     nerd-fonts.hack
@@ -311,4 +314,29 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+
+  # Install Codex extensions automatically on a fresh machine. gstack keeps its
+  # own checkout for upgrades, while Superpowers comes from Codex's marketplace.
+  home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
+    set -euo pipefail
+    export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.git pkgs.jq pkgs.perl ]}:/opt/homebrew/bin:/usr/local/bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+
+    gstack_dir="$HOME/.gstack/repos/gstack"
+    if [[ ! -d "$gstack_dir/.git" ]]; then
+      $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
+      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --single-branch --depth 1 \
+        https://github.com/garrytan/gstack.git "$gstack_dir"
+    elif [[ -z "''${DRY_RUN:-}" ]]; then
+      ${pkgs.git}/bin/git -C "$gstack_dir" pull --ff-only
+    fi
+
+    if [[ -z "''${DRY_RUN:-}" ]]; then
+      "$gstack_dir/setup" --host codex --prefix --quiet
+      if ! codex plugin list --json \
+        | jq -e '.installed[] | select(.pluginId == "superpowers@openai-curated")' \
+          >/dev/null; then
+        codex plugin add superpowers@openai-curated --json >/dev/null
+      fi
+    fi
+  '';
 }

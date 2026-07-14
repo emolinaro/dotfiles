@@ -39,6 +39,7 @@
       "tmux"
       "direnv"
       "starship"
+      "shellcheck"
     ];
     casks = [
       "wezterm"
