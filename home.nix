@@ -48,6 +48,11 @@ in
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
     initContent = ''
+      ${lib.optionalString isLinux ''
+        # Set a consistent theme in xterm-compatible remote terminals.
+        printf '\033]11;#000000\007\033]10;#f5f5f5\007'
+      ''}
+
       # Make Starship right prompt align cleanly in Zsh
       ZLE_RPROMPT_INDENT=0
 
