@@ -1,12 +1,17 @@
-{ config, lib, pkgs, ... }:
+{ config, homeDirectory, lib, pkgs, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
+  isLinux = pkgs.stdenv.hostPlatform.isLinux;
+  codexCommand = if isLinux then "${pkgs.codex}/bin/codex" else "codex";
+  superpowersMarketplace = if isLinux then "superpowers-dev" else "openai-curated";
+  superpowersPlugin = "superpowers@${superpowersMarketplace}";
+  platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
 in
 
 {
-  home.username = "molinaro";
-  home.homeDirectory = "/Users/molinaro";
+  home.username = username;
+  home.homeDirectory = homeDirectory;
   home.stateVersion = "24.11";
   home.packages = with pkgs; [
     # cli i use constantly
@@ -19,8 +24,14 @@ in
     neovim
     highlight
     tree
+    uv
     bun
     coreutils # gstack uses gtimeout to bound nested Codex calls
+  ] ++ lib.optionals isLinux [
+    pkgs.codex
+    pkgs.docker-client
+    pkgs.docker-compose
+  ] ++ [
     
     # the font everything renders in
     nerd-fonts.hack
@@ -37,6 +48,11 @@ in
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
     initContent = ''
+      ${lib.optionalString isLinux ''
+        # Set a consistent theme in xterm-compatible remote terminals.
+        printf '\033]11;#000000\007\033]10;#f5f5f5\007'
+      ''}
+
       # Make Starship right prompt align cleanly in Zsh
       ZLE_RPROMPT_INDENT=0
 
@@ -285,27 +301,9 @@ in
     };
   };
 
-
-#  programs.starship = {
-#    enable = true;
-#    settings = {
-#      add_newline = false;
-#      format = "$directory$git_branch$git_status$cmd_duration$line_break$character";
-#      character = {
-#        success_symbol = "[❯](purple)";
-#        error_symbol = "[❯](red)";
-#      };
-#      cmd_duration.format = "[$duration]($style) ";
-#    };
-#  };
-
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
-  home.file.".config/wezterm".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
-  home.file.".config/herdr".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   home.file.".claude/settings.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/settings.json";
   home.file.".claude/CLAUDE.md".source =
@@ -314,12 +312,18 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".config/wezterm" = lib.mkIf (!isLinux) {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
+  };
+  home.file.".config/herdr" = lib.mkIf (!isLinux) {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
+  };
 
   # Install Codex extensions automatically on a fresh machine. gstack keeps its
   # own checkout for upgrades, while Superpowers comes from Codex's marketplace.
   home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
     set -euo pipefail
-    export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.git pkgs.jq pkgs.perl ]}:/opt/homebrew/bin:/usr/local/bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+    export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.gawk pkgs.git pkgs.jq pkgs.perl ]}:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
 
     gstack_dir="$HOME/.gstack/repos/gstack"
     if [[ ! -d "$gstack_dir/.git" ]]; then
@@ -332,10 +336,13 @@ in
 
     if [[ -z "''${DRY_RUN:-}" ]]; then
       "$gstack_dir/setup" --host codex --prefix --quiet
-      if ! codex plugin list --json \
-        | jq -e '.installed[] | select(.pluginId == "superpowers@openai-curated")' \
-          >/dev/null; then
-        codex plugin add superpowers@openai-curated --json >/dev/null
+      if ! ${codexCommand} plugin marketplace list | grep -q '${superpowersMarketplace}'; then
+        ${lib.optionalString isLinux "${codexCommand} plugin marketplace add obra/superpowers"}
+        :
+      fi
+      if ! ${codexCommand} plugin list \
+        | awk '$1 == "${superpowersPlugin}" && $2 ~ /^installed/ { found = 1 } END { exit !found }'; then
+        ${codexCommand} plugin add ${superpowersPlugin}
       fi
     fi
   '';
