@@ -24,6 +24,7 @@ in
     neovim
     highlight
     tree
+    uv
     bun
     coreutils # gstack uses gtimeout to bound nested Codex calls
   ] ++ lib.optionals isLinux [
