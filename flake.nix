@@ -13,9 +13,13 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    # Pin Herdr independently so Ubuntu gets the upstream-supported Nix build.
+    herdr.url = "github:ogulcancelik/herdr/v0.7.3";
+    herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -30,6 +34,7 @@
       extraSpecialArgs = {
         username = ubuntuUsername;
         homeDirectory = ubuntuHomeDirectory;
+        herdrPackage = herdr.packages.${system}.default;
       };
       modules = [
         ./home.nix
@@ -48,6 +53,7 @@
           home-manager.extraSpecialArgs = {
             username = "molinaro";
             homeDirectory = "/Users/molinaro";
+            herdrPackage = null;
           };
           home-manager.users.molinaro = import ./home.nix;
         }
