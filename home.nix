@@ -43,6 +43,7 @@ in
     lazygit
     neovim
     opencode
+    pi-coding-agent
     pre-commit
     python3
     ripgrep   # fast search
@@ -362,6 +363,8 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".pi/agent/AGENTS.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/opencode.json".text = builtins.toJSON {
     plugin = [
       "superpowers@git+https://github.com/obra/superpowers.git#${superpowersRev}"
@@ -416,6 +419,17 @@ in
       "$gstack_dir/setup" --host claude --prefix --quiet
       "$gstack_dir/setup" --host codex --prefix --quiet
       "$gstack_dir/setup" --host opencode --prefix --quiet
+
+      gstack_link="$HOME/.agents/skills/gstack"
+      mkdir -p "$(dirname "$gstack_link")"
+      if [[ -L "$gstack_link" ]]; then
+        ln -sfn "$gstack_dir/.agents/skills" "$gstack_link"
+      elif [[ ! -e "$gstack_link" ]]; then
+        ln -s "$gstack_dir/.agents/skills" "$gstack_link"
+      else
+        echo "error: $gstack_link exists and is not a symlink" >&2
+        exit 1
+      fi
 
       superpowers_link="$HOME/.agents/skills/superpowers"
       mkdir -p "$(dirname "$superpowers_link")"
