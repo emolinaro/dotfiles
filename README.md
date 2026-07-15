@@ -30,6 +30,8 @@ The developer toolchain includes Python with uv, Ruff, and basedpyright; Go
 with gopls, golangci-lint, Delve, and goimports; and shell tooling with
 ShellCheck, shfmt, and bash-language-server. Neovim provides completion, LSP
 navigation and actions, diagnostics, and format-on-save for these languages.
+On macOS, Homebrew manages the Codex, Claude Code, OpenCode, and Pi agent CLIs;
+Ubuntu installs the same agents from Nixpkgs.
 
 ## Supported systems
 
