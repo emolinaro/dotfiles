@@ -36,9 +36,6 @@
     onActivation.extraFlags = [ "--force" ];
     brews = [
       "herdr"
-      "tmux"
-      "direnv"
-      "starship"
     ];
     casks = [
       "wezterm"
