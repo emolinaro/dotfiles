@@ -1,4 +1,4 @@
-{ ... }:
+{ homeDirectory, username, ... }:
 
 {
   # Determinate already manages the Nix daemon, so nix-darwin shouldn't.
@@ -7,9 +7,9 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.hostPlatform = "aarch64-darwin"; # use x86_64-darwin for Intel CPU
 
-  system.primaryUser = "molinaro";
-  users.users.molinaro = {
-    home = "/Users/molinaro";
+  system.primaryUser = username;
+  users.users.${username} = {
+    home = homeDirectory;
   };
   system.stateVersion = 6;
   system.defaults = {
@@ -27,7 +27,7 @@
   };
   nix-homebrew = {
     enable = true;
-    user = "molinaro";
+    user = username;
   };
   homebrew = {
     enable = true;
