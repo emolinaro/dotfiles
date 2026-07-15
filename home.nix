@@ -1,4 +1,4 @@
-{ config, herdrPackage, homeDirectory, lib, pkgs, username, ... }:
+{ config, gstackRev, herdrPackage, homeDirectory, lib, pkgs, superpowersRev, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -17,6 +17,9 @@ in
     fzf       # fuzzy finder
     jq        # json on the command line
     git
+    gh
+    delta
+    opencode
     kubectl
     kubernetes-helm
     k9s
@@ -47,6 +50,7 @@ in
     bun
     coreutils # gstack uses gtimeout to bound nested Codex calls
   ] ++ lib.optionals isLinux [
+    pkgs.claude-code
     pkgs.codex
     pkgs.docker-client
     pkgs.docker-compose
@@ -147,9 +151,24 @@ in
     ];
   };
 
-  programs.git.settings.user = {
-    name = "emolinaro";
-    email = "40191802+emolinaro@users.noreply.github.com";
+  programs.git.settings = {
+    user = {
+      name = "emolinaro";
+      email = "40191802+emolinaro@users.noreply.github.com";
+    };
+    fetch.prune = true;
+    push.autoSetupRemote = true;
+    rerere.enabled = true;
+    rerere.autoUpdate = true;
+    merge.conflictStyle = "zdiff3";
+    worktree.guessRemote = true;
+    core.pager = "delta";
+    interactive.diffFilter = "delta --color-only";
+    delta = {
+      navigate = true;
+      line-numbers = true;
+      side-by-side = false;
+    };
   };
 
   programs.starship = {
@@ -336,6 +355,11 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".config/opencode/opencode.json".text = builtins.toJSON {
+    plugin = [
+      "superpowers@git+https://github.com/obra/superpowers.git#${superpowersRev}"
+    ];
+  };
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   };
@@ -343,8 +367,8 @@ in
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   };
 
-  # Install Codex extensions automatically on a fresh machine. Both extensions
-  # keep checkouts so they can be fast-forwarded during later rebuilds.
+  # Install agent workflows from the revisions recorded in flake.lock. The
+  # checkouts stay writable because gstack builds platform-specific tooling.
   home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
     set -euo pipefail
     export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.gawk pkgs.git pkgs.jq pkgs.perl ]}:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -352,23 +376,39 @@ in
     gstack_dir="$HOME/.gstack/repos/gstack"
     if [[ ! -d "$gstack_dir/.git" ]]; then
       $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --single-branch --depth 1 \
+      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
         https://github.com/garrytan/gstack.git "$gstack_dir"
-    elif [[ -z "''${DRY_RUN:-}" ]]; then
-      ${pkgs.git}/bin/git -C "$gstack_dir" pull --ff-only
     fi
 
     superpowers_dir="$HOME/.codex/superpowers"
     if [[ ! -d "$superpowers_dir/.git" ]]; then
       $DRY_RUN_CMD mkdir -p "$(dirname "$superpowers_dir")"
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --single-branch --depth 1 \
+      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
         https://github.com/obra/superpowers.git "$superpowers_dir"
-    elif [[ -z "''${DRY_RUN:-}" ]]; then
-      ${pkgs.git}/bin/git -C "$superpowers_dir" pull --ff-only
     fi
 
     if [[ -z "''${DRY_RUN:-}" ]]; then
+      # gstack's prefixed Claude install rewrites tracked skill names in place.
+      # Return only those generated names to their canonical form so the
+      # cleanliness guard still catches every genuine local edit.
+      "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
+      if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
+        echo "error: $gstack_dir has local changes; refusing to replace them" >&2
+        exit 1
+      fi
+      ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+      ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+
+      if [[ -n "$(${pkgs.git}/bin/git -C "$superpowers_dir" status --porcelain)" ]]; then
+        echo "error: $superpowers_dir has local changes; refusing to replace them" >&2
+        exit 1
+      fi
+      ${pkgs.git}/bin/git -C "$superpowers_dir" fetch --depth 1 origin ${lib.escapeShellArg superpowersRev}
+      ${pkgs.git}/bin/git -C "$superpowers_dir" checkout --detach ${lib.escapeShellArg superpowersRev}
+
+      "$gstack_dir/setup" --host claude --prefix --quiet
       "$gstack_dir/setup" --host codex --prefix --quiet
+      "$gstack_dir/setup" --host opencode --prefix --quiet
 
       superpowers_link="$HOME/.agents/skills/superpowers"
       mkdir -p "$(dirname "$superpowers_link")"

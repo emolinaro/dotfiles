@@ -17,9 +17,19 @@
     # Pin Herdr independently so Ubuntu gets the upstream-supported Nix build.
     herdr.url = "github:ogulcancelik/herdr/v0.7.3";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
+
+    # Lock agent workflows so rebuilds do not silently pull new behavior.
+    gstack = {
+      url = "github:garrytan/gstack";
+      flake = false;
+    };
+    superpowers = {
+      url = "github:obra/superpowers";
+      flake = false;
+    };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, gstack, superpowers }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -42,6 +52,8 @@
         username = ubuntuUsername;
         homeDirectory = ubuntuHomeDirectory;
         herdrPackage = herdr.packages.${system}.default;
+        gstackRev = gstack.rev;
+        superpowersRev = superpowers.rev;
       };
       modules = [
         ./home.nix
@@ -65,6 +77,8 @@
             username = darwinUsername;
             homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
+            gstackRev = gstack.rev;
+            superpowersRev = superpowers.rev;
           };
           home-manager.users.${darwinUsername} = import ./home.nix;
         }

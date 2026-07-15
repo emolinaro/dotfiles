@@ -17,9 +17,14 @@ Running the platform-specific switch builds:
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config)
 - Terminal (WezTerm config)
-- Agent configs (Claude, Codex, opencode all share one AGENTS.md)
+- Agent configs (Claude, Codex, and OpenCode share one AGENTS.md)
 - Codex extensions (gstack and Superpowers)
 - Herdr workspace manager and shared configuration
+
+The balanced agent workflow installs Codex, Claude Code, and OpenCode; pins
+gstack and Superpowers through `flake.lock`; uses isolated worktrees for
+feature development; runs local verification and review before completion;
+and requires explicit approval before push, pull request, merge, or deploy.
 
 The developer toolchain includes Python with uv, Ruff, and basedpyright; Go
 with gopls, golangci-lint, Delve, and goimports; and shell tooling with
@@ -130,6 +135,40 @@ implementation. Platform scripts can also be run directly when needed:
 
 Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
 shell. The rebuild restores it with sudo if it has been changed.
+
+## Update packages and agent workflows
+
+Nix records the exact revisions of package collections and external agent
+workflows in `flake.lock`. Update every input from the repository root with:
+
+```sh
+nix flake update
+```
+
+Update one or more named inputs without changing the others by listing them:
+
+```sh
+nix flake update gstack
+nix flake update superpowers
+nix flake update nixpkgs nixpkgs-linux
+```
+
+Most Nix packages come from a shared Nixpkgs input, so an individual package
+such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
+the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
+targets. Inputs such as `gstack`, `superpowers`, `herdr`, `home-manager`, and
+`nix-darwin` can be updated independently.
+
+Review and validate every lock update before applying it:
+
+```sh
+git diff -- flake.lock
+nix flake check --all-systems --impure --no-build
+./rebuild.sh
+```
+
+Homebrew packages on macOS are not recorded in `flake.lock`; nix-darwin
+updates those through the declared Homebrew activation settings.
 
 ## Make it yours
 
