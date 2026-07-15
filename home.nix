@@ -31,6 +31,7 @@ in
     grpcurl
     hadolint
     highlight
+    htop
     httpie
     jq        # json on the command line
     just
@@ -59,6 +60,7 @@ in
     pkgs.docker-compose
     herdrPackage
     pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
+    pkgs.procps
   ] ++ [
     
     # the font everything renders in
