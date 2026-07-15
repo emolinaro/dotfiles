@@ -12,50 +12,53 @@ in
   home.stateVersion = "24.11";
   home.packages = with pkgs; [
     # cli i use constantly
-    ripgrep   # fast search
-    fd        # fast find
-    fzf       # fuzzy finder
-    jq        # json on the command line
-    git
-    gh
-    delta
-    opencode
-    kubectl
-    kubernetes-helm
-    k9s
-    kubectx
-    stern
-    dive
-    yq-go
-    grpcurl
-    httpie
-    just
-    watchexec
-    lazygit
-    neovim
-    highlight
-    tree
-    uv
-    python3
-    ruff
     basedpyright
-    go
-    gopls
-    golangci-lint
-    delve
-    gotools
-    shellcheck
-    shfmt
     bash-language-server
     bun
     coreutils # gstack uses gtimeout to bound nested Codex calls
+    delta
+    delve
+    dive
+    fd        # fast find
+    fzf       # fuzzy finder
+    gh
+    git
+    gnumake
+    go
+    golangci-lint
+    gopls
+    gotools
+    grpcurl
+    hadolint
+    highlight
+    httpie
+    jq        # json on the command line
+    just
+    k9s
+    kubectl
+    kubectx
+    kubernetes-helm
+    lazygit
+    neovim
+    opencode
+    pre-commit
+    python3
+    ripgrep   # fast search
+    ruff
+    shellcheck
+    shfmt
+    stern
+    tree
+    uv
+    watchexec
+    yq-go
   ] ++ lib.optionals isLinux [
     pkgs.claude-code
     pkgs.codex
     pkgs.docker-client
     pkgs.docker-compose
-    pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
     herdrPackage
+    pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
   ] ++ [
     
     # the font everything renders in
