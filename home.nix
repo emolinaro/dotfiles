@@ -50,6 +50,7 @@ in
     shellcheck
     shfmt
     stern
+    tmux
     tree
     uv
     watchexec
