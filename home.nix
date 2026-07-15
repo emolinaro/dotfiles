@@ -42,8 +42,6 @@ in
     kubernetes-helm
     lazygit
     neovim
-    opencode
-    pi-coding-agent
     pre-commit
     python3
     ripgrep   # fast search
@@ -63,6 +61,8 @@ in
     pkgs.docker-compose
     herdrPackage
     pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
+    pkgs.opencode
+    pkgs.pi-coding-agent
     pkgs.procps
   ] ++ [
     

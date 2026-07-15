@@ -36,6 +36,8 @@
     onActivation.extraFlags = [ "--force" ];
     brews = [
       "herdr"
+      "opencode"
+      "pi-coding-agent"
     ];
     casks = [
       "wezterm"
