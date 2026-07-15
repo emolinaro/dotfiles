@@ -40,6 +40,8 @@ in
     EDITOR = "nvim";
     DOTFILES = "${config.home.homeDirectory}/.dotfiles";
     CDPATH = "${config.home.homeDirectory}/Documents/GITHUB";
+    # GNU ls colors: directories blue, symlinks cyan, executables green.
+    LS_COLORS = "di=1;34:ln=1;36:ex=1;32:fi=0";
   } // lib.optionalAttrs isLinux {
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
     HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
@@ -87,6 +89,9 @@ in
     '';
     shellAliases = {
       ".." = "cd ..";
+      ls = "${pkgs.coreutils}/bin/ls -F --color=auto";
+      ll = "${pkgs.coreutils}/bin/ls -lahF --color=auto";
+      la = "${pkgs.coreutils}/bin/ls -AF --color=auto";
       add = "git add .";
       push = "git push";
       pull = "git pull";
