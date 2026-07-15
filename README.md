@@ -21,6 +21,11 @@ Running the platform-specific switch builds:
 - Codex extensions (gstack and Superpowers)
 - Herdr workspace manager and shared configuration
 
+The developer toolchain includes Python with uv, Ruff, and basedpyright; Go
+with gopls, golangci-lint, Delve, and goimports; and shell tooling with
+ShellCheck, shfmt, and bash-language-server. Neovim provides completion, LSP
+navigation and actions, diagnostics, and format-on-save for these languages.
+
 ## Supported systems
 
 - macOS on Apple Silicon, by default.
@@ -145,4 +150,6 @@ Read through `brews` and `casks` before you run `bootstrap.sh` or `rebuild.sh` f
 ## License
 
 This repo is licensed under MIT No Attribution.
+It is based on [Kun Chen's dotfiles](https://github.com/kunchenguid/dotfiles),
+with additional development and platform support by Emiliano Molinaro.
 See `LICENSE`.

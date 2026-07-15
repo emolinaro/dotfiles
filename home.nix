@@ -33,6 +33,17 @@ in
     highlight
     tree
     uv
+    python3
+    ruff
+    basedpyright
+    go
+    gopls
+    golangci-lint
+    delve
+    gotools
+    shellcheck
+    shfmt
+    bash-language-server
     bun
     coreutils # gstack uses gtimeout to bound nested Codex calls
   ] ++ lib.optionals isLinux [
@@ -149,7 +160,7 @@ in
       scan_timeout = 30;
       command_timeout = 1000;
 
-      format = "$username$hostname$directory$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$rust$golang$cmd_duration$line_break$jobs$status$character";
+      format = "$username$hostname$directory$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$golang$cmd_duration$line_break$jobs$status$character";
       right_format = "$time";
 
       character = {
@@ -276,12 +287,6 @@ in
       nodejs = {
         symbol = "node ";
         style = "bold green";
-        format = "[$symbol$version]($style) ";
-      };
-
-      rust = {
-        symbol = "rs ";
-        style = "bold red";
         format = "[$symbol$version]($style) ";
       };
 
