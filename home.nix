@@ -156,7 +156,7 @@ in
       directory = {
         style = "bold cyan";
         truncation_length = 4;
-        truncation_symbol = "…/";
+        truncation_symbol = "⋯/";
         truncate_to_repo = true;
         read_only = " 󰌾";
       };
