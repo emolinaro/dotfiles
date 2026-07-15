@@ -14,6 +14,7 @@ in
     # cli i use constantly
     basedpyright
     bash-language-server
+    btop
     bun
     coreutils # gstack uses gtimeout to bound nested Codex calls
     delta
