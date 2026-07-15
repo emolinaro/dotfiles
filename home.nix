@@ -102,6 +102,7 @@ in
       cp = "cp -i";
       mv = "mv -i";
       rm = "rm -i";
+      vi = "nvim";
     };
   };
 
