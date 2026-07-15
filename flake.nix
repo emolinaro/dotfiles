@@ -24,6 +24,13 @@
     envOr = name: fallback:
       let value = builtins.getEnv name;
       in if value == "" then fallback else value;
+    sudoUser = builtins.getEnv "SUDO_USER";
+    currentUser = builtins.getEnv "USER";
+    darwinUsername =
+      if sudoUser != "" && sudoUser != "root" then sudoUser
+      else if currentUser != "" && currentUser != "root" then currentUser
+      else throw "Unable to determine the non-root macOS user. Run the setup as a sudo-capable user with --impure.";
+    darwinHomeDirectory = "/Users/${darwinUsername}";
     ubuntuUsername = envOr "DOTFILES_USERNAME" "ubuntu";
     ubuntuHomeDirectory = envOr "DOTFILES_HOME" "/home/${ubuntuUsername}";
     mkUbuntuHome = system: home-manager.lib.homeManagerConfiguration {
@@ -43,6 +50,10 @@
     };
   in {
     darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
+      specialArgs = {
+        username = darwinUsername;
+        homeDirectory = darwinHomeDirectory;
+      };
       modules = [ 
         ./configuration.nix 
         nix-homebrew.darwinModules.nix-homebrew
@@ -51,11 +62,11 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.extraSpecialArgs = {
-            username = "molinaro";
-            homeDirectory = "/Users/molinaro";
+            username = darwinUsername;
+            homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
           };
-          home-manager.users.molinaro = import ./home.nix;
+          home-manager.users.${darwinUsername} = import ./home.nix;
         }
       ];
     };

@@ -3,6 +3,9 @@ home/.config/herdr/*.log
 home/.config/herdr/session.json
 home/.config/herdr/*.sock
 
+# Superpowers workflow artifacts
+docs/superpowers/
+
 # macOS + nix build noise
 .DS_Store
 result

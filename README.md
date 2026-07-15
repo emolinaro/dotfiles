@@ -37,7 +37,7 @@ git clone https://github.com/emolinaro/dotfiles.git
 cd dotfiles
 ```
 
-Before you run it: open the config files and change the values listed in "Make it yours" below (username, home path, git identity, host label, and Intel vs Apple Silicon), and read the Homebrew cleanup warning.
+Before you run it: open the config files and change the values listed in "Make it yours" below (git identity, host label, and Intel vs Apple Silicon), and read the Homebrew cleanup warning.
 `bootstrap.sh` applies the config to your machine, so do this first.
 
 ```sh
@@ -128,7 +128,7 @@ shell. The rebuild restores it with sudo if it has been changed.
 This repo is mine.
 If you clone it, change these before you run `bootstrap.sh`:
 
-- **Username and home path** `molinaro` / `/Users/molinaro`, in four places: `flake.nix:26`, `configuration.nix:10-12`, `configuration.nix:30` (the `nix-homebrew.user` setting), and `home.nix:8-9`.
+- **macOS user** is detected automatically from the account running the setup. When the scripts invoke `sudo`, the flake uses `SUDO_USER`; otherwise it uses `USER`. Evaluation is intentionally impure so any sudo-capable account can apply the configuration without code changes.
 - **Git identity**, in `home.nix:43-46` (`emolinaro` / `40191802+emolinaro@users.noreply.github.com`).
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `scripts/macos/rebuild.sh` (the `#mac` at the end of the flake reference), and `scripts/macos/bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
