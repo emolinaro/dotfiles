@@ -12,7 +12,8 @@ Running the platform-specific switch builds:
 
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
 - Homebrew apps (casks and CLI tools)
-- Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font)
+- Nix user packages for shell, Git, Kubernetes, containers, service debugging,
+  Neovim, and the Hack Nerd Font
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config)
 - Terminal (WezTerm config)
@@ -91,7 +92,9 @@ installer prerequisites, and the system libraries required by gstack's
 Chromium browser. Home Manager installs the Nix-managed Docker client and
 Compose tooling alongside Codex, Herdr, and the shared dotfiles. Herdr comes
 from its pinned upstream Nix flake on Ubuntu; macOS continues to install Herdr
-through its declared Homebrew cask.
+through its declared Homebrew cask. The shared cloud toolkit includes Helm,
+k9s, kubectx/kubens, Stern, Dive, yq, grpcurl, HTTPie, Just, and Watchexec.
+Headless Ubuntu also gets Lazydocker; macOS uses OrbStack instead.
 
 The bootstrap supports x86_64 and ARM64, uses the current username and home
 directory, changes the login shell to `/usr/bin/zsh`, enables Docker through

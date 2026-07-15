@@ -18,6 +18,16 @@ in
     jq        # json on the command line
     git
     kubectl
+    kubernetes-helm
+    k9s
+    kubectx
+    stern
+    dive
+    yq-go
+    grpcurl
+    httpie
+    just
+    watchexec
     lazygit
     neovim
     highlight
@@ -29,6 +39,7 @@ in
     pkgs.codex
     pkgs.docker-client
     pkgs.docker-compose
+    pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
     herdrPackage
   ] ++ [
     
