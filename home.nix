@@ -3,6 +3,7 @@
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
+  ezaIcons = if isLinux then "never" else "always";
   platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
 in
 
@@ -123,9 +124,9 @@ in
     '';
     shellAliases = {
       ".." = "cd ..";
-      ls = "eza --icons=always";
-      ll = "eza -laF --icons=always";
-      la = "eza -aF --icons=always";
+      ls = "eza --icons=${ezaIcons}";
+      ll = "eza -laF --icons=${ezaIcons}";
+      la = "eza -aF --icons=${ezaIcons}";
       add = "git add .";
       push = "git push";
       pull = "git pull";
