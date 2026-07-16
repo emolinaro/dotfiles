@@ -44,7 +44,6 @@
       "orbstack"
       "claude-code"
       "codex"
-      "font-meslo-lg-nerd-font"
     ];
   };
 }
