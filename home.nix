@@ -65,7 +65,6 @@ in
     pkgs.pi-coding-agent
     pkgs.procps
   ] ++ [
-    
     # the font everything renders in
     nerd-fonts.hack
   ];
