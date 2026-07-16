@@ -20,6 +20,7 @@ in
     delta
     delve
     dive
+    eza
     fd        # fast find
     fzf       # fuzzy finder
     gh
@@ -122,9 +123,9 @@ in
     '';
     shellAliases = {
       ".." = "cd ..";
-      ls = "${pkgs.coreutils}/bin/ls -F --color=auto";
-      ll = "${pkgs.coreutils}/bin/ls -lahF --color=auto";
-      la = "${pkgs.coreutils}/bin/ls -AF --color=auto";
+      ls = "eza --icons=always";
+      ll = "eza -laF --icons=always";
+      la = "eza -aF --icons=always";
       add = "git add .";
       push = "git push";
       pull = "git pull";
