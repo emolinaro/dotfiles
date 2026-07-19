@@ -1,4 +1,4 @@
-# global agent instructions
+# Global Agent Instructions
 
 - Never use the em dash "—". Use plain dash "-" instead
 - When writing commit messages, NEVER auto-add your agent name as co-author
@@ -15,4 +15,3 @@
 - Before presenting implementation as complete, run the relevant formatter, linter, tests, and repository-level validation commands.
 - Treat review as read-only unless the user explicitly asks for fixes.
 - Require explicit user approval before pushing, opening or merging pull requests, deploying, or running destructive commands.
-
