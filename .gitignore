@@ -5,7 +5,6 @@ home/.config/herdr/*.sock
 
 # Superpowers workflow artifacts
 docs/superpowers/
-.worktrees/
 
 # macOS + nix build noise
 .DS_Store
