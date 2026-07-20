@@ -384,6 +384,13 @@ in
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   };
 
+  home.activation.treeSitterParsers = lib.mkIf isLinux (lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    if [[ -z "''${DRY_RUN:-}" ]]; then
+      export PATH="${lib.makeBinPath [ pkgs.curl pkgs.gcc pkgs.git pkgs.tree-sitter ]}:$PATH"
+      ${pkgs.neovim}/bin/nvim --headless "+Lazy! build nvim-treesitter" +qa
+    fi
+  '');
+
   # Install agent workflows from the revisions recorded in flake.lock. The
   # checkouts stay writable because gstack builds platform-specific tooling.
   home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
