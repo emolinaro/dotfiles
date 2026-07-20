@@ -19,6 +19,8 @@ Running the platform-specific switch builds:
 - Terminal (WezTerm config)
 - Agent configs (Claude, Codex, and OpenCode share one AGENTS.md)
 - Codex extensions (gstack and Superpowers)
+- chrome-devtools-axi agent skill at `~/.agents/skills/chrome-devtools-axi`,
+  with its CLI available on demand through npx
 - gh-axi agent skill at `~/.agents/skills/gh-axi`, with its CLI available on
   demand through npx
 - Lavish AXI agent skill at `~/.agents/skills/lavish`, with its CLI available
@@ -28,7 +30,8 @@ Running the platform-specific switch builds:
 - No Mistakes validation gate and shared agent configuration
 
 The balanced agent workflow installs Codex, Claude Code, and OpenCode; pins
-gh-axi, Lavish, gstack, and Superpowers through `flake.lock`; uses isolated
+chrome-devtools-axi, gh-axi, Lavish, gstack, and Superpowers through
+`flake.lock`; uses isolated
 worktrees for feature development; runs local verification and review before
 completion; and requires explicit approval before push, pull request, merge, or
 deploy.
@@ -110,8 +113,8 @@ cd dotfiles
 The Ubuntu setup is headless. It uses apt only for Zsh, Docker Engine, Nix
 installer prerequisites, and the system libraries required by gstack's
 Chromium browser. Home Manager installs the Nix-managed Docker client and
-Compose tooling alongside Codex, gh-axi, Lavish, Herdr, Treehouse, No Mistakes,
-and the shared dotfiles. Herdr comes from its pinned upstream Nix flake on
+Compose tooling alongside Codex, chrome-devtools-axi, gh-axi, Lavish, Herdr,
+Treehouse, No Mistakes, and the shared dotfiles. Herdr comes from its pinned upstream Nix flake on
 Ubuntu; macOS continues to install Herdr through its declared Homebrew cask.
 Treehouse comes from its pinned upstream flake on both platforms. No Mistakes
 is installed from its checksum-pinned release package, selects the first
@@ -163,6 +166,7 @@ Update one or more named inputs without changing the others by listing them:
 
 ```sh
 nix flake update lavish
+nix flake update chromeDevtoolsAxi
 nix flake update ghAxi
 nix flake update gstack
 nix flake update superpowers
@@ -172,9 +176,10 @@ nix flake update nixpkgs nixpkgs-linux
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `ghAxi`, `lavish`, `gstack`, `superpowers`, `herdr`,
-`treehouse`, `home-manager`, and `nix-darwin` can be updated independently. No
-Mistakes is versioned separately in `packages/no-mistakes.nix`.
+targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `gstack`,
+`superpowers`, `herdr`, `treehouse`, `home-manager`, and `nix-darwin` can be
+updated independently. No Mistakes is versioned separately in
+`packages/no-mistakes.nix`.
 
 Review and validate every lock update before applying it:
 
