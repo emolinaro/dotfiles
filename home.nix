@@ -1,4 +1,4 @@
-{ config, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, treehousePackage, username, ... }:
+{ config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, treehousePackage, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -369,6 +369,7 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".codex/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".agents/skills/gh-axi".source = ghAxiSkill;
   home.file.".agents/skills/lavish".source = lavishSkill;
   home.file.".no-mistakes/config.yaml".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/no-mistakes/config.yaml";
