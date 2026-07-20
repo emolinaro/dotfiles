@@ -1,0 +1,8 @@
+# Maximum number of worktrees in the pool
+max_trees = 16
+
+# Optional worktree root directory.
+# Empty uses $HOME/.treehouse.
+# Relative paths are resolved from the repo root for repo-scoped commands.
+# Use an absolute user-level root for treehouse prune --all.
+# root = "$HOME/worktrees"
