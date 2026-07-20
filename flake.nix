@@ -28,6 +28,12 @@
       flake = false;
     };
 
+    # Expose gh-axi as a global agent skill; its CLI runs on demand through npx.
+    ghAxi = {
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.27";
+      flake = false;
+    };
+
     # Lock agent workflows so rebuilds do not silently pull new behavior.
     gstack = {
       url = "github:garrytan/gstack";
@@ -39,7 +45,7 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, lavish, gstack, superpowers }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, lavish, ghAxi, gstack, superpowers }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -62,6 +68,7 @@
         username = ubuntuUsername;
         homeDirectory = ubuntuHomeDirectory;
         herdrPackage = herdr.packages.${system}.default;
+        ghAxiSkill = "${ghAxi}/skills/gh-axi";
         lavishSkill = "${lavish}/skills/lavish";
         treehousePackage = treehouse.packages.${system}.default;
         gstackRev = gstack.rev;
@@ -89,6 +96,7 @@
             username = darwinUsername;
             homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
+            ghAxiSkill = "${ghAxi}/skills/gh-axi";
             lavishSkill = "${lavish}/skills/lavish";
             treehousePackage = treehouse.packages.${config.nixpkgs.hostPlatform.system}.default;
             gstackRev = gstack.rev;
