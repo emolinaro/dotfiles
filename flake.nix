@@ -22,6 +22,12 @@
     treehouse.url = "github:kunchenguid/treehouse/v2.0.1";
     treehouse.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Pin the public Lavish skill; its CLI runs on demand through npx.
+    lavish = {
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.42";
+      flake = false;
+    };
+
     # Lock agent workflows so rebuilds do not silently pull new behavior.
     gstack = {
       url = "github:garrytan/gstack";
@@ -33,7 +39,7 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, gstack, superpowers }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, lavish, gstack, superpowers }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -56,6 +62,7 @@
         username = ubuntuUsername;
         homeDirectory = ubuntuHomeDirectory;
         herdrPackage = herdr.packages.${system}.default;
+        lavishSkill = "${lavish}/skills/lavish";
         treehousePackage = treehouse.packages.${system}.default;
         gstackRev = gstack.rev;
         superpowersRev = superpowers.rev;
@@ -82,6 +89,7 @@
             username = darwinUsername;
             homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
+            lavishSkill = "${lavish}/skills/lavish";
             treehousePackage = treehouse.packages.${config.nixpkgs.hostPlatform.system}.default;
             gstackRev = gstack.rev;
             superpowersRev = superpowers.rev;
