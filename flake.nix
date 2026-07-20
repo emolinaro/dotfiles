@@ -75,19 +75,19 @@
         ./configuration.nix 
         nix-homebrew.darwinModules.nix-homebrew
         home-manager.darwinModules.home-manager
-        {
+        ({ config, ... }: {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.extraSpecialArgs = {
             username = darwinUsername;
             homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
-            treehousePackage = treehouse.packages.aarch64-darwin.default;
+            treehousePackage = treehouse.packages.${config.nixpkgs.hostPlatform.system}.default;
             gstackRev = gstack.rev;
             superpowersRev = superpowers.rev;
           };
           home-manager.users.${darwinUsername} = import ./home.nix;
-        }
+        })
       ];
     };
     homeConfigurations = {
