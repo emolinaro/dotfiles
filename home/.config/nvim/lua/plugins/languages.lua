@@ -1,4 +1,33 @@
+local treesitter_parsers = {
+  'bash',
+  'go',
+  'javascript',
+  'json',
+  'lua',
+  'markdown',
+  'markdown_inline',
+  'nix',
+  'python',
+  'rust',
+  'toml',
+  'tsx',
+  'typescript',
+  'yaml',
+}
+
 return {
+  {
+    'nvim-treesitter/nvim-treesitter',
+    lazy = false,
+    build = ':TSUpdate',
+    parsers = treesitter_parsers,
+    config = function()
+      local treesitter = require('nvim-treesitter')
+      treesitter.setup()
+      vim.treesitter.language.register('bash', { 'sh', 'bash', 'zsh' })
+      treesitter.install(treesitter_parsers)
+    end,
+  },
   {
     'saghen/blink.cmp',
     version = '1.*',
