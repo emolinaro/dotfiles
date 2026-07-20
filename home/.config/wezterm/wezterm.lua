@@ -4,6 +4,23 @@ local config = wezterm.config_builder()
 
 -- ui
 config.color_scheme = "rose-pine-moon"
+config.colors = {
+  tab_bar = {
+    active_tab = {
+      bg_color = "#f6c177",
+      fg_color = "#232136",
+      intensity = "Bold",
+    },
+    inactive_tab_hover = {
+      bg_color = "#9ccfd8",
+      fg_color = "#232136",
+    },
+    new_tab_hover = {
+      bg_color = "#9ccfd8",
+      fg_color = "#232136",
+    },
+  },
+}
 config.max_fps = 120
 config.font = wezterm.font("Hack Nerd Font", { weight = "Regular" })
 config.font_size = 15.0
@@ -13,7 +30,7 @@ config.hide_tab_bar_if_only_one_tab = true
 config.window_decorations = "RESIZE"
 config.window_frame = {
   font = wezterm.font("Hack Nerd Font", { weight = "Bold" }),
-  font_size = 13.0,
+  font_size = 15.0,
 }
 
 config.inactive_pane_hsb = {
@@ -38,8 +55,8 @@ config.keys = {
   { key = "t", mods = "CMD", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
   { key = "n", mods = "LEADER", action = wezterm.action.ActivateTabRelative(1) },
   { key = "p", mods = "LEADER", action = wezterm.action.ActivateTabRelative(-1) },
-  { key = "]", mods = "CMD", action = wezterm.action.ActivateTabRelative(1) },
-  { key = "[", mods = "CMD", action = wezterm.action.ActivateTabRelative(-1) },
+  { key = "}", mods = "CMD", action = wezterm.action.ActivateTabRelative(1) },
+  { key = "{", mods = "CMD", action = wezterm.action.ActivateTabRelative(-1) },
 
   -- windows
   { key = "n", mods = "CMD", action = wezterm.action.SpawnWindow },

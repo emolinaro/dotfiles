@@ -53,6 +53,7 @@ in
     stern
     tmux
     tree
+    tree-sitter
     uv
     watchexec
     yq-go
@@ -373,6 +374,10 @@ in
   };
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
+  };
+  home.file.".config/tmux" = {
+    force = true;
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/tmux";
   };
   home.file.".config/herdr" = {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
