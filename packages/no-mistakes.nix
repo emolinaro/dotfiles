@@ -42,6 +42,10 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
     install -Dm755 no-mistakes "$out/bin/no-mistakes"
+    mkdir -p "$out/share/zsh/site-functions"
+    HOME="$TMPDIR" NO_MISTAKES_NO_UPDATE_CHECK=1 \
+      "$out/bin/no-mistakes" completion zsh \
+      > "$out/share/zsh/site-functions/_no-mistakes"
     runHook postInstall
   '';
 
