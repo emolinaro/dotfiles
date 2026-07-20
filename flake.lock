@@ -17,6 +17,23 @@
         "type": "github"
       }
     },
+    "ghAxi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783834005,
+        "narHash": "sha256-hehWN06+UhCAEACsqn54eNHywlnllY9qHn3c/Fu5Tto=",
+        "owner": "kunchenguid",
+        "repo": "gh-axi",
+        "rev": "e8533b554e3a64fdabc6090ac61507e6c654a914",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "ref": "gh-axi-v0.1.27",
+        "repo": "gh-axi",
+        "type": "github"
+      }
+    },
     "gstack": {
       "flake": false,
       "locked": {
@@ -165,6 +182,7 @@
     },
     "root": {
       "inputs": {
+        "ghAxi": "ghAxi",
         "gstack": "gstack",
         "herdr": "herdr",
         "home-manager": "home-manager",
