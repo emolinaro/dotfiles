@@ -5,6 +5,8 @@ local config = wezterm.config_builder()
 -- ui
 config.color_scheme = "rose-pine-moon"
 config.colors = {
+  selection_bg = "#f6c177",
+  selection_fg = "#232136",
   tab_bar = {
     active_tab = {
       bg_color = "#f6c177",
