@@ -75,6 +75,23 @@
         "type": "github"
       }
     },
+    "lavish": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784060905,
+        "narHash": "sha256-IcApX4Qpx7oy5x5uaeOlIFC/6pr/kjjcjjPjmCXk2DI=",
+        "owner": "kunchenguid",
+        "repo": "lavish-axi",
+        "rev": "b7aa0ca5f644a6de99d7d7326c4b1b11b6a16419",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "ref": "lavish-axi-v0.1.42",
+        "repo": "lavish-axi",
+        "type": "github"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -151,6 +168,7 @@
         "gstack": "gstack",
         "herdr": "herdr",
         "home-manager": "home-manager",
+        "lavish": "lavish",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
