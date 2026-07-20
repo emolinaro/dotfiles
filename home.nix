@@ -62,6 +62,7 @@ in
     pkgs.codex
     pkgs.docker-client
     pkgs.docker-compose
+    pkgs.gcc # nvim-treesitter compiles parsers with cc
     herdrPackage
     pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
     pkgs.opencode
