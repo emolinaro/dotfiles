@@ -1,4 +1,4 @@
-{ config, gstackRev, herdrPackage, homeDirectory, lib, pkgs, superpowersRev, treehousePackage, username, ... }:
+{ config, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, treehousePackage, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -45,6 +45,7 @@ in
     kubernetes-helm
     lazygit
     neovim
+    nodejs
     noMistakesPackage
     pre-commit
     python3
@@ -368,6 +369,7 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".codex/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".agents/skills/lavish".source = lavishSkill;
   home.file.".no-mistakes/config.yaml".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/no-mistakes/config.yaml";
   home.file.".config/opencode/AGENTS.md".source =
@@ -388,9 +390,8 @@ in
   };
   home.file.".config/treehouse".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/treehouse";
-  home.file.".config/herdr" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
-  };
+  home.file.".config/herdr".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
 
   home.activation.treeSitterParsers = lib.mkIf isLinux (lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
