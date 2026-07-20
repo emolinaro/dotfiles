@@ -20,6 +20,8 @@ Running the platform-specific switch builds:
 - Agent configs (Claude, Codex, and OpenCode share one AGENTS.md)
 - Codex extensions (gstack and Superpowers)
 - Herdr workspace manager and shared configuration
+- Treehouse worktree manager and shared configuration
+- No Mistakes validation gate and shared agent configuration
 
 The balanced agent workflow installs Codex, Claude Code, and OpenCode; pins
 gstack and Superpowers through `flake.lock`; uses isolated worktrees for
@@ -102,9 +104,13 @@ cd dotfiles
 The Ubuntu setup is headless. It uses apt only for Zsh, Docker Engine, Nix
 installer prerequisites, and the system libraries required by gstack's
 Chromium browser. Home Manager installs the Nix-managed Docker client and
-Compose tooling alongside Codex, Herdr, and the shared dotfiles. Herdr comes
-from its pinned upstream Nix flake on Ubuntu; macOS continues to install Herdr
-through its declared Homebrew cask. The shared cloud toolkit includes Helm,
+Compose tooling alongside Codex, Herdr, Treehouse, No Mistakes, and the shared
+dotfiles. Herdr comes from its pinned upstream Nix flake on Ubuntu; macOS
+continues to install Herdr through its declared Homebrew cask. Treehouse comes
+from its pinned upstream flake on both platforms. No Mistakes is installed from
+its checksum-pinned release package, selects the first available configured
+agent, keeps validation evidence out of repositories, and leaves update checks
+to Nix. The shared cloud toolkit includes Helm,
 k9s, kubectx/kubens, Stern, Dive, yq, grpcurl, HTTPie, Just, and Watchexec.
 Headless Ubuntu also gets Lazydocker; macOS uses OrbStack instead.
 
@@ -158,8 +164,9 @@ nix flake update nixpkgs nixpkgs-linux
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `gstack`, `superpowers`, `herdr`, `home-manager`, and
-`nix-darwin` can be updated independently.
+targets. Inputs such as `gstack`, `superpowers`, `herdr`, `treehouse`,
+`home-manager`, and `nix-darwin` can be updated independently. No Mistakes is
+versioned separately in `packages/no-mistakes.nix`.
 
 Review and validate every lock update before applying it:
 

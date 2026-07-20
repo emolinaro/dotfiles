@@ -155,7 +155,8 @@
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "nixpkgs-linux": "nixpkgs-linux",
-        "superpowers": "superpowers"
+        "superpowers": "superpowers",
+        "treehouse": "treehouse"
       }
     },
     "superpowers": {
@@ -171,6 +172,27 @@
       "original": {
         "owner": "obra",
         "repo": "superpowers",
+        "type": "github"
+      }
+    },
+    "treehouse": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784499851,
+        "narHash": "sha256-X/zRvpjSyEJ8/rkP+2a3y2q4XBDco+2ERh+EGQ7xP4w=",
+        "owner": "kunchenguid",
+        "repo": "treehouse",
+        "rev": "5b8ecdec49034fe6861d63b8ea331490bb14c946",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "ref": "v2.0.1",
+        "repo": "treehouse",
         "type": "github"
       }
     }
