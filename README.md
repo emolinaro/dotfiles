@@ -19,19 +19,22 @@ Running the platform-specific switch builds:
 - Terminal (WezTerm config)
 - Agent configs (Claude, Codex, and OpenCode share one AGENTS.md)
 - Codex extensions (gstack and Superpowers)
+- Lavish AXI agent skill at `~/.agents/skills/lavish`, with its CLI available
+  on demand through npx
 - Herdr workspace manager and shared configuration
 - Treehouse worktree manager and shared configuration
 - No Mistakes validation gate and shared agent configuration
 
 The balanced agent workflow installs Codex, Claude Code, and OpenCode; pins
-gstack and Superpowers through `flake.lock`; uses isolated worktrees for
+Lavish, gstack, and Superpowers through `flake.lock`; uses isolated worktrees for
 feature development; runs local verification and review before completion;
 and requires explicit approval before push, pull request, merge, or deploy.
 
 The developer toolchain includes Python with uv, Ruff, and basedpyright; Go
-with gopls, golangci-lint, Delve, and goimports; and shell tooling with
-ShellCheck, shfmt, and bash-language-server. Neovim provides completion, LSP
-navigation and actions, diagnostics, and format-on-save for these languages.
+with gopls, golangci-lint, Delve, and goimports; Node.js with npm and npx; and
+shell tooling with ShellCheck, shfmt, and bash-language-server. Neovim provides
+completion, LSP navigation and actions, diagnostics, and format-on-save for
+these languages.
 On macOS, Homebrew manages the Codex, Claude Code, OpenCode, and Pi agent CLIs;
 Ubuntu installs the same agents from Nixpkgs.
 
@@ -104,8 +107,8 @@ cd dotfiles
 The Ubuntu setup is headless. It uses apt only for Zsh, Docker Engine, Nix
 installer prerequisites, and the system libraries required by gstack's
 Chromium browser. Home Manager installs the Nix-managed Docker client and
-Compose tooling alongside Codex, Herdr, Treehouse, No Mistakes, and the shared
-dotfiles. Herdr comes from its pinned upstream Nix flake on Ubuntu; macOS
+Compose tooling alongside Codex, Lavish, Herdr, Treehouse, No Mistakes, and the
+shared dotfiles. Herdr comes from its pinned upstream Nix flake on Ubuntu; macOS
 continues to install Herdr through its declared Homebrew cask. Treehouse comes
 from its pinned upstream flake on both platforms. No Mistakes is installed from
 its checksum-pinned release package, selects the first available configured
@@ -156,6 +159,7 @@ nix flake update
 Update one or more named inputs without changing the others by listing them:
 
 ```sh
+nix flake update lavish
 nix flake update gstack
 nix flake update superpowers
 nix flake update nixpkgs nixpkgs-linux
@@ -164,7 +168,7 @@ nix flake update nixpkgs nixpkgs-linux
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `gstack`, `superpowers`, `herdr`, `treehouse`,
+targets. Inputs such as `lavish`, `gstack`, `superpowers`, `herdr`, `treehouse`,
 `home-manager`, and `nix-darwin` can be updated independently. No Mistakes is
 versioned separately in `packages/no-mistakes.nix`.
 
