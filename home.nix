@@ -3,6 +3,7 @@
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
+  noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   ezaIcons = if isLinux then "never" else "always";
   platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
 in
@@ -44,6 +45,7 @@ in
     kubernetes-helm
     lazygit
     neovim
+    noMistakesPackage
     pre-commit
     python3
     ripgrep   # fast search
@@ -80,6 +82,7 @@ in
     CDPATH = "${config.home.homeDirectory}/Documents/GITHUB";
     # GNU ls colors: directories blue, symlinks cyan, executables green.
     LS_COLORS = "di=1;34:ln=1;36:ex=1;32:fi=0";
+    NO_MISTAKES_NO_UPDATE_CHECK = "1";
   } // lib.optionalAttrs isLinux {
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
     HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
@@ -365,6 +368,8 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".codex/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".no-mistakes/config.yaml".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/no-mistakes/config.yaml";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".pi/agent/AGENTS.md".source =
