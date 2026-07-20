@@ -6,6 +6,9 @@ home/.config/herdr/*.sock
 # Superpowers workflow artifacts
 docs/superpowers/
 
+# Lavish review artifacts
+.lavish/
+
 # macOS + nix build noise
 .DS_Store
 result
