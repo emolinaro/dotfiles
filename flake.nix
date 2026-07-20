@@ -18,6 +18,10 @@
     herdr.url = "github:ogulcancelik/herdr/v0.7.3";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
 
+    # Use Treehouse's upstream-supported package on macOS and Ubuntu.
+    treehouse.url = "github:kunchenguid/treehouse/v2.0.1";
+    treehouse.inputs.nixpkgs.follows = "nixpkgs";
+
     # Lock agent workflows so rebuilds do not silently pull new behavior.
     gstack = {
       url = "github:garrytan/gstack";
@@ -29,7 +33,7 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, gstack, superpowers }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, gstack, superpowers }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -52,6 +56,7 @@
         username = ubuntuUsername;
         homeDirectory = ubuntuHomeDirectory;
         herdrPackage = herdr.packages.${system}.default;
+        treehousePackage = treehouse.packages.${system}.default;
         gstackRev = gstack.rev;
         superpowersRev = superpowers.rev;
       };
@@ -77,6 +82,7 @@
             username = darwinUsername;
             homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
+            treehousePackage = treehouse.packages.aarch64-darwin.default;
             gstackRev = gstack.rev;
             superpowersRev = superpowers.rev;
           };

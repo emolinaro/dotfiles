@@ -1,4 +1,4 @@
-{ config, gstackRev, herdrPackage, homeDirectory, lib, pkgs, superpowersRev, username, ... }:
+{ config, gstackRev, herdrPackage, homeDirectory, lib, pkgs, superpowersRev, treehousePackage, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -53,6 +53,7 @@ in
     stern
     tmux
     tree
+    treehousePackage
     tree-sitter
     uv
     watchexec
@@ -380,6 +381,8 @@ in
     force = true;
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/tmux";
   };
+  home.file.".config/treehouse".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/treehouse";
   home.file.".config/herdr" = {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
   };
