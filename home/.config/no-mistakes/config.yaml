@@ -1,0 +1,5 @@
+agent: [codex, claude, opencode, pi]
+
+test:
+  evidence:
+    store_in_repo: false
