@@ -19,13 +19,18 @@ return {
   {
     'nvim-treesitter/nvim-treesitter',
     lazy = false,
-    build = ':TSUpdate',
+    build = function()
+      local treesitter = require('nvim-treesitter')
+      local options = { max_jobs = 1 }
+
+      treesitter.install(treesitter_parsers, options):wait(300000)
+      treesitter.update(treesitter_parsers, options):wait(300000)
+    end,
     parsers = treesitter_parsers,
     config = function()
       local treesitter = require('nvim-treesitter')
       treesitter.setup()
       vim.treesitter.language.register('bash', { 'sh', 'bash', 'zsh' })
-      treesitter.install(treesitter_parsers)
     end,
   },
   {
