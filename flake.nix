@@ -28,6 +28,12 @@
       flake = false;
     };
 
+    # Expose chrome-devtools-axi as a global agent skill; its CLI runs on demand through npx.
+    chromeDevtoolsAxi = {
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.26";
+      flake = false;
+    };
+
     # Expose gh-axi as a global agent skill; its CLI runs on demand through npx.
     ghAxi = {
       url = "github:kunchenguid/gh-axi/gh-axi-v0.1.27";
@@ -45,7 +51,7 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, lavish, ghAxi, gstack, superpowers }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, lavish, chromeDevtoolsAxi, ghAxi, gstack, superpowers }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -65,6 +71,7 @@
         config.allowUnfree = true;
       };
       extraSpecialArgs = {
+        chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
         username = ubuntuUsername;
         homeDirectory = ubuntuHomeDirectory;
         herdrPackage = herdr.packages.${system}.default;
@@ -93,6 +100,7 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.extraSpecialArgs = {
+            chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
             username = darwinUsername;
             homeDirectory = darwinHomeDirectory;
             herdrPackage = null;
