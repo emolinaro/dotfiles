@@ -1,4 +1,4 @@
-{ chromeDevtoolsAxiSkill, config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, treehousePackage, username, ... }:
+{ chromeDevtoolsAxiSkill, config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, superpowersSkill, treehousePackage, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -13,6 +13,10 @@ in
   home.username = username;
   home.homeDirectory = homeDirectory;
   home.stateVersion = "24.11";
+
+  # Avoid re-evaluating every Home Manager option to generate options.json.
+  manual.manpages.enable = false;
+
   home.packages = with pkgs; [
     # cli i use constantly
     basedpyright
@@ -382,6 +386,10 @@ in
   home.file.".agents/skills/chrome-devtools-axi".source = chromeDevtoolsAxiSkill;
   home.file.".agents/skills/gh-axi".source = ghAxiSkill;
   home.file.".agents/skills/lavish".source = lavishSkill;
+  home.file.".agents/skills/superpowers" = {
+    force = true;
+    source = superpowersSkill;
+  };
   home.file.".no-mistakes/config.yaml".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/no-mistakes/config.yaml";
   home.file.".config/opencode/AGENTS.md".source =
@@ -415,8 +423,7 @@ in
     fi
   '');
 
-  # Install agent workflows from the revisions recorded in flake.lock. The
-  # checkouts stay writable because gstack builds platform-specific tooling.
+  # Keep gstack writable because it builds platform-specific tooling.
   home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
     set -euo pipefail
     export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.gawk pkgs.git pkgs.jq pkgs.perl ]}:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -428,35 +435,48 @@ in
         https://github.com/garrytan/gstack.git "$gstack_dir"
     fi
 
-    superpowers_dir="$HOME/.codex/superpowers"
-    if [[ ! -d "$superpowers_dir/.git" ]]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$superpowers_dir")"
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
-        https://github.com/obra/superpowers.git "$superpowers_dir"
-    fi
-
     if [[ -z "''${DRY_RUN:-}" ]]; then
-      # gstack's prefixed Claude install rewrites tracked skill names in place.
-      # Return only those generated names to their canonical form so the
-      # cleanliness guard still catches every genuine local edit.
-      "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
-      if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
-        echo "error: $gstack_dir has local changes; refusing to replace them" >&2
-        exit 1
+      setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
+      expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
+      current_setup_state=""
+      if [[ -r "$setup_state_file" ]]; then
+        current_setup_state="$(<"$setup_state_file")"
       fi
-      ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
-      ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
-
-      if [[ -n "$(${pkgs.git}/bin/git -C "$superpowers_dir" status --porcelain)" ]]; then
-        echo "error: $superpowers_dir has local changes; refusing to replace them" >&2
-        exit 1
+      legacy_setup_state="gstack=${gstackRev};superpowers=${superpowersRev};hosts=auto-prefix-v1"
+      if [[ "$current_setup_state" == "$legacy_setup_state" ]]; then
+        current_setup_state="$expected_setup_state"
+        printf '%s\n' "$expected_setup_state" > "$setup_state_file"
       fi
-      ${pkgs.git}/bin/git -C "$superpowers_dir" fetch --depth 1 origin ${lib.escapeShellArg superpowersRev}
-      ${pkgs.git}/bin/git -C "$superpowers_dir" checkout --detach ${lib.escapeShellArg superpowersRev}
+      current_gstack_rev="$(${pkgs.git}/bin/git -C "$gstack_dir" rev-parse HEAD 2>/dev/null || true)"
 
-      "$gstack_dir/setup" --host claude --prefix --quiet
-      "$gstack_dir/setup" --host codex --prefix --quiet
-      "$gstack_dir/setup" --host opencode --prefix --quiet
+      needs_gstack_setup=0
+      if [[ "$current_setup_state" != "$expected_setup_state" \
+        || "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} \
+        || ! -x "$gstack_dir/browse/dist/browse" \
+        || ! -e "$HOME/.claude/skills/gstack" \
+        || ! -e "$HOME/.codex/skills/gstack" \
+        || ! -e "$HOME/.config/opencode/skills/gstack" ]]; then
+        needs_gstack_setup=1
+      fi
+
+      if [[ "$needs_gstack_setup" -eq 1 ]]; then
+        # A prefixed Claude install rewrites tracked skill names. Normalize only
+        # before an update so the guard still detects genuine local changes.
+        "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
+        if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
+          echo "error: $gstack_dir has local changes; refusing to replace them" >&2
+          exit 1
+        fi
+        if [[ "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} ]]; then
+          ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+          ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+        fi
+
+        # One auto setup installs every available agent host without regenerating
+        # the shared Codex skill set once per host.
+        "$gstack_dir/setup" --host auto --prefix --quiet
+        printf '%s\n' "$expected_setup_state" > "$setup_state_file"
+      fi
 
       gstack_link="$HOME/.agents/skills/gstack"
       mkdir -p "$(dirname "$gstack_link")"
@@ -469,16 +489,6 @@ in
         exit 1
       fi
 
-      superpowers_link="$HOME/.agents/skills/superpowers"
-      mkdir -p "$(dirname "$superpowers_link")"
-      if [[ -L "$superpowers_link" ]]; then
-        ln -sfn "$superpowers_dir/skills" "$superpowers_link"
-      elif [[ ! -e "$superpowers_link" ]]; then
-        ln -s "$superpowers_dir/skills" "$superpowers_link"
-      else
-        echo "error: $superpowers_link exists and is not a symlink" >&2
-        exit 1
-      fi
     fi
   '';
 
@@ -491,12 +501,17 @@ in
       ${herdrCommand} integration install opencode
       ${herdrCommand} integration install pi
 
-      # Herdr writes an absolute Claude hook path. Keep the tracked settings portable.
+      # Herdr writes an absolute Claude hook path and may append the same hook again.
+      # Keep the tracked settings portable and the SessionStart hooks idempotent.
       portable_claude_settings="$(${pkgs.coreutils}/bin/mktemp)"
       ${pkgs.jq}/bin/jq '
         (.hooks.SessionStart[]?.hooks[]?
           | select((.command? // "") | contains("herdr-agent-state.sh"))
           | .command) = "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session"
+        | .hooks.SessionStart |= reduce .[] as $hook (
+            [];
+            if any(.[]; . == $hook) then . else . + [$hook] end
+          )
       ' "$HOME/.claude/settings.json" > "$portable_claude_settings"
       ${pkgs.coreutils}/bin/cp "$portable_claude_settings" "${dotfiles}/home/.claude/settings.json"
       ${pkgs.coreutils}/bin/rm "$portable_claude_settings"
