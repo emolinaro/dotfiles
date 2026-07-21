@@ -48,6 +48,38 @@ local maximize_window = wezterm.action_callback(function(window, _pane)
   window:maximize()
 end)
 
+local function snap_window(direction)
+  return wezterm.action_callback(function(window, _pane)
+    local screen = wezterm.gui.screens().active
+    if not screen then
+      return
+    end
+
+    local half_width = math.floor(screen.width / 2)
+    local half_height = math.floor(screen.height / 2)
+    local x = screen.x
+    local y = screen.y
+    local width = screen.width
+    local height = screen.height
+
+    if direction == "left" then
+      width = half_width
+    elseif direction == "right" then
+      x = screen.x + half_width
+      width = screen.width - half_width
+    elseif direction == "top" then
+      height = half_height
+    elseif direction == "bottom" then
+      y = screen.y + half_height
+      height = screen.height - half_height
+    end
+
+    window:restore()
+    window:set_inner_size(width, height)
+    window:set_position(x, y)
+  end)
+end
+
 config.disable_default_key_bindings = true
 config.leader = { key = "Space", mods = "CTRL" }
 config.keys = {
@@ -66,6 +98,11 @@ config.keys = {
   -- windows
   { key = "n", mods = "CMD", action = wezterm.action.SpawnWindow },
   { key = "w", mods = "CMD", action = wezterm.action.CloseCurrentTab({ confirm = true }) },
+  { key = "f", mods = "CMD|CTRL", action = wezterm.action.ToggleFullScreen },
+  { key = "LeftArrow", mods = "CTRL|ALT", action = snap_window("left") },
+  { key = "RightArrow", mods = "CTRL|ALT", action = snap_window("right") },
+  { key = "UpArrow", mods = "CTRL|ALT", action = snap_window("top") },
+  { key = "DownArrow", mods = "CTRL|ALT", action = snap_window("bottom") },
 
   -- splits (panes)
   { key = "v", mods = "LEADER", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
