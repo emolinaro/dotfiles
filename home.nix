@@ -6,6 +6,7 @@ let
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   ezaIcons = if isLinux then "never" else "always";
   platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
+  herdrCommand = if isLinux then lib.getExe herdrPackage else "/opt/homebrew/bin/herdr";
 in
 
 {
@@ -399,6 +400,9 @@ in
     force = true;
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/tmux";
   };
+  home.file.".local/share/tmux/plugins/resurrect".source = pkgs.tmuxPlugins.resurrect;
+  home.file.".local/share/tmux/plugins/continuum".source = pkgs.tmuxPlugins.continuum;
+  home.file.".local/share/tmux/plugins/yank".source = pkgs.tmuxPlugins.yank;
   home.file.".config/treehouse".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/treehouse";
   home.file.".config/herdr".source =
@@ -475,6 +479,27 @@ in
         echo "error: $superpowers_link exists and is not a symlink" >&2
         exit 1
       fi
+    fi
+  '';
+
+  # Install Herdr's official hooks/plugins after the managed agent configs exist.
+  home.activation.herdrIntegrations = lib.hm.dag.entryAfter [ "codexExtensions" ] ''
+    if [[ -z "''${DRY_RUN:-}" ]]; then
+      mkdir -p "$HOME/.pi/agent/extensions"
+      ${herdrCommand} integration install claude
+      ${herdrCommand} integration install codex
+      ${herdrCommand} integration install opencode
+      ${herdrCommand} integration install pi
+
+      # Herdr writes an absolute Claude hook path. Keep the tracked settings portable.
+      portable_claude_settings="$(${pkgs.coreutils}/bin/mktemp)"
+      ${pkgs.jq}/bin/jq '
+        (.hooks.SessionStart[]?.hooks[]?
+          | select((.command? // "") | contains("herdr-agent-state.sh"))
+          | .command) = "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session"
+      ' "$HOME/.claude/settings.json" > "$portable_claude_settings"
+      ${pkgs.coreutils}/bin/cp "$portable_claude_settings" "${dotfiles}/home/.claude/settings.json"
+      ${pkgs.coreutils}/bin/rm "$portable_claude_settings"
     fi
   '';
 }

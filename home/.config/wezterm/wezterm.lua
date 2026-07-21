@@ -3,6 +3,9 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 -- ui
+-- Use the WebGpu/Metal renderer: the default OpenGL front end freezes/crashes
+-- when resuming from the macOS lock screen or display sleep (wezterm#7291).
+config.front_end = "WebGpu"
 config.color_scheme = "rose-pine-moon"
 config.colors = {
   selection_bg = "#f6c177",
