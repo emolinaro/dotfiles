@@ -79,6 +79,7 @@
         lavishSkill = "${lavish}/skills/lavish";
         treehousePackage = treehouse.packages.${system}.default;
         gstackRev = gstack.rev;
+        superpowersSkill = "${superpowers}/skills";
         superpowersRev = superpowers.rev;
       };
       modules = [
@@ -108,6 +109,7 @@
             lavishSkill = "${lavish}/skills/lavish";
             treehousePackage = treehouse.packages.${config.nixpkgs.hostPlatform.system}.default;
             gstackRev = gstack.rev;
+            superpowersSkill = "${superpowers}/skills";
             superpowersRev = superpowers.rev;
           };
           home-manager.users.${darwinUsername} = import ./home.nix;
