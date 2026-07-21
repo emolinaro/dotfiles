@@ -8,6 +8,14 @@
   nixpkgs.hostPlatform = "aarch64-darwin"; # use x86_64-darwin for Intel CPU
 
   system.primaryUser = username;
+  programs.zsh = {
+    enable = true;
+    # Home Manager initializes native Zsh completion. Avoid running compinit twice,
+    # and do not load bashcompinit, which is only Bash-completion compatibility inside Zsh.
+    enableCompletion = false;
+    enableBashCompletion = false;
+    promptInit = "";
+  };
   users.users.${username} = {
     home = homeDirectory;
   };
