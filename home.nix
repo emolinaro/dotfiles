@@ -41,6 +41,7 @@ in
     just
     k9s
     kubectl
+    kubelogin-oidc
     kubectx
     kubernetes-helm
     lazygit
@@ -192,8 +193,8 @@ in
 
     settings = {
       add_newline = false;
-      scan_timeout = 30;
-      command_timeout = 1000;
+      scan_timeout = 20;
+      command_timeout = 300;
 
       format = "$username$hostname$directory$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$golang$cmd_duration$line_break$jobs$status$character";
       right_format = "$time";
@@ -247,13 +248,14 @@ in
       };
 
       git_metrics = {
-        disabled = false;
+        disabled = true;
         added_style = "bold green";
         deleted_style = "bold red";
         format = "([+$added]($added_style) )([-$deleted]($deleted_style) )";
       };
 
       package = {
+        disabled = true;
         symbol = "pkg ";
         style = "bold 208";
         format = "[$symbol$version]($style) ";
@@ -363,6 +365,13 @@ in
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
+  home.file.".zprofile" = lib.mkIf (!isLinux) {
+    force = true;
+    text = ''
+      # OrbStack CLI integration; Homebrew setup is handled by nix-darwin.
+      source ~/.orbstack/shell/init.zsh 2>/dev/null || true
+    '';
+  };
   home.file.".claude/settings.json".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/settings.json";
   home.file.".claude/CLAUDE.md".source =
