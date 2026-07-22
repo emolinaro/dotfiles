@@ -153,6 +153,9 @@
         default = nonoPackageFor system;
       });
       checks = forAllSystems (system: {
+        gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
+          migrationPackage = (pkgsFor system).callPackage ./packages/gstack-checkout-migration.nix { };
+        };
         nono-package = (pkgsFor system).callPackage ./tests/nono-package.nix {
           nonoPackage = nonoPackageFor system;
         };
