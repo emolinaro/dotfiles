@@ -20,16 +20,15 @@
     "chromeDevtoolsAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1782893055,
-        "narHash": "sha256-csjr1T+a9MPNIw4qxk1TIgFUoGjB8jhrZ+oc6ObcDts=",
+        "lastModified": 1784695683,
+        "narHash": "sha256-TmRl31TG0pRwg7F8tEwIbgYGKHeyR0waHVJuvgdqVhU=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "27e291a28164410a6b9b80796b3c4c490bca0fa3",
+        "rev": "de1b5c5040ac657674dcb5475c0f2d90d714256d",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "chrome-devtools-axi-v0.1.26",
         "repo": "chrome-devtools-axi",
         "type": "github"
       }
@@ -37,16 +36,15 @@
     "ghAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1783834005,
-        "narHash": "sha256-hehWN06+UhCAEACsqn54eNHywlnllY9qHn3c/Fu5Tto=",
+        "lastModified": 1784673500,
+        "narHash": "sha256-E4WwUWx8BUlYIGUQIlMJzY1nJZwHLOGHyAGwqt8cOQA=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "e8533b554e3a64fdabc6090ac61507e6c654a914",
+        "rev": "6e1dcf4dda91c18111f18475e071a8b8a0dd2977",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "gh-axi-v0.1.27",
         "repo": "gh-axi",
         "type": "github"
       }
@@ -71,19 +69,19 @@
       "inputs": {
         "nixpkgs": [
           "nixpkgs-linux"
-        ]
+        ],
+        "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1783464789,
-        "narHash": "sha256-Q2yvMs/N6oAF8xnRIrMxEOOV6Aj8aAXQzuvcaux2enA=",
+        "lastModified": 1784682028,
+        "narHash": "sha256-kVUyNs/C2bkUoVyr4ow+nyoXbFoc1/LvtYa/3ILRz9o=",
         "owner": "ogulcancelik",
         "repo": "herdr",
-        "rev": "299dd4163a96381ec2d8e5bde13d7ba6d6432373",
+        "rev": "ef85fa0c7ebb48bb59fe7593af5a67f3e02ff3d4",
         "type": "github"
       },
       "original": {
         "owner": "ogulcancelik",
-        "ref": "v0.7.3",
         "repo": "herdr",
         "type": "github"
       }
@@ -112,16 +110,15 @@
     "lavish": {
       "flake": false,
       "locked": {
-        "lastModified": 1784060905,
-        "narHash": "sha256-IcApX4Qpx7oy5x5uaeOlIFC/6pr/kjjcjjPjmCXk2DI=",
+        "lastModified": 1784695679,
+        "narHash": "sha256-CirTDJW8jgzHos3p0eJk7DCGn0OsYvBZHhZkwSyGWPA=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "b7aa0ca5f644a6de99d7d7326c4b1b11b6a16419",
+        "rev": "966f4d58f769b0ceab5a8baf49982dba0fde4769",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "lavish-axi-v0.1.42",
         "repo": "lavish-axi",
         "type": "github"
       }
@@ -209,8 +206,28 @@
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "nixpkgs-linux": "nixpkgs-linux",
-        "superpowers": "superpowers",
-        "treehouse": "treehouse"
+        "superpowers": "superpowers"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "herdr",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783577481,
+        "narHash": "sha256-EWMxOWrJ031f8f/lrcEmhTRs4npw1/5N3Hcjin846c8=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "4cdea398dc491b082dccdce0fad1ed0b75fa3394",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     },
     "superpowers": {
@@ -226,27 +243,6 @@
       "original": {
         "owner": "obra",
         "repo": "superpowers",
-        "type": "github"
-      }
-    },
-    "treehouse": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1784499851,
-        "narHash": "sha256-X/zRvpjSyEJ8/rkP+2a3y2q4XBDco+2ERh+EGQ7xP4w=",
-        "owner": "kunchenguid",
-        "repo": "treehouse",
-        "rev": "5b8ecdec49034fe6861d63b8ea331490bb14c946",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kunchenguid",
-        "ref": "v2.0.1",
-        "repo": "treehouse",
         "type": "github"
       }
     }

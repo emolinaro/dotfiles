@@ -5,44 +5,14 @@ One repo, one command, and a fresh machine ends up configured the same way every
 
 ## What you get
 
-Both platforms get the shared shell, editor, CLI, and agent configuration. macOS
-also gets the desktop and system settings managed by nix-darwin and Homebrew.
+Both platforms get a reproducible shell, editor, developer toolchain, agent
+workflow, and shared user configuration through Home Manager. macOS also gets
+desktop applications and system settings managed by nix-darwin and Homebrew.
 
-Running the platform-specific switch builds:
-
-- System settings (dark mode, key repeat, dock, Finder, trackpad)
-- Homebrew apps (casks and CLI tools)
-- Nix user packages for shell, Git, Kubernetes, containers, service debugging,
-  Neovim, and the Hack Nerd Font
-- Shell (zsh, aliases, starship prompt)
-- Editor (Neovim config)
-- Terminal (WezTerm config)
-- Agent configs (Claude, Codex, and OpenCode share one AGENTS.md)
-- Codex extensions (gstack and Superpowers)
-- chrome-devtools-axi agent skill at `~/.agents/skills/chrome-devtools-axi`,
-  with its CLI available on demand through npx
-- gh-axi agent skill at `~/.agents/skills/gh-axi`, with its CLI available on
-  demand through npx
-- Lavish AXI agent skill at `~/.agents/skills/lavish`, with its CLI available
-  on demand through npx
-- Herdr workspace manager and shared configuration
-- Treehouse worktree manager and shared configuration
-- No Mistakes validation gate and shared agent configuration
-
-The balanced agent workflow installs Codex, Claude Code, and OpenCode; pins
-chrome-devtools-axi, gh-axi, Lavish, gstack, and Superpowers through
-`flake.lock`; uses isolated
-worktrees for feature development; runs local verification and review before
-completion; and requires explicit approval before push, pull request, merge, or
-deploy.
-
-The developer toolchain includes Python with uv, Ruff, and basedpyright; Go
-with gopls, golangci-lint, Delve, and goimports; Node.js with npm and npx; and
-shell tooling with ShellCheck, shfmt, and bash-language-server. Neovim provides
-completion, LSP navigation and actions, diagnostics, and format-on-save for
-these languages.
-On macOS, Homebrew manages the Codex, Claude Code, OpenCode, and Pi agent CLIs;
-Ubuntu installs the same agents from Nixpkgs.
+The configuration provides a fast Zsh environment, a language-aware Neovim
+setup, cloud and container tooling, managed agent extensions, isolated
+worktree workflows, and local validation before changes are completed. Push,
+pull request, merge, and deployment actions always require explicit approval.
 
 ## Supported systems
 
@@ -110,18 +80,11 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-The Ubuntu setup is headless. It uses apt only for Zsh, Docker Engine, Nix
-installer prerequisites, and the system libraries required by gstack's
-Chromium browser. Home Manager installs the Nix-managed Docker client and
-Compose tooling alongside Codex, chrome-devtools-axi, gh-axi, Lavish, Herdr,
-Treehouse, No Mistakes, and the shared dotfiles. Herdr comes from its pinned upstream Nix flake on
-Ubuntu; macOS continues to install Herdr through its declared Homebrew cask.
-Treehouse comes from its pinned upstream flake on both platforms. No Mistakes
-is installed from its checksum-pinned release package, selects the first
-available configured agent, keeps validation evidence out of repositories, and
-leaves update checks to Nix. The shared cloud toolkit includes Helm,
-k9s, kubectx/kubens, Stern, Dive, yq, grpcurl, HTTPie, Just, and Watchexec.
-Headless Ubuntu also gets Lazydocker; macOS uses OrbStack instead.
+The Ubuntu setup is headless. Apt installs only system-level prerequisites;
+Home Manager installs the shared user environment. Platform-specific package
+sources are selected declaratively, and checksum-pinned binary packages choose
+the correct archive for each supported architecture. Update checks remain
+under Nix control.
 
 The bootstrap supports x86_64 and ARM64, uses the current username and home
 directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
@@ -177,9 +140,9 @@ Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
 targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `gstack`,
-`superpowers`, `herdr`, `treehouse`, `home-manager`, and `nix-darwin` can be
-updated independently. No Mistakes is versioned separately in
-`packages/no-mistakes.nix`.
+`superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be updated
+independently. Treehouse and No Mistakes are versioned separately in
+`packages/treehouse.nix` and `packages/no-mistakes.nix`.
 
 Review and validate every lock update before applying it:
 
