@@ -18,6 +18,7 @@
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   gstackCheckout = "${config.home.homeDirectory}/.local/share/gstack/repos/gstack";
+  gstackCheckoutMigration = pkgs.callPackage ./packages/gstack-checkout-migration.nix { };
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
@@ -490,83 +491,96 @@ in
     fi
   '';
 
-  # Keep gstack writable because it builds platform-specific tooling.
-  home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
+  home.activation.gstackCheckoutMigration = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
     set -euo pipefail
-    export PATH="${
-      lib.makeBinPath [
-        pkgs.bun
-        pkgs.coreutils
-        pkgs.gawk
-        pkgs.git
-        pkgs.jq
-        pkgs.perl
-      ]
-    }:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
-
-    gstack_dir=${lib.escapeShellArg gstackCheckout}
-    if [[ ! -d "$gstack_dir/.git" ]]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
-        https://github.com/garrytan/gstack.git "$gstack_dir"
-    fi
-
     if [[ -z "''${DRY_RUN:-}" ]]; then
-      setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
-      expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
-      current_setup_state=""
-      if [[ -r "$setup_state_file" ]]; then
-        current_setup_state="$(<"$setup_state_file")"
-      fi
-      legacy_setup_state="gstack=${gstackRev};superpowers=${superpowersRev};hosts=auto-prefix-v1"
-      if [[ "$current_setup_state" == "$legacy_setup_state" ]]; then
-        current_setup_state="$expected_setup_state"
-        printf '%s\n' "$expected_setup_state" > "$setup_state_file"
-      fi
-      current_gstack_rev="$(${pkgs.git}/bin/git -C "$gstack_dir" rev-parse HEAD 2>/dev/null || true)"
-
-      needs_gstack_setup=0
-      if [[ "$current_setup_state" != "$expected_setup_state" \
-        || "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} \
-        || ! -x "$gstack_dir/browse/dist/browse" \
-        || ! -e "$HOME/.claude/skills/gstack" \
-        || ! -e "$HOME/.codex/skills/gstack" \
-        || ! -e "$HOME/.config/opencode/skills/gstack" ]]; then
-        needs_gstack_setup=1
-      fi
-
-      if [[ "$needs_gstack_setup" -eq 1 ]]; then
-        # A prefixed Claude install rewrites tracked skill names. Normalize only
-        # before an update so the guard still detects genuine local changes.
-        "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
-        if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
-          echo "error: $gstack_dir has local changes; refusing to replace them" >&2
-          exit 1
-        fi
-        if [[ "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} ]]; then
-          ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
-          ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
-        fi
-
-        # One auto setup installs every available agent host without regenerating
-        # the shared Codex skill set once per host.
-        "$gstack_dir/setup" --host auto --prefix --quiet
-        printf '%s\n' "$expected_setup_state" > "$setup_state_file"
-      fi
-
-      gstack_link="$HOME/.agents/skills/gstack"
-      mkdir -p "$(dirname "$gstack_link")"
-      if [[ -L "$gstack_link" ]]; then
-        ln -sfn "$gstack_dir/.agents/skills" "$gstack_link"
-      elif [[ ! -e "$gstack_link" ]]; then
-        ln -s "$gstack_dir/.agents/skills" "$gstack_link"
-      else
-        echo "error: $gstack_link exists and is not a symlink" >&2
-        exit 1
-      fi
-
+      ${lib.getExe gstackCheckoutMigration} ${lib.escapeShellArg gstackCheckout}
     fi
   '';
+
+  # Keep gstack writable because it builds platform-specific tooling.
+  home.activation.codexExtensions =
+    lib.hm.dag.entryAfter
+      [
+        "gstackCheckoutMigration"
+        "installPackages"
+      ]
+      ''
+        set -euo pipefail
+        export PATH="${
+          lib.makeBinPath [
+            pkgs.bun
+            pkgs.coreutils
+            pkgs.gawk
+            pkgs.git
+            pkgs.jq
+            pkgs.perl
+          ]
+        }:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+
+        gstack_dir=${lib.escapeShellArg gstackCheckout}
+        if [[ ! -d "$gstack_dir/.git" ]]; then
+          $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
+            https://github.com/garrytan/gstack.git "$gstack_dir"
+        fi
+
+        if [[ -z "''${DRY_RUN:-}" ]]; then
+          setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
+          expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
+          current_setup_state=""
+          if [[ -r "$setup_state_file" ]]; then
+            current_setup_state="$(<"$setup_state_file")"
+          fi
+          legacy_setup_state="gstack=${gstackRev};superpowers=${superpowersRev};hosts=auto-prefix-v1"
+          if [[ "$current_setup_state" == "$legacy_setup_state" ]]; then
+            current_setup_state="$expected_setup_state"
+            printf '%s\n' "$expected_setup_state" > "$setup_state_file"
+          fi
+          current_gstack_rev="$(${pkgs.git}/bin/git -C "$gstack_dir" rev-parse HEAD 2>/dev/null || true)"
+
+          needs_gstack_setup=0
+          if [[ "$current_setup_state" != "$expected_setup_state" \
+            || "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} \
+            || ! -x "$gstack_dir/browse/dist/browse" \
+            || ! -e "$HOME/.claude/skills/gstack" \
+            || ! -e "$HOME/.codex/skills/gstack" \
+            || ! -e "$HOME/.config/opencode/skills/gstack" ]]; then
+            needs_gstack_setup=1
+          fi
+
+          if [[ "$needs_gstack_setup" -eq 1 ]]; then
+            # A prefixed Claude install rewrites tracked skill names. Normalize only
+            # before an update so the guard still detects genuine local changes.
+            "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
+            if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
+              echo "error: $gstack_dir has local changes; refusing to replace them" >&2
+              exit 1
+            fi
+            if [[ "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} ]]; then
+              ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+              ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+            fi
+
+            # One auto setup installs every available agent host without regenerating
+            # the shared Codex skill set once per host.
+            "$gstack_dir/setup" --host auto --prefix --quiet
+            printf '%s\n' "$expected_setup_state" > "$setup_state_file"
+          fi
+
+          gstack_link="$HOME/.agents/skills/gstack"
+          mkdir -p "$(dirname "$gstack_link")"
+          if [[ -L "$gstack_link" ]]; then
+            ln -sfn "$gstack_dir/.agents/skills" "$gstack_link"
+          elif [[ ! -e "$gstack_link" ]]; then
+            ln -s "$gstack_dir/.agents/skills" "$gstack_link"
+          else
+            echo "error: $gstack_link exists and is not a symlink" >&2
+            exit 1
+          fi
+
+        fi
+      '';
 
   # Install Herdr's official hooks/plugins after the managed agent configs exist.
   home.activation.herdrIntegrations = lib.hm.dag.entryAfter [ "codexExtensions" "nonoProfiles" ] ''
