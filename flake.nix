@@ -46,72 +46,123 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, lavish, chromeDevtoolsAxi, ghAxi, gstack, superpowers }:
-  let
-    envOr = name: fallback:
-      let value = builtins.getEnv name;
-      in if value == "" then fallback else value;
-    sudoUser = builtins.getEnv "SUDO_USER";
-    currentUser = builtins.getEnv "USER";
-    darwinUsername =
-      if sudoUser != "" && sudoUser != "root" then sudoUser
-      else if currentUser != "" && currentUser != "root" then currentUser
-      else throw "Unable to determine the non-root macOS user. Run the setup as a sudo-capable user with --impure.";
-    darwinHomeDirectory = "/Users/${darwinUsername}";
-    ubuntuUsername = envOr "DOTFILES_USERNAME" "ubuntu";
-    ubuntuHomeDirectory = envOr "DOTFILES_HOME" "/home/${ubuntuUsername}";
-    mkUbuntuHome = system: home-manager.lib.homeManagerConfiguration {
-      pkgs = import nixpkgs-linux {
-        inherit system;
-        config.allowUnfree = true;
-      };
-      extraSpecialArgs = {
-        chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
-        username = ubuntuUsername;
-        homeDirectory = ubuntuHomeDirectory;
-        herdrPackage = herdr.packages.${system}.default;
-        ghAxiSkill = "${ghAxi}/skills/gh-axi";
-        lavishSkill = "${lavish}/skills/lavish";
-        gstackRev = gstack.rev;
-        superpowersSkill = "${superpowers}/skills";
-        superpowersRev = superpowers.rev;
-      };
-      modules = [
-        ./home.nix
-        { programs.home-manager.enable = true; }
+  outputs =
+    inputs@{
+      self,
+      nix-darwin,
+      nix-homebrew,
+      home-manager,
+      nixpkgs,
+      nixpkgs-linux,
+      herdr,
+      lavish,
+      chromeDevtoolsAxi,
+      ghAxi,
+      gstack,
+      superpowers,
+    }:
+    let
+      envOr =
+        name: fallback:
+        let
+          value = builtins.getEnv name;
+        in
+        if value == "" then fallback else value;
+      sudoUser = builtins.getEnv "SUDO_USER";
+      currentUser = builtins.getEnv "USER";
+      darwinUsername =
+        if sudoUser != "" && sudoUser != "root" then
+          sudoUser
+        else if currentUser != "" && currentUser != "root" then
+          currentUser
+        else
+          throw "Unable to determine the non-root macOS user. Run the setup as a sudo-capable user with --impure.";
+      darwinHomeDirectory = "/Users/${darwinUsername}";
+      ubuntuUsername = envOr "DOTFILES_USERNAME" "ubuntu";
+      ubuntuHomeDirectory = envOr "DOTFILES_HOME" "/home/${ubuntuUsername}";
+      supportedSystems = [
+        "aarch64-darwin"
+        "x86_64-linux"
+        "aarch64-linux"
       ];
-    };
-  in {
-    darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
-      specialArgs = {
-        username = darwinUsername;
-        homeDirectory = darwinHomeDirectory;
-      };
-      modules = [ 
-        ./configuration.nix 
-        nix-homebrew.darwinModules.nix-homebrew
-        home-manager.darwinModules.home-manager
-        ({ config, ... }: {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.extraSpecialArgs = {
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+      pkgsFor =
+        system:
+        import (if nixpkgs.lib.hasSuffix "-darwin" system then nixpkgs else nixpkgs-linux) {
+          inherit system;
+          config.allowUnfree = true;
+        };
+      nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      mkUbuntuHome =
+        system:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = pkgsFor system;
+          extraSpecialArgs = {
             chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
-            username = darwinUsername;
-            homeDirectory = darwinHomeDirectory;
-            herdrPackage = null;
+            username = ubuntuUsername;
+            homeDirectory = ubuntuHomeDirectory;
+            herdrPackage = herdr.packages.${system}.default;
+            nonoPackage = nonoPackageFor system;
             ghAxiSkill = "${ghAxi}/skills/gh-axi";
             lavishSkill = "${lavish}/skills/lavish";
             gstackRev = gstack.rev;
             superpowersSkill = "${superpowers}/skills";
             superpowersRev = superpowers.rev;
           };
-          home-manager.users.${darwinUsername} = import ./home.nix;
-        })
-      ];
+          modules = [
+            ./home.nix
+            { programs.home-manager.enable = true; }
+          ];
+        };
+    in
+    {
+      darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
+        specialArgs = {
+          username = darwinUsername;
+          homeDirectory = darwinHomeDirectory;
+        };
+        modules = [
+          ./configuration.nix
+          nix-homebrew.darwinModules.nix-homebrew
+          home-manager.darwinModules.home-manager
+          ({ config, ... }: {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = {
+              chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+              username = darwinUsername;
+              homeDirectory = darwinHomeDirectory;
+              herdrPackage = null;
+              nonoPackage = nonoPackageFor "aarch64-darwin";
+              ghAxiSkill = "${ghAxi}/skills/gh-axi";
+              lavishSkill = "${lavish}/skills/lavish";
+              gstackRev = gstack.rev;
+              superpowersSkill = "${superpowers}/skills";
+              superpowersRev = superpowers.rev;
+            };
+            home-manager.users.${darwinUsername} = import ./home.nix;
+          })
+        ];
+      };
+      homeConfigurations = {
+        ubuntu-x86_64 = mkUbuntuHome "x86_64-linux";
+        ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
+      };
+      packages = forAllSystems (system: {
+        nono = nonoPackageFor system;
+        default = nonoPackageFor system;
+      });
+      checks = forAllSystems (system: {
+        nono-package = (pkgsFor system).callPackage ./tests/nono-package.nix {
+          nonoPackage = nonoPackageFor system;
+        };
+        nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
+          wrapperModule = ./packages/nono-agent-wrappers.nix;
+        };
+        nono-profiles = (pkgsFor system).callPackage ./tests/nono-profiles.nix {
+          nonoPackage = nonoPackageFor system;
+          profiles = ./home/.config/nono/profiles;
+        };
+      });
     };
-    homeConfigurations = {
-      ubuntu-x86_64 = mkUbuntuHome "x86_64-linux";
-      ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
-    };
-  };
 }

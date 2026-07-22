@@ -14,6 +14,43 @@ setup, cloud and container tooling, managed agent extensions, isolated
 worktree workflows, and local validation before changes are completed. Push,
 pull request, merge, and deployment actions always require explicit approval.
 
+## Agent sandbox
+
+Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
+version-pinned Nono sandbox by default. The active working directory and each
+client's own state are writable. SSH keys, cloud configuration, browser data,
+unrelated repositories, the general macOS keychain, and container sockets are
+not granted.
+
+The first rollout restricts filesystem access, ambient environment variables,
+and Unix sockets. Outbound IP networking remains unrestricted until each
+client's provider, login, plugin, and package-registry endpoints have been
+captured and tested. API-key, cloud, Git-hosting, Docker, Kubernetes, and
+SSH-agent variables are stripped from the sandboxed process.
+
+Explicit host commands remain available for trusted work that cannot run in
+the sandbox:
+
+```sh
+claude-unsafe
+codex-unsafe
+opencode-unsafe
+pi-unsafe
+```
+
+Each command prints an `UNSANDBOXED` warning before launching the real client.
+For example, use `codex-unsafe login` if macOS login requires keychain access;
+do not widen the normal profile automatically. Desktop applications and
+editor-launched processes do not pass through these terminal wrappers.
+
+Nono uses the official release tarballs with a separate SHA-256 hash for each
+supported target. To update it, change the version, target hashes, and URLs in
+`packages/nono.nix`, then validate every target:
+
+```sh
+nix flake check --all-systems --impure --no-build
+```
+
 ## Supported systems
 
 - macOS on Apple Silicon, by default.
