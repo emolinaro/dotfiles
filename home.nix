@@ -392,7 +392,7 @@ in
     source = superpowersSkill;
   };
   home.file.".no-mistakes/config.yaml".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/no-mistakes/config.yaml";
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.no-mistakes/config.yaml";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".pi/agent/AGENTS.md".source =
