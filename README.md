@@ -17,10 +17,10 @@ pull request, merge, and deployment actions always require explicit approval.
 ## Agent sandbox
 
 Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
-version-pinned Nono sandbox by default. The active working directory and each
-client's own state are writable. SSH keys, cloud configuration, browser data,
-unrelated repositories, the general macOS keychain, and container sockets are
-not granted.
+version-pinned Nono sandbox by default. The current Git worktree and each
+client's own state are writable. Launches outside a Git worktree fail closed.
+SSH keys, cloud configuration, browser data, unrelated repositories, the
+general macOS keychain, and container sockets are not granted.
 
 The first rollout restricts filesystem access, ambient environment variables,
 and Unix sockets. Outbound IP networking remains unrestricted until each
@@ -45,10 +45,22 @@ editor-launched processes do not pass through these terminal wrappers.
 
 Nono uses the official release tarballs with a separate SHA-256 hash for each
 supported target. To update it, change the version, target hashes, and URLs in
-`packages/nono.nix`, then validate every target:
+`packages/nono.nix`. First evaluate every target from any supported host:
 
 ```sh
 nix flake check --all-systems --impure --no-build
+```
+
+Then run the following native builds on Apple Silicon macOS, x86_64 Ubuntu,
+and aarch64 Ubuntu so every release archive, executable, and Linux ELF patch is
+exercised on its target platform:
+
+```sh
+system="$(nix eval --impure --raw --expr builtins.currentSystem)"
+nix build \
+  ".#checks.$system.nono-package" \
+  ".#checks.$system.nono-agent-wrappers" \
+  ".#checks.$system.nono-profiles"
 ```
 
 ## Supported systems

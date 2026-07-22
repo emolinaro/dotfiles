@@ -27,16 +27,13 @@
   "filesystem": {
     "allow": [
       "@git:common-dir",
-      "$HOME/.gstack/analytics",
-      "$HOME/.gstack/projects",
-      "$HOME/.gstack/sessions",
-      "$HOME/.gstack/security"
+      "$HOME/.gstack"
     ],
     "read": [
       "@git:config-files",
       "@git:hooks-path",
       "$HOME/.agents",
-      "$HOME/.gstack/repos/gstack",
+      "$HOME/.local/share/gstack/repos/gstack",
       "$HOME/.config/herdr",
       "$HOME/.dotfiles/home/.config/herdr"
     ],
@@ -62,24 +59,79 @@
     "block": false
   },
   "workdir": {
-    "access": "readwrite"
+    "access": "none"
   },
   "environment": {
+    "allow_vars": [
+      "CDPATH",
+      "COLORTERM",
+      "EDITOR",
+      "FORCE_COLOR",
+      "HERDR_SOCKET_PATH",
+      "HOME",
+      "IN_NIX_SHELL",
+      "LANG",
+      "LANGUAGE",
+      "LC_*",
+      "LESS",
+      "LOGNAME",
+      "LS_COLORS",
+      "MANPATH",
+      "NIX_PATH",
+      "NIX_PROFILES",
+      "NIX_SSL_CERT_FILE",
+      "NO_COLOR",
+      "NO_MISTAKES_NO_UPDATE_CHECK",
+      "PAGER",
+      "PATH",
+      "PWD",
+      "SHELL",
+      "SHLVL",
+      "SSL_CERT_DIR",
+      "SSL_CERT_FILE",
+      "TEMP",
+      "TERM",
+      "TERMINFO",
+      "TERMINFO_DIRS",
+      "TERM_PROGRAM",
+      "TERM_PROGRAM_VERSION",
+      "TMP",
+      "TMPDIR",
+      "TZ",
+      "USER",
+      "VISUAL",
+      "XDG_CACHE_HOME",
+      "XDG_CONFIG_HOME",
+      "XDG_DATA_HOME",
+      "XDG_RUNTIME_DIR",
+      "XDG_STATE_HOME"
+    ],
     "deny_vars": [
-      "ANTHROPIC_API_KEY",
-      "OPENAI_API_KEY",
-      "GEMINI_API_KEY",
+      "ANTHROPIC_*",
+      "OPENAI_*",
+      "GEMINI_*",
       "AWS_*",
       "AZURE_*",
       "GOOGLE_*",
-      "GH_TOKEN",
-      "GITHUB_TOKEN",
-      "GITLAB_TOKEN",
+      "GCP_*",
+      "GH_*",
+      "GITHUB_*",
+      "GITLAB_*",
+      "BITBUCKET_*",
       "KUBECONFIG",
-      "DOCKER_HOST",
-      "CONTAINER_HOST",
-      "SSH_AUTH_SOCK"
-    ]
+      "KUBE_*",
+      "DOCKER_*",
+      "CONTAINER_*",
+      "PODMAN_*",
+      "SSH_*",
+      "NPM_TOKEN",
+      "NPM_CONFIG_*",
+      "TF_VAR_*",
+      "VAULT_*"
+    ],
+    "set_vars": {
+      "XDG_CONFIG_HOME": "$HOME/.config"
+    }
   },
   "rollback": {
     "exclude_patterns": [

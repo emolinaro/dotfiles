@@ -17,7 +17,9 @@
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
+  gstackCheckout = "${config.home.homeDirectory}/.local/share/gstack/repos/gstack";
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
+  nonoProfiles = ./home/.config/nono/profiles;
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
@@ -39,7 +41,8 @@ let
         pi = "/opt/homebrew/bin/pi";
       };
   agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
-    inherit agentExecutables nonoPackage;
+    inherit agentExecutables homeDirectory nonoPackage;
+    profiles = nonoProfiles;
   };
   nonoProfileNames = [
     "dotfiles-claude"
@@ -460,8 +463,7 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/treehouse";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
-  home.file.".config/nono/profiles".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nono/profiles";
+  home.file.".config/nono/profiles".source = nonoProfiles;
 
   home.activation.treeSitterParsers = lib.mkIf isLinux (
     lib.hm.dag.entryAfter [ "linkGeneration" ] ''
@@ -483,7 +485,7 @@ in
     if [[ -z "''${DRY_RUN:-}" ]]; then
       for profile in ${lib.escapeShellArgs nonoProfileNames}; do
         ${lib.getExe nonoPackage} profile validate --strict \
-          "$HOME/.config/nono/profiles/$profile.json"
+          "${nonoProfiles}/$profile.json"
       done
     fi
   '';
@@ -502,7 +504,7 @@ in
       ]
     }:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
 
-    gstack_dir="$HOME/.gstack/repos/gstack"
+    gstack_dir=${lib.escapeShellArg gstackCheckout}
     if [[ ! -d "$gstack_dir/.git" ]]; then
       $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
       $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
