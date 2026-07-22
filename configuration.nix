@@ -49,6 +49,7 @@
       "herdr"
       "opencode"
       "pi-coding-agent"
+      "midnight-commander"
     ];
     casks = [
       "wezterm"
