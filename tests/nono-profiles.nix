@@ -33,17 +33,32 @@ pkgs.runCommand "nono-profiles-test"
         "$HOME/.cache/herdr/herdr.sock",
         "$HOME/.config/herdr/herdr.sock"
       ] | sort)
+      and .workdir.access == "none"
+      and (.filesystem.allow | index("$HOME/.gstack") != null)
+      and (.filesystem.read | index("$HOME/.local/share/gstack/repos/gstack") != null)
+      and (.filesystem.read | index("$HOME/.gstack/repos/gstack") == null)
+      and (.environment.allow_vars | contains([
+        "HERDR_SOCKET_PATH",
+        "HOME",
+        "PATH",
+        "TERM"
+      ]))
+      and (.environment.allow_vars | index("*") == null)
+      and .environment.set_vars.XDG_CONFIG_HOME == "$HOME/.config"
       and .environment.set_vars.HERDR_SOCKET_PATH == null
       and ([.groups.include[] | if type == "object" then .name else . end]
         | index("user_caches_macos") == null
         and index("user_caches_linux") == null)
       and (.environment.deny_vars | contains([
+        "ANTHROPIC_*",
+        "OPENAI_*",
+        "GEMINI_*",
         "AWS_*",
         "AZURE_*",
         "GOOGLE_*",
         "KUBECONFIG",
-        "DOCKER_HOST",
-        "SSH_AUTH_SOCK"
+        "DOCKER_*",
+        "SSH_*"
       ]))
     ' "$profile_dir/dotfiles-agent-base.json" >/dev/null
 
@@ -72,7 +87,7 @@ pkgs.runCommand "nono-profiles-test"
           or . == "vscode_macos"
           or . == "vscode_linux";
 
-        .workdir.access == "readwrite"
+        .workdir.access == "none"
         and .security.capability_elevation == false
         and .network.block == false
         and (filesystem_grants | map(forbidden_path | not) | all)

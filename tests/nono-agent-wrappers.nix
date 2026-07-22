@@ -1,5 +1,6 @@
 {
   pkgs,
+  profiles,
   wrapperModule,
 }:
 
@@ -9,13 +10,34 @@ let
     pkgs.writeShellApplication {
       inherit name;
       text = ''
-        : "''${NONO_TEST_TRACE:?NONO_TEST_TRACE must name a trace file}"
-        printf '%s\n' "$@" > "$NONO_TEST_TRACE"
-        exit "''${NONO_TEST_EXIT_CODE:-0}"
+        : "''${WRAPPER_TEST_TRACE:?WRAPPER_TEST_TRACE must name a trace file}"
+        printf '%s\n' "$@" > "$WRAPPER_TEST_TRACE"
+        exit "''${WRAPPER_TEST_EXIT_CODE:-0}"
       '';
     };
 
-  fakeNono = mkRecorder "nono";
+  fakeNono = pkgs.writeShellApplication {
+    name = "nono";
+    text = ''
+      : "''${WRAPPER_TEST_TRACE:?WRAPPER_TEST_TRACE must name a trace file}"
+      if [[ -n "''${GIT_DIR:-}" || -n "''${NONO_ALLOW:-}" || -n "''${NONO_PROFILE:-}" ]]; then
+        echo "ambient Git or Nono policy variable reached Nono" >&2
+        exit 1
+      fi
+      if [[ "''${XDG_CONFIG_HOME:-}" != /nix/store/* ]]; then
+        echo "Nono config is not store-backed: ''${XDG_CONFIG_HOME:-<unset>}" >&2
+        exit 1
+      fi
+      printf '%s\n' "$@" > "$WRAPPER_TEST_TRACE"
+      exit "''${WRAPPER_TEST_EXIT_CODE:-0}"
+    '';
+  };
+  fakeHomeGit = pkgs.writeShellApplication {
+    name = "git";
+    text = ''
+      printf '%s\n' /tmp
+    '';
+  };
   fakeAgents = {
     claude = mkRecorder "claude";
     codex = mkRecorder "codex";
@@ -25,13 +47,35 @@ let
   agentExecutables = pkgs.lib.mapAttrs (name: package: "${package}/bin/${name}") fakeAgents;
 
   wrappers = pkgs.callPackage wrapperModule {
-    inherit agentExecutables;
+    inherit agentExecutables profiles;
+    homeDirectory = "/tmp";
     nonoPackage = fakeNono;
+  };
+  profilesWithoutOpencode = pkgs.runCommand "nono-test-profiles-without-opencode" { } ''
+    mkdir -p "$out"
+    cp ${profiles}/dotfiles-agent-base.json "$out/"
+    for agent in claude codex pi; do
+      cp "${profiles}/dotfiles-$agent.json" "$out/"
+    done
+  '';
+  wrappersWithMissingProfile = pkgs.callPackage wrapperModule {
+    inherit agentExecutables;
+    homeDirectory = "/tmp";
+    nonoPackage = fakeNono;
+    profiles = profilesWithoutOpencode;
   };
   wrappersWithMissingPi = pkgs.callPackage wrapperModule {
     agentExecutables = agentExecutables // {
       pi = "/definitely/missing/pi";
     };
+    homeDirectory = "/tmp";
+    nonoPackage = fakeNono;
+    inherit profiles;
+  };
+  wrappersWithHomeWorktree = pkgs.callPackage wrapperModule {
+    inherit agentExecutables profiles;
+    git = fakeHomeGit;
+    homeDirectory = "/tmp";
     nonoPackage = fakeNono;
   };
 in
@@ -45,28 +89,32 @@ pkgs.runCommand "nono-agent-wrappers-test"
   ''
     set -euo pipefail
 
-    export HOME="$TMPDIR/home"
-    profiles="$HOME/.config/nono/profiles"
-    mkdir -p "$profiles"
-    for agent in claude codex opencode pi; do
-      touch "$profiles/dotfiles-$agent.json"
-    done
+    export HOME=/tmp
+    repo="$TMPDIR/repo"
+    mkdir -p "$repo/subdir"
+    ${pkgs.git}/bin/git init -q "$repo"
+    cd "$repo/subdir"
+    export GIT_DIR=/definitely/missing
+    export NONO_ALLOW=/
+    export NONO_PROFILE=untrusted
 
     assert_normal_wrapper() {
       local agent="$1"
       local real_executable="$2"
       shift 2
 
-      export NONO_TEST_TRACE="$TMPDIR/$agent.trace"
-      unset NONO_TEST_EXIT_CODE
+      export WRAPPER_TEST_TRACE="$TMPDIR/$agent.trace"
+      unset WRAPPER_TEST_EXIT_CODE
       "${wrappers}/bin/$agent" "argument with spaces" -- literal
 
       expected=(
         run
         --profile
-        "dotfiles-$agent"
+        "${profiles}/dotfiles-$agent.json"
+        --allow
+        "$repo"
         --workdir
-        "$PWD"
+        "$repo/subdir"
         --
         "$real_executable"
       )
@@ -80,7 +128,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       fi
       expected+=("argument with spaces" -- literal)
       printf '%s\n' "''${expected[@]}" > "$TMPDIR/$agent.expected"
-      diff -u "$TMPDIR/$agent.expected" "$NONO_TEST_TRACE"
+      diff -u "$TMPDIR/$agent.expected" "$WRAPPER_TEST_TRACE"
     }
 
     assert_normal_wrapper claude ${agentExecutables.claude}
@@ -88,27 +136,59 @@ pkgs.runCommand "nono-agent-wrappers-test"
     assert_normal_wrapper opencode ${agentExecutables.opencode}
     assert_normal_wrapper pi ${agentExecutables.pi}
 
-    rm "$profiles/dotfiles-opencode.json"
-    export NONO_TEST_TRACE="$TMPDIR/missing-profile.trace"
-    if "${wrappers}/bin/opencode" > "$TMPDIR/missing-profile.stdout" 2> "$TMPDIR/missing-profile.stderr"; then
+    export WRAPPER_TEST_TRACE="$TMPDIR/missing-profile.trace"
+    if "${wrappersWithMissingProfile}/bin/opencode" > "$TMPDIR/missing-profile.stdout" 2> "$TMPDIR/missing-profile.stderr"; then
       echo "opencode unexpectedly started without its local profile" >&2
       exit 1
     fi
-    test ! -e "$NONO_TEST_TRACE"
+    test ! -e "$WRAPPER_TEST_TRACE"
     grep -F "missing Nono profile" "$TMPDIR/missing-profile.stderr"
 
-    export NONO_TEST_TRACE="$TMPDIR/unsafe.trace"
-    export NONO_TEST_EXIT_CODE=23
+    outside="$TMPDIR/outside"
+    mkdir -p "$outside"
+    cd "$outside"
+    export WRAPPER_TEST_TRACE="$TMPDIR/outside-worktree.trace"
+    set +e
+    "${wrappers}/bin/claude" > "$TMPDIR/outside-worktree.stdout" 2> "$TMPDIR/outside-worktree.stderr"
+    outside_status=$?
+    set -e
+    test "$outside_status" -eq 78
+    test ! -e "$WRAPPER_TEST_TRACE"
+    grep -F "must be launched inside a Git worktree" "$TMPDIR/outside-worktree.stderr"
+
+    cd "$repo/subdir"
+    export WRAPPER_TEST_TRACE="$TMPDIR/home-worktree.trace"
+    set +e
+    "${wrappersWithHomeWorktree}/bin/codex" > "$TMPDIR/home-worktree.stdout" 2> "$TMPDIR/home-worktree.stderr"
+    home_status=$?
+    set -e
+    test "$home_status" -eq 78
+    test ! -e "$WRAPPER_TEST_TRACE"
+    grep -F "worktree that contains HOME" "$TMPDIR/home-worktree.stderr"
+
+    export HOME="$TMPDIR/unexpected-home"
+    mkdir -p "$HOME"
+    export WRAPPER_TEST_TRACE="$TMPDIR/unexpected-home.trace"
+    set +e
+    "${wrappers}/bin/codex" > "$TMPDIR/unexpected-home.stdout" 2> "$TMPDIR/unexpected-home.stderr"
+    unexpected_home_status=$?
+    set -e
+    test "$unexpected_home_status" -eq 78
+    test ! -e "$WRAPPER_TEST_TRACE"
+    grep -F "refusing unexpected HOME" "$TMPDIR/unexpected-home.stderr"
+
+    export WRAPPER_TEST_TRACE="$TMPDIR/unsafe.trace"
+    export WRAPPER_TEST_EXIT_CODE=23
     set +e
     "${wrappers}/bin/pi-unsafe" "unsafe argument" 2> "$TMPDIR/unsafe.stderr"
     unsafe_status=$?
     set -e
     test "$unsafe_status" -eq 23
     printf '%s\n' "unsafe argument" > "$TMPDIR/unsafe.expected"
-    diff -u "$TMPDIR/unsafe.expected" "$NONO_TEST_TRACE"
+    diff -u "$TMPDIR/unsafe.expected" "$WRAPPER_TEST_TRACE"
     grep -F "UNSANDBOXED" "$TMPDIR/unsafe.stderr"
 
-    unset NONO_TEST_EXIT_CODE
+    unset WRAPPER_TEST_EXIT_CODE
     set +e
     "${wrappersWithMissingPi}/bin/pi" > "$TMPDIR/missing-executable.stdout" 2> "$TMPDIR/missing-executable.stderr"
     missing_status=$?

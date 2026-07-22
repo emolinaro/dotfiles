@@ -1,7 +1,12 @@
 {
   agentExecutables,
+  coreutils,
+  git,
+  homeDirectory,
   lib,
   nonoPackage,
+  profiles,
+  runCommand,
   symlinkJoin,
   writeShellApplication,
 }:
@@ -17,6 +22,10 @@ let
   relativeExecutables = builtins.filter (
     name: !(lib.hasPrefix "/" agentExecutables.${name})
   ) agentNames;
+  nonoConfig = runCommand "nono-agent-config" { } ''
+    mkdir -p "$out/nono"
+    ln -s ${profiles} "$out/nono/profiles"
+  '';
 
   mkNormalWrapper =
     name:
@@ -37,8 +46,9 @@ let
     writeShellApplication {
       inherit name;
       text = ''
-        profile_path="$HOME/.config/nono/profiles/${profile}.json"
+        profile_path=${lib.escapeShellArg "${profiles}/${profile}.json"}
         real_executable=${lib.escapeShellArg realExecutable}
+        configured_home=${lib.escapeShellArg homeDirectory}
 
         if [[ ! -r "$profile_path" ]]; then
           echo "error: missing Nono profile: $profile_path" >&2
@@ -48,11 +58,44 @@ let
           echo "error: real ${name} executable is unavailable: $real_executable" >&2
           exit 127
         fi
+        if [[ "''${HOME:-}" != "$configured_home" ]]; then
+          echo "error: refusing unexpected HOME: ''${HOME:-<unset>}" >&2
+          exit 78
+        fi
+
+        while IFS= read -r environment_entry; do
+          variable="''${environment_entry%%=*}"
+          if [[ "$variable" == GIT_* || "$variable" == NONO_* ]]; then
+            unset "$variable"
+          fi
+        done < <(${lib.getExe' coreutils "env"})
+        export NONO_NO_PACK_UPDATE_HINTS=1
+        export NONO_NO_UPDATE_CHECK=1
+        export XDG_CONFIG_HOME=${lib.escapeShellArg nonoConfig}
+
+        current_directory="$(pwd -P)"
+        if ! worktree_root="$(${lib.getExe git} -C "$current_directory" rev-parse --show-toplevel 2>/dev/null)" \
+          || [[ -z "$worktree_root" ]]; then
+          echo "error: ${name} must be launched inside a Git worktree" >&2
+          exit 78
+        fi
+        worktree_root="$(cd "$worktree_root" && pwd -P)"
+        if ! home_directory="$(cd "$configured_home" && pwd -P)"; then
+          echo "error: configured home is unavailable: $configured_home" >&2
+          exit 78
+        fi
+        if [[ "$worktree_root" == "/" \
+          || "$home_directory" == "$worktree_root" \
+          || "$home_directory" == "$worktree_root/"* ]]; then
+          echo "error: refusing to sandbox a Git worktree that contains HOME: $worktree_root" >&2
+          exit 78
+        fi
 
         exec ${lib.escapeShellArg (lib.getExe nonoPackage)} \
           run \
-          --profile ${lib.escapeShellArg profile} \
-          --workdir "$PWD" \
+          --profile "$profile_path" \
+          --allow "$worktree_root" \
+          --workdir "$current_directory" \
           -- \
           ${lib.escapeShellArgs ([ realExecutable ] ++ clientArguments)} \
           "$@"

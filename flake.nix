@@ -157,6 +157,7 @@
           nonoPackage = nonoPackageFor system;
         };
         nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
+          profiles = ./home/.config/nono/profiles;
           wrapperModule = ./packages/nono-agent-wrappers.nix;
         };
         nono-profiles = (pkgsFor system).callPackage ./tests/nono-profiles.nix {
