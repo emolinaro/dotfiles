@@ -2,10 +2,9 @@
   description = "dotfiles";
 
   inputs = {
-    # Use `github:NixOS/nixpkgs/nixpkgs-26.05-darwin` to use Nixpkgs 26.05.
+    # Keep the core Nix modules on matching release branches.
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     nixpkgs-linux.url = "github:NixOS/nixpkgs/nixos-26.05";
-    # Use `github:nix-darwin/nix-darwin/nix-darwin-26.05` to use Nixpkgs 26.05.
     nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -14,29 +13,25 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
-    # Pin Herdr independently so Ubuntu gets the upstream-supported Nix build.
-    herdr.url = "github:ogulcancelik/herdr/v0.7.3";
+    # Use Herdr independently so Ubuntu gets the upstream-supported Nix build.
+    herdr.url = "github:ogulcancelik/herdr";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
 
-    # Use Treehouse's upstream-supported package on macOS and Ubuntu.
-    treehouse.url = "github:kunchenguid/treehouse/v2.0.1";
-    treehouse.inputs.nixpkgs.follows = "nixpkgs";
-
-    # Pin the public Lavish skill; its CLI runs on demand through npx.
+    # Expose the public Lavish skill; its CLI runs on demand through npx.
     lavish = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.42";
+      url = "github:kunchenguid/lavish-axi";
       flake = false;
     };
 
     # Expose chrome-devtools-axi as a global agent skill; its CLI runs on demand through npx.
     chromeDevtoolsAxi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.26";
+      url = "github:kunchenguid/chrome-devtools-axi";
       flake = false;
     };
 
     # Expose gh-axi as a global agent skill; its CLI runs on demand through npx.
     ghAxi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.27";
+      url = "github:kunchenguid/gh-axi";
       flake = false;
     };
 
@@ -51,7 +46,7 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, treehouse, lavish, chromeDevtoolsAxi, ghAxi, gstack, superpowers }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-linux, herdr, lavish, chromeDevtoolsAxi, ghAxi, gstack, superpowers }:
   let
     envOr = name: fallback:
       let value = builtins.getEnv name;
@@ -77,7 +72,6 @@
         herdrPackage = herdr.packages.${system}.default;
         ghAxiSkill = "${ghAxi}/skills/gh-axi";
         lavishSkill = "${lavish}/skills/lavish";
-        treehousePackage = treehouse.packages.${system}.default;
         gstackRev = gstack.rev;
         superpowersSkill = "${superpowers}/skills";
         superpowersRev = superpowers.rev;
@@ -107,7 +101,6 @@
             herdrPackage = null;
             ghAxiSkill = "${ghAxi}/skills/gh-axi";
             lavishSkill = "${lavish}/skills/lavish";
-            treehousePackage = treehouse.packages.${config.nixpkgs.hostPlatform.system}.default;
             gstackRev = gstack.rev;
             superpowersSkill = "${superpowers}/skills";
             superpowersRev = superpowers.rev;

@@ -1,9 +1,10 @@
-{ chromeDevtoolsAxiSkill, config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, superpowersSkill, treehousePackage, username, ... }:
+{ chromeDevtoolsAxiSkill, config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, superpowersSkill, username, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
+  treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
   platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "/opt/homebrew/bin/herdr";
