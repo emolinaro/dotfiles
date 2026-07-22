@@ -1,0 +1,32 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-claude",
+    "version": "1.0.0",
+    "description": "Claude Code with repository-scoped access and no keychain grant",
+    "author": "dotfiles"
+  },
+  "groups": {
+    "include": [
+      {
+        "name": "claude_cache_linux",
+        "when": "linux"
+      }
+    ]
+  },
+  "filesystem": {
+    "allow": [
+      "$HOME/.claude",
+      "$HOME/.cache/claude",
+      "$HOME/.local/state/claude/locks"
+    ],
+    "read": [
+      "$HOME/.local/share/claude"
+    ],
+    "allow_file": [
+      "$HOME/.claude.json",
+      "$HOME/.claude.json.lock",
+      "$HOME/.claude.lock"
+    ]
+  }
+}

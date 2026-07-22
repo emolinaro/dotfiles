@@ -1,0 +1,14 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-pi",
+    "version": "1.0.0",
+    "description": "Pi with repository-scoped access",
+    "author": "dotfiles"
+  },
+  "filesystem": {
+    "allow": [
+      "$HOME/.pi"
+    ]
+  }
+}

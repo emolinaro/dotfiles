@@ -1,0 +1,96 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "dotfiles-agent-base",
+    "version": "1.0.0",
+    "description": "Shared sandbox boundary for terminal coding agents",
+    "author": "dotfiles"
+  },
+  "groups": {
+    "include": [
+      "node_runtime",
+      "python_runtime",
+      "rust_runtime",
+      "nix_runtime",
+      "git_config",
+      "unlink_protection",
+      {
+        "name": "linux_sysfs_read",
+        "when": "linux"
+      }
+    ]
+  },
+  "security": {
+    "signal_mode": "isolated",
+    "capability_elevation": false
+  },
+  "filesystem": {
+    "allow": [
+      "@git:common-dir",
+      "$HOME/.gstack/analytics",
+      "$HOME/.gstack/projects",
+      "$HOME/.gstack/sessions",
+      "$HOME/.gstack/security"
+    ],
+    "read": [
+      "@git:config-files",
+      "@git:hooks-path",
+      "$HOME/.agents",
+      "$HOME/.gstack/repos/gstack",
+      "$HOME/.config/herdr",
+      "$HOME/.dotfiles/home/.config/herdr"
+    ],
+    "read_file": [
+      "$HOME/.dotfiles/home/AGENTS.md",
+      "$HOME/.dotfiles/home/.claude/settings.json"
+    ],
+    "deny": [
+      "/var/run/docker.sock",
+      "/run/docker.sock",
+      "$HOME/.docker/run/docker.sock",
+      "$HOME/.orbstack/run/docker.sock"
+    ],
+    "unix_socket": [
+      "$HOME/.cache/herdr/herdr.sock",
+      "$HOME/.config/herdr/herdr.sock"
+    ]
+  },
+  "linux": {
+    "af_unix_mediation": "pathname"
+  },
+  "network": {
+    "block": false
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "environment": {
+    "deny_vars": [
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY",
+      "GEMINI_API_KEY",
+      "AWS_*",
+      "AZURE_*",
+      "GOOGLE_*",
+      "GH_TOKEN",
+      "GITHUB_TOKEN",
+      "GITLAB_TOKEN",
+      "KUBECONFIG",
+      "DOCKER_HOST",
+      "CONTAINER_HOST",
+      "SSH_AUTH_SOCK"
+    ]
+  },
+  "rollback": {
+    "exclude_patterns": [
+      "node_modules",
+      ".next",
+      "__pycache__",
+      "target"
+    ],
+    "exclude_globs": [
+      "*.tmp.[0-9]*.[0-9]*"
+    ]
+  },
+  "interactive": true
+}

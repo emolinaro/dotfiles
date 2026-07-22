@@ -1,4 +1,19 @@
-{ chromeDevtoolsAxiSkill, config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, superpowersSkill, username, ... }:
+{
+  chromeDevtoolsAxiSkill,
+  config,
+  ghAxiSkill,
+  gstackRev,
+  herdrPackage,
+  homeDirectory,
+  lavishSkill,
+  lib,
+  nonoPackage,
+  pkgs,
+  superpowersRev,
+  superpowersSkill,
+  username,
+  ...
+}:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -8,6 +23,30 @@ let
   ezaIcons = if isLinux then "never" else "always";
   platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "/opt/homebrew/bin/herdr";
+  agentExecutables =
+    if isLinux then
+      {
+        claude = lib.getExe pkgs.claude-code;
+        codex = lib.getExe pkgs.codex;
+        opencode = lib.getExe pkgs.opencode;
+        pi = lib.getExe pkgs.pi-coding-agent;
+      }
+    else
+      {
+        claude = "/opt/homebrew/bin/claude";
+        codex = "/opt/homebrew/bin/codex";
+        opencode = "/opt/homebrew/bin/opencode";
+        pi = "/opt/homebrew/bin/pi";
+      };
+  agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
+    inherit agentExecutables nonoPackage;
+  };
+  nonoProfileNames = [
+    "dotfiles-claude"
+    "dotfiles-codex"
+    "dotfiles-opencode"
+    "dotfiles-pi"
+  ];
 in
 
 {
@@ -18,71 +57,73 @@ in
   # Avoid re-evaluating every Home Manager option to generate options.json.
   manual.manpages.enable = false;
 
-  home.packages = with pkgs; [
-    # cli i use constantly
-    basedpyright
-    bash-language-server
-    btop
-    bun
-    coreutils # gstack uses gtimeout to bound nested Codex calls
-    delta
-    delve
-    dive
-    eza
-    fd        # fast find
-    fzf       # fuzzy finder
-    gh
-    git
-    gnumake
-    go
-    golangci-lint
-    gopls
-    gotools
-    grpcurl
-    hadolint
-    highlight
-    htop
-    httpie
-    jq        # json on the command line
-    just
-    k9s
-    kubectl
-    kubelogin-oidc
-    kubectx
-    kubernetes-helm
-    lazygit
-    neovim
-    nodejs
-    noMistakesPackage
-    pre-commit
-    python3
-    ripgrep   # fast search
-    ruff
-    shellcheck
-    shfmt
-    stern
-    tmux
-    tree
-    treehousePackage
-    tree-sitter
-    uv
-    watchexec
-    yq-go
-  ] ++ lib.optionals isLinux [
-    pkgs.claude-code
-    pkgs.codex
-    pkgs.docker-client
-    pkgs.docker-compose
-    pkgs.gcc # nvim-treesitter compiles parsers with cc
-    herdrPackage
-    pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
-    pkgs.opencode
-    pkgs.pi-coding-agent
-    pkgs.procps
-  ] ++ [
-    # the font everything renders in
-    nerd-fonts.hack
-  ];
+  home.packages =
+    with pkgs;
+    [
+      # cli i use constantly
+      basedpyright
+      bash-language-server
+      btop
+      bun
+      coreutils # gstack uses gtimeout to bound nested Codex calls
+      delta
+      delve
+      dive
+      eza
+      fd # fast find
+      fzf # fuzzy finder
+      gh
+      git
+      gnumake
+      go
+      golangci-lint
+      gopls
+      gotools
+      grpcurl
+      hadolint
+      highlight
+      htop
+      httpie
+      jq # json on the command line
+      just
+      k9s
+      kubectl
+      kubelogin-oidc
+      kubectx
+      kubernetes-helm
+      lazygit
+      neovim
+      nodejs
+      nonoPackage
+      noMistakesPackage
+      pre-commit
+      python3
+      ripgrep # fast search
+      ruff
+      shellcheck
+      shfmt
+      stern
+      tmux
+      tree
+      treehousePackage
+      tree-sitter
+      uv
+      watchexec
+      yq-go
+      agentWrappers
+    ]
+    ++ lib.optionals isLinux [
+      pkgs.docker-client
+      pkgs.docker-compose
+      pkgs.gcc # nvim-treesitter compiles parsers with cc
+      herdrPackage
+      pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
+      pkgs.procps
+    ]
+    ++ [
+      # the font everything renders in
+      nerd-fonts.hack
+    ];
   fonts.fontconfig.enable = true;
   home.sessionVariables = {
     EDITOR = "nvim";
@@ -91,15 +132,18 @@ in
     # GNU ls colors: directories blue, symlinks cyan, executables green.
     LS_COLORS = "di=1;34:ln=1;36:ex=1;32:fi=0";
     NO_MISTAKES_NO_UPDATE_CHECK = "1";
-  } // lib.optionalAttrs isLinux {
+    NONO_NO_PACK_UPDATE_HINTS = "1";
+    NONO_NO_UPDATE_CHECK = "1";
+  }
+  // lib.optionalAttrs isLinux {
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
     HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
   };
 
   programs.zsh = {
     enable = true;
-    autosuggestion.enable = true;      # ghost text from history
-    syntaxHighlighting.enable = true;  # commands turn green when valid
+    autosuggestion.enable = true; # ghost text from history
+    syntaxHighlighting.enable = true; # commands turn green when valid
     initContent = ''
       ${lib.optionalString isLinux ''
         # Set a consistent theme in xterm-compatible remote terminals.
@@ -416,18 +460,47 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/treehouse";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
+  home.file.".config/nono/profiles".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nono/profiles";
 
-  home.activation.treeSitterParsers = lib.mkIf isLinux (lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+  home.activation.treeSitterParsers = lib.mkIf isLinux (
+    lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      if [[ -z "''${DRY_RUN:-}" ]]; then
+        export PATH="${
+          lib.makeBinPath [
+            pkgs.curl
+            pkgs.gcc
+            pkgs.git
+            pkgs.tree-sitter
+          ]
+        }:$PATH"
+        ${pkgs.neovim}/bin/nvim --headless "+Lazy! build nvim-treesitter" +qa
+      fi
+    ''
+  );
+
+  home.activation.nonoProfiles = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
-      export PATH="${lib.makeBinPath [ pkgs.curl pkgs.gcc pkgs.git pkgs.tree-sitter ]}:$PATH"
-      ${pkgs.neovim}/bin/nvim --headless "+Lazy! build nvim-treesitter" +qa
+      for profile in ${lib.escapeShellArgs nonoProfileNames}; do
+        ${lib.getExe nonoPackage} profile validate --strict \
+          "$HOME/.config/nono/profiles/$profile.json"
+      done
     fi
-  '');
+  '';
 
   # Keep gstack writable because it builds platform-specific tooling.
   home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
     set -euo pipefail
-    export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.gawk pkgs.git pkgs.jq pkgs.perl ]}:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+    export PATH="${
+      lib.makeBinPath [
+        pkgs.bun
+        pkgs.coreutils
+        pkgs.gawk
+        pkgs.git
+        pkgs.jq
+        pkgs.perl
+      ]
+    }:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
 
     gstack_dir="$HOME/.gstack/repos/gstack"
     if [[ ! -d "$gstack_dir/.git" ]]; then
@@ -494,7 +567,7 @@ in
   '';
 
   # Install Herdr's official hooks/plugins after the managed agent configs exist.
-  home.activation.herdrIntegrations = lib.hm.dag.entryAfter [ "codexExtensions" ] ''
+  home.activation.herdrIntegrations = lib.hm.dag.entryAfter [ "codexExtensions" "nonoProfiles" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
       mkdir -p "$HOME/.pi/agent/extensions"
       ${herdrCommand} integration install claude

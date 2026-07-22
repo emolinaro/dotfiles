@@ -1,0 +1,27 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-opencode",
+    "version": "1.0.0",
+    "description": "OpenCode with repository-scoped access and no keychain grant",
+    "author": "dotfiles"
+  },
+  "groups": {
+    "include": [
+      {
+        "name": "opencode_linux",
+        "when": "linux"
+      }
+    ]
+  },
+  "filesystem": {
+    "allow": [
+      "$HOME/.opencode",
+      "$HOME/.config/opencode",
+      "$HOME/.cache/opencode",
+      "$HOME/.local/share/opencode",
+      "$HOME/.local/share/opentui",
+      "$HOME/.local/state/opencode"
+    ]
+  }
+}

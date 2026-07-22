@@ -1,0 +1,14 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-codex",
+    "version": "1.0.0",
+    "description": "Codex with repository-scoped access and no keychain grant",
+    "author": "dotfiles"
+  },
+  "filesystem": {
+    "allow": [
+      "$HOME/.codex"
+    ]
+  }
+}
