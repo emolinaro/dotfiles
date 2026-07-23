@@ -9,6 +9,10 @@
   "filesystem": {
     "allow": [
       "$HOME/.pi"
+    ],
+    "deny": [
+      "$HOME/.pi/agent/AGENTS.md",
+      "$HOME/.pi/agent/extensions"
     ]
   }
 }

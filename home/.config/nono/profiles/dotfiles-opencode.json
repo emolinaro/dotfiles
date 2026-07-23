@@ -22,6 +22,12 @@
       "$HOME/.local/share/opencode",
       "$HOME/.local/share/opentui",
       "$HOME/.local/state/opencode"
+    ],
+    "deny": [
+      "$HOME/.config/opencode/AGENTS.md",
+      "$HOME/.config/opencode/opencode.json",
+      "$HOME/.config/opencode/plugins",
+      "$HOME/.config/opencode/skills"
     ]
   }
 }

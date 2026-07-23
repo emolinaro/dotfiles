@@ -26,8 +26,8 @@
   },
   "filesystem": {
     "allow": [
-      "@git:common-dir",
-      "$HOME/.gstack"
+      "$HOME/.gstack",
+      "$TMPDIR"
     ],
     "read": [
       "@git:config-files",
@@ -42,14 +42,15 @@
       "$HOME/.dotfiles/home/.claude/settings.json"
     ],
     "deny": [
+      "/tmp",
+      "/private/tmp",
+      "/private/var/folders",
+      "/var/folders",
+      "$SSH_AUTH_SOCK",
       "/var/run/docker.sock",
       "/run/docker.sock",
       "$HOME/.docker/run/docker.sock",
       "$HOME/.orbstack/run/docker.sock"
-    ],
-    "unix_socket": [
-      "$HOME/.cache/herdr/herdr.sock",
-      "$HOME/.config/herdr/herdr.sock"
     ]
   },
   "linux": {
@@ -67,7 +68,6 @@
       "COLORTERM",
       "EDITOR",
       "FORCE_COLOR",
-      "HERDR_SOCKET_PATH",
       "HOME",
       "IN_NIX_SHELL",
       "LANG",

@@ -24,8 +24,9 @@ let
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
-  platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
-  herdrCommand = if isLinux then lib.getExe herdrPackage else "/opt/homebrew/bin/herdr";
+  homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
+  platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
+  herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
   agentExecutables =
     if isLinux then
       {
@@ -36,10 +37,10 @@ let
       }
     else
       {
-        claude = "/opt/homebrew/bin/claude";
-        codex = "/opt/homebrew/bin/codex";
-        opencode = "/opt/homebrew/bin/opencode";
-        pi = "/opt/homebrew/bin/pi";
+        claude = "${homebrewPrefix}/bin/claude";
+        codex = "${homebrewPrefix}/bin/codex";
+        opencode = "${homebrewPrefix}/bin/opencode";
+        pi = "${homebrewPrefix}/bin/pi";
       };
   agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
     inherit agentExecutables homeDirectory nonoPackage;

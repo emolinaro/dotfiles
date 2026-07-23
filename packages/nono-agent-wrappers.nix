@@ -1,4 +1,5 @@
 {
+  bash,
   agentExecutables,
   coreutils,
   git,
@@ -9,6 +10,7 @@
   runCommand,
   symlinkJoin,
   writeShellApplication,
+  writeTextFile,
 }:
 
 let
@@ -43,9 +45,14 @@ let
         else
           [ ];
     in
-    writeShellApplication {
+    writeTextFile {
       inherit name;
+      destination = "/bin/${name}";
+      executable = true;
       text = ''
+        #!${lib.getExe bash} -p
+        set -euo pipefail
+
         profile_path=${lib.escapeShellArg "${profiles}/${profile}.json"}
         real_executable=${lib.escapeShellArg realExecutable}
         configured_home=${lib.escapeShellArg homeDirectory}
@@ -65,10 +72,13 @@ let
 
         while IFS= read -r environment_entry; do
           variable="''${environment_entry%%=*}"
-          if [[ "$variable" == GIT_* || "$variable" == NONO_* || "$variable" == TMPDIR || "$variable" == TMP || "$variable" == TEMP ]]; then
+          if [[ "$variable" == BASH_ENV || "$variable" == GIT_* || "$variable" == NONO_* || "$variable" == TMPDIR || "$variable" == TMP || "$variable" == TEMP ]]; then
             unset "$variable"
           fi
         done < <(${lib.getExe' coreutils "env"})
+        session_temp_root="$configured_home/.cache/nono"
+        mkdir -p "$session_temp_root"
+        export TMPDIR="$(mktemp -d "$session_temp_root/session.XXXXXXXXXX")"
         export NONO_NO_PACK_UPDATE_HINTS=1
         export NONO_NO_UPDATE_CHECK=1
         export XDG_CONFIG_HOME=${lib.escapeShellArg nonoConfig}
