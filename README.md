@@ -16,15 +16,24 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
-version-pinned Nono sandbox by default. The current Git worktree and an
-ephemeral per-session client home are writable. Trusted agent instructions,
-skills, plugins, and configuration are staged into that home while their host
-originals remain read-only. Of each client's durable state, only its dedicated
-authentication JSON file is copied into a separate persistent store and
-synchronized with its legacy client path using generation checks. Git metadata
-is isolated per session, then refs and the index are reconciled only if the
-host repository has not changed concurrently.
+Terminal launches of `claude`, `codex`, `opencode`, and `pi` use the upstream
+clients directly. To run an agent inside the version-pinned Nono sandbox, use:
+
+```sh
+claude-nono
+codex-nono
+opencode-nono
+pi-nono
+```
+
+The Nono wrappers make the current Git worktree and an ephemeral per-session
+client home writable. Trusted agent instructions, skills, plugins, and
+configuration are staged into that home while their host originals remain
+read-only. Of each client's durable state, only its dedicated authentication
+JSON file is copied into a separate persistent store and synchronized with its
+legacy client path using generation checks. Git metadata is isolated per
+session, then refs and the index are reconciled only if the host repository has
+not changed concurrently.
 Parallel linked-worktree sessions use separate lifecycle locks and serialize
 only snapshots and reconciliation against their shared Git directory. On
 macOS, the real `.git` path remains denied for the full sandbox lifetime while
@@ -51,22 +60,17 @@ Interrupted Git sessions are restored under a per-worktree lock and their
 session state is quarantined under `~/.cache/nono/recovery/` for manual
 inspection. Reflog-only recovery refs expire after 30 days.
 
-Explicit host commands remain available for trusted work that cannot run in
-the sandbox:
+Sign in with the ordinary client before its first Nono session. The Nono
+wrapper imports that client's authentication JSON and synchronizes later
+changes. If only the host credential file disappears, the next Nono session
+restores it from the persistent store. To clear both copies, perform the
+client's logout flow from inside its `*-nono` session.
 
-```sh
-claude-unsafe
-codex-unsafe
-opencode-unsafe
-pi-unsafe
-```
-
-Each command prints an `UNSANDBOXED` warning before launching the real client.
 On macOS, a subscription-authenticated client that stores or refreshes
-credentials in the login keychain must use its unsafe wrapper for the complete
-session, not only for login. The normal wrapper intentionally cannot reach the
+credentials in the login keychain must use the ordinary direct client for the
+complete session. The Nono wrapper intentionally cannot reach the general
 keychain. Desktop applications and editor-launched processes do not pass
-through these terminal wrappers.
+through the terminal wrappers.
 
 Nono uses the official release tarballs with a separate SHA-256 hash for each
 supported target. To update it, change the version and target hashes in
