@@ -17,10 +17,14 @@ pull request, merge, and deployment actions always require explicit approval.
 ## Agent sandbox
 
 Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
-version-pinned Nono sandbox by default. The current Git worktree and each
-client's own state are writable. Launches outside a Git worktree fail closed.
-SSH keys, cloud configuration, browser data, unrelated repositories, the
-general macOS keychain, and container sockets are not granted.
+version-pinned Nono sandbox by default. The current Git worktree and an
+ephemeral per-session client home are writable. Trusted agent instructions,
+skills, plugins, and configuration are linked into that home read-only.
+Only each client's dedicated authentication JSON file is copied through a
+separate persistent store.
+Launches outside a Git worktree fail closed. SSH keys, cloud configuration,
+browser data, unrelated repositories, the general macOS keychain, and
+container sockets are not granted.
 
 The first rollout restricts filesystem access, ambient environment variables,
 and Unix sockets. Outbound IP networking remains unrestricted until each
@@ -39,9 +43,11 @@ pi-unsafe
 ```
 
 Each command prints an `UNSANDBOXED` warning before launching the real client.
-For example, use `codex-unsafe login` if macOS login requires keychain access;
-do not widen the normal profile automatically. Desktop applications and
-editor-launched processes do not pass through these terminal wrappers.
+On macOS, a subscription-authenticated client that stores or refreshes
+credentials in the login keychain must use its unsafe wrapper for the complete
+session, not only for login. The normal wrapper intentionally cannot reach the
+keychain. Desktop applications and editor-launched processes do not pass
+through these terminal wrappers.
 
 Nono uses the official release tarballs with a separate SHA-256 hash for each
 supported target. To update it, change the version, target hashes, and URLs in
@@ -51,21 +57,25 @@ supported target. To update it, change the version, target hashes, and URLs in
 nix flake check --all-systems --impure --no-build
 ```
 
-Then run the following native builds on Apple Silicon macOS, x86_64 Ubuntu,
-and aarch64 Ubuntu so every release archive, executable, and Linux ELF patch is
-exercised on its target platform:
+Then run the following native builds on Apple Silicon macOS, Intel macOS,
+x86_64 Ubuntu, and aarch64 Ubuntu so every release archive, executable, and
+Linux ELF patch is exercised on its target platform:
 
 ```sh
 system="$(nix eval --impure --raw --expr builtins.currentSystem)"
 nix build \
   ".#checks.$system.nono-package" \
   ".#checks.$system.nono-agent-wrappers" \
-  ".#checks.$system.nono-profiles"
+  ".#checks.$system.nono-profiles" \
+  ".#checks.$system.nono-runtime-driver"
+nix run ".#nono-runtime-test"
 ```
 
 ## Supported systems
 
 - macOS on Apple Silicon, by default.
+- Intel Mac: set `nixpkgs.hostPlatform = "x86_64-darwin";` in
+  `configuration.nix`.
 - Headless Ubuntu 24.04 on x86_64 or ARM64. The Ubuntu bootstrap requires a
   non-root user with sudo access and selects the correct architecture automatically.
 
@@ -182,6 +192,13 @@ nix flake update gstack
 nix flake update superpowers
 nix flake update nixpkgs nixpkgs-linux
 ```
+
+The first rebuild after this layout change moves only the managed gstack
+checkout from `~/.gstack/repos/gstack` to
+`~/.local/share/gstack/repos/gstack`. Other repositories under
+`~/.gstack/repos` remain in place. Home Manager dry runs print the planned
+move, and recovery is a direct move back to the original path before the next
+rebuild.
 
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates

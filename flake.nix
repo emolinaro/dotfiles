@@ -62,6 +62,7 @@
       superpowers,
     }:
     let
+      agentRegistry = import ./packages/nono-agents.nix;
       envOr =
         name: fallback:
         let
@@ -94,6 +95,12 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      nonoRuntimeTestFor =
+        system:
+        (pkgsFor system).callPackage ./tests/nono-runtime.nix {
+          nonoPackage = nonoPackageFor system;
+          profiles = ./home/.config/nono/profiles;
+        };
       mkUbuntuHome =
         system:
         home-manager.lib.homeManagerConfiguration {
@@ -151,7 +158,14 @@
       };
       packages = forAllSystems (system: {
         nono = nonoPackageFor system;
+        nono-runtime-test = nonoRuntimeTestFor system;
         default = nonoPackageFor system;
+      });
+      apps = forAllSystems (system: {
+        nono-runtime-test = {
+          type = "app";
+          program = "${nonoRuntimeTestFor system}/bin/nono-runtime-test";
+        };
       });
       checks = forAllSystems (system: {
         gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
@@ -161,13 +175,16 @@
           nonoPackage = nonoPackageFor system;
         };
         nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
+          inherit agentRegistry;
           profiles = ./home/.config/nono/profiles;
           wrapperModule = ./packages/nono-agent-wrappers.nix;
         };
         nono-profiles = (pkgsFor system).callPackage ./tests/nono-profiles.nix {
+          inherit agentRegistry;
           nonoPackage = nonoPackageFor system;
           profiles = ./home/.config/nono/profiles;
         };
+        nono-runtime-driver = nonoRuntimeTestFor system;
       });
     };
 }

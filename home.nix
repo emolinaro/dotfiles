@@ -16,6 +16,8 @@
 }:
 
 let
+  agentRegistry = import ./packages/nono-agents.nix;
+  agentNames = builtins.attrNames agentRegistry;
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   gstackCheckout = "${config.home.homeDirectory}/.local/share/gstack/repos/gstack";
   gstackCheckoutMigration = pkgs.callPackage ./packages/gstack-checkout-migration.nix { };
@@ -27,31 +29,25 @@ let
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
-  agentExecutables =
-    if isLinux then
-      {
-        claude = lib.getExe pkgs.claude-code;
-        codex = lib.getExe pkgs.codex;
-        opencode = lib.getExe pkgs.opencode;
-        pi = lib.getExe pkgs.pi-coding-agent;
-      }
-    else
-      {
-        claude = "${homebrewPrefix}/bin/claude";
-        codex = "${homebrewPrefix}/bin/codex";
-        opencode = "${homebrewPrefix}/bin/opencode";
-        pi = "${homebrewPrefix}/bin/pi";
-      };
+  linuxAgentExecutables = {
+    claude = lib.getExe pkgs.claude-code;
+    codex = lib.getExe pkgs.codex;
+    opencode = lib.getExe pkgs.opencode;
+    pi = lib.getExe pkgs.pi-coding-agent;
+  };
+  agentExecutables = lib.genAttrs agentNames (
+    name: if isLinux then linuxAgentExecutables.${name} else "${homebrewPrefix}/bin/${name}"
+  );
   agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
-    inherit agentExecutables homeDirectory nonoPackage;
+    inherit
+      agentExecutables
+      agentRegistry
+      homeDirectory
+      nonoPackage
+      ;
     profiles = nonoProfiles;
   };
-  nonoProfileNames = [
-    "dotfiles-claude"
-    "dotfiles-codex"
-    "dotfiles-opencode"
-    "dotfiles-pi"
-  ];
+  nonoProfileNames = map (name: agentRegistry.${name}.profile) agentNames;
 in
 
 {
@@ -485,6 +481,9 @@ in
 
   home.activation.nonoProfiles = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
+      export DOTFILES_AGENT_HOME="$HOME/.cache/nono/profile-validation"
+      export DOTFILES_HOST_HOME="$HOME"
+      export SSH_AUTH_SOCK="''${SSH_AUTH_SOCK:-/nonexistent/nono-ssh-agent.sock}"
       for profile in ${lib.escapeShellArgs nonoProfileNames}; do
         ${lib.getExe nonoPackage} profile validate --strict \
           "${nonoProfiles}/$profile.json"
@@ -496,6 +495,8 @@ in
     set -euo pipefail
     if [[ -z "''${DRY_RUN:-}" ]]; then
       ${lib.getExe gstackCheckoutMigration} ${lib.escapeShellArg gstackCheckout}
+    else
+      ${lib.getExe gstackCheckoutMigration} --dry-run ${lib.escapeShellArg gstackCheckout}
     fi
   '';
 

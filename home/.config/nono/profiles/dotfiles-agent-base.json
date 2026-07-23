@@ -18,39 +18,111 @@
         "name": "linux_sysfs_read",
         "when": "linux"
       }
+    ],
+    "exclude": [
+      "system_write_linux",
+      "system_write_macos"
     ]
   },
   "security": {
     "signal_mode": "isolated",
     "capability_elevation": false
   },
+  "allow_parent_of_protected": true,
   "filesystem": {
     "allow": [
-      "$HOME/.gstack",
+      "$DOTFILES_AGENT_HOME/.gstack",
       "$TMPDIR"
     ],
     "read": [
       "@git:config-files",
       "@git:hooks-path",
-      "$HOME/.agents",
-      "$HOME/.local/share/gstack/repos/gstack",
-      "$HOME/.config/herdr",
-      "$HOME/.dotfiles/home/.config/herdr"
+      "$DOTFILES_HOST_HOME/.agents",
+      "$DOTFILES_HOST_HOME/.local/share/gstack/repos/gstack"
+    ],
+    "write": [
+      {
+        "path": "/dev/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/pts",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/self/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/fd",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/pts",
+        "when": "macos"
+      }
+    ],
+    "write_file": [
+      {
+        "path": "/dev/null",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/zero",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/full",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/tty",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/stdout",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/stderr",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/null",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/zero",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/tty",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/stdout",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/stderr",
+        "when": "macos"
+      }
     ],
     "read_file": [
-      "$HOME/.dotfiles/home/AGENTS.md",
-      "$HOME/.dotfiles/home/.claude/settings.json"
+      "$DOTFILES_HOST_HOME/.dotfiles/home/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.dotfiles/home/.claude/settings.json"
     ],
     "deny": [
-      "/tmp",
-      "/private/tmp",
-      "/private/var/folders",
-      "/var/folders",
-      "$SSH_AUTH_SOCK",
+      {
+        "path": "$SSH_AUTH_SOCK",
+        "when": "macos"
+      },
+      "$DOTFILES_HOST_HOME/.cache/herdr/herdr.sock",
+      "$DOTFILES_HOST_HOME/.config/herdr/herdr.sock",
       "/var/run/docker.sock",
       "/run/docker.sock",
-      "$HOME/.docker/run/docker.sock",
-      "$HOME/.orbstack/run/docker.sock"
+      "$DOTFILES_HOST_HOME/.docker/run/docker.sock",
+      "$DOTFILES_HOST_HOME/.orbstack/run/docker.sock"
     ]
   },
   "linux": {
@@ -89,22 +161,15 @@
       "SHLVL",
       "SSL_CERT_DIR",
       "SSL_CERT_FILE",
-      "TEMP",
       "TERM",
       "TERMINFO",
       "TERMINFO_DIRS",
       "TERM_PROGRAM",
       "TERM_PROGRAM_VERSION",
-      "TMP",
       "TMPDIR",
       "TZ",
       "USER",
-      "VISUAL",
-      "XDG_CACHE_HOME",
-      "XDG_CONFIG_HOME",
-      "XDG_DATA_HOME",
-      "XDG_RUNTIME_DIR",
-      "XDG_STATE_HOME"
+      "VISUAL"
     ],
     "deny_vars": [
       "ANTHROPIC_*",
@@ -130,7 +195,12 @@
       "VAULT_*"
     ],
     "set_vars": {
-      "XDG_CONFIG_HOME": "$HOME/.config"
+      "HOME": "$HOME",
+      "XDG_CACHE_HOME": "$HOME/.cache",
+      "XDG_CONFIG_HOME": "$HOME/.config",
+      "XDG_DATA_HOME": "$HOME/.local/share",
+      "XDG_RUNTIME_DIR": "$HOME/.run",
+      "XDG_STATE_HOME": "$HOME/.local/state"
     }
   },
   "rollback": {

@@ -3,35 +3,26 @@
   "meta": {
     "name": "dotfiles-claude",
     "version": "1.0.0",
-    "description": "Claude Code with repository-scoped access",
+    "description": "Claude Code with isolated session state",
     "author": "dotfiles"
-  },
-  "groups": {
-    "include": [
-      {
-        "name": "claude_cache_linux",
-        "when": "linux"
-      }
-    ]
   },
   "filesystem": {
     "allow": [
-      "$HOME/.claude",
-      "$HOME/.cache/claude",
-      "$HOME/.local/state/claude/locks"
+      "$DOTFILES_AGENT_HOME/.claude",
+      "$DOTFILES_AGENT_HOME/.cache/claude",
+      "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs",
+      "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
     ],
     "read": [
-      "$HOME/.local/share/claude"
+      "$DOTFILES_AGENT_HOME/.local/share/claude",
+      "$DOTFILES_HOST_HOME/.claude/CLAUDE.md",
+      "$DOTFILES_HOST_HOME/.claude/settings.json",
+      "$DOTFILES_HOST_HOME/.claude/skills"
     ],
     "allow_file": [
-      "$HOME/.claude.json",
-      "$HOME/.claude.json.lock",
-      "$HOME/.claude.lock"
-    ],
-    "deny": [
-      "$HOME/.claude/hooks",
-      "$HOME/.claude/plugins",
-      "$HOME/.claude/settings.json"
+      "$DOTFILES_AGENT_HOME/.claude.json",
+      "$DOTFILES_AGENT_HOME/.claude.json.lock",
+      "$DOTFILES_AGENT_HOME/.claude.lock"
     ]
   }
 }

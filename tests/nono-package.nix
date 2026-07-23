@@ -14,6 +14,6 @@ assert pkgs.lib.assertMsg linuxIsPatched
 pkgs.runCommand "nono-package-test" { nativeBuildInputs = [ nonoPackage ]; } ''
   set -euo pipefail
 
-  test "$(nono --version)" = "nono 0.69.0"
+  test "$(nono --version)" = "nono ${nonoPackage.version}"
   touch "$out"
 ''
