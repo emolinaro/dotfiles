@@ -19,11 +19,12 @@ pull request, merge, and deployment actions always require explicit approval.
 Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
 version-pinned Nono sandbox by default. The current Git worktree and an
 ephemeral per-session client home are writable. Trusted agent instructions,
-skills, plugins, and configuration are staged into that home read-only.
-Only each client's dedicated authentication JSON file is copied through a
-separate persistent store and synchronized with its legacy client path using
-generation checks. Git metadata is isolated per session, then refs and the
-index are reconciled only if the host repository has not changed concurrently.
+skills, plugins, and configuration are staged into that home while their host
+originals remain read-only. Of each client's durable state, only its dedicated
+authentication JSON file is copied into a separate persistent store and
+synchronized with its legacy client path using generation checks. Git metadata
+is isolated per session, then refs and the index are reconciled only if the
+host repository has not changed concurrently.
 Parallel linked-worktree sessions use separate lifecycle locks and serialize
 only snapshots and reconciliation against their shared Git directory. On
 macOS, the real `.git` path remains denied for the full sandbox lifetime while
@@ -68,7 +69,7 @@ keychain. Desktop applications and editor-launched processes do not pass
 through these terminal wrappers.
 
 Nono uses the official release tarballs with a separate SHA-256 hash for each
-supported target. To update it, change the version, target hashes, and URLs in
+supported target. To update it, change the version and target hashes in
 `packages/nono.nix`. First evaluate every target from any supported host:
 
 ```sh
