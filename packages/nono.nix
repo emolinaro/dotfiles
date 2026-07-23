@@ -14,6 +14,10 @@ let
         target = "aarch64-apple-darwin";
         hash = "sha256-gf9O/2Wpds2hAu+B7pb/n4Zo95iA++tr/g+QNd+QPwU=";
       };
+      x86_64-darwin = {
+        target = "x86_64-apple-darwin";
+        hash = "sha256-4fBOlvQdr0vwFJTgGy+c2EpDsnmfwJCt9iuZ+8hHyiQ=";
+      };
       aarch64-linux = {
         target = "aarch64-unknown-linux-gnu";
         hash = "sha256-rcBz9c2gFBHEZnNF9PBN1AAv2rSswcNEvYba4d4hkWA=";
@@ -59,6 +63,7 @@ stdenvNoCC.mkDerivation {
     mainProgram = "nono";
     platforms = [
       "aarch64-darwin"
+      "x86_64-darwin"
       "aarch64-linux"
       "x86_64-linux"
     ];

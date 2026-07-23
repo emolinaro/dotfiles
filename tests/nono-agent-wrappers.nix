@@ -24,6 +24,10 @@ let
         echo "ambient Git or Nono policy variable reached Nono" >&2
         exit 1
       fi
+      if [[ -n "''${TMPDIR:-}" || -n "''${TMP:-}" || -n "''${TEMP:-}" ]]; then
+        echo "ambient temporary-directory variable reached Nono" >&2
+        exit 1
+      fi
       if [[ "''${XDG_CONFIG_HOME:-}" != /nix/store/* ]]; then
         echo "Nono config is not store-backed: ''${XDG_CONFIG_HOME:-<unset>}" >&2
         exit 1

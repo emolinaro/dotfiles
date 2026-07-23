@@ -5,7 +5,7 @@
   nix.enable = false;
 
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.hostPlatform = "aarch64-darwin"; # Nono agent wrappers require Apple Silicon.
+  nixpkgs.hostPlatform = "aarch64-darwin"; # use x86_64-darwin for Intel CPU
 
   # Avoid re-evaluating all nix-darwin options to generate the local manual and options.json.
   documentation.enable = false;

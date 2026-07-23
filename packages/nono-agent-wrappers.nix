@@ -65,7 +65,7 @@ let
 
         while IFS= read -r environment_entry; do
           variable="''${environment_entry%%=*}"
-          if [[ "$variable" == GIT_* || "$variable" == NONO_* ]]; then
+          if [[ "$variable" == GIT_* || "$variable" == NONO_* || "$variable" == TMPDIR || "$variable" == TMP || "$variable" == TEMP ]]; then
             unset "$variable"
           fi
         done < <(${lib.getExe' coreutils "env"})
