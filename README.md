@@ -24,6 +24,11 @@ Only each client's dedicated authentication JSON file is copied through a
 separate persistent store and synchronized with its legacy client path using
 generation checks. Git metadata is isolated per session, then refs and the
 index are reconciled only if the host repository has not changed concurrently.
+Launch from a linked worktree when a repository has registered linked
+worktrees. Main-checkout launches fail closed so the shared Git directory never
+moves out from under another worktree. Active merge, rebase, cherry-pick,
+revert, bisect, shallow, sparse-checkout, split-index, and submodule states are
+also rejected before isolation begins.
 Launches outside a Git worktree fail closed. SSH keys, cloud configuration,
 browser data, unrelated repositories, the general macOS keychain, and
 container sockets are not granted.

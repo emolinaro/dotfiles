@@ -40,6 +40,9 @@ pkgs.runCommand "nono-profiles-test"
       and (.filesystem.unix_socket // []) == []
       and .workdir.access == "none"
       and (.groups.exclude | contains([
+        "homebrew_linux",
+        "homebrew_macos",
+        "system_read_linux_core",
         "system_read_macos",
         "system_write_linux",
         "system_write_macos"
@@ -66,9 +69,13 @@ pkgs.runCommand "nono-profiles-test"
         "/dev/fd"
       ]))
       and (.filesystem.write | map(if type == "object" then .path else . end) | index("/dev/pts") == null)
+      and (.filesystem.read | map(if type == "object" then .path else . end) | index("/dev/pts") == null)
       and (.filesystem.allow_file | map(if type == "object" then .path else . end) | contains([
         "/dev/null",
+        "/dev/dtracehelper",
+        "/dev/random",
         "/dev/tty",
+        "/dev/urandom",
         "/dev/stdout",
         "/dev/stderr"
       ]))
@@ -76,8 +83,13 @@ pkgs.runCommand "nono-profiles-test"
         "/dev/fd",
         "/System/Library",
         "/System/Cryptexes",
+        "/System/Volumes/Preboot/Cryptexes/OS",
         "/System/Volumes/Preboot/Cryptexes/OS/System/Library",
         "/System/Volumes/Preboot/Cryptexes/OS/usr/lib",
+        "/home/linuxbrew/.linuxbrew/Cellar",
+        "/home/linuxbrew/.linuxbrew/opt",
+        "/opt/homebrew/Cellar",
+        "/opt/homebrew/opt",
         "/nix"
       ]))
       and (.filesystem.read | map(if type == "object" then .path else . end) | all(
@@ -88,8 +100,13 @@ pkgs.runCommand "nono-profiles-test"
         and . != "/Volumes"
         and . != "/System/Volumes"
         and . != "/Applications"
+        and . != "/home/linuxbrew/.linuxbrew"
         and . != "/opt"
+        and . != "/opt/homebrew"
       ))
+      and (.filesystem.read_file | map(if type == "object" then .path else . end) | contains([
+        "/Library/Preferences/Logging/com.apple.diagnosticd.filter.plist"
+      ]))
       and (.environment.allow_vars | contains([
         "HOME",
         "PATH",

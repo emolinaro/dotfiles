@@ -45,6 +45,34 @@ let
           ln -s "$WRAPPER_TEST_VICTIM" "$common_directory/info"
         fi
 
+        if [[ -n "''${WRAPPER_TEST_SWITCH_BRANCH:-}" ]]; then
+          git switch -qc session-branch
+          printf '%s\n' switched >> tracked
+          git add tracked
+          git commit -qm switched
+        fi
+
+        if [[ -n "''${WRAPPER_TEST_CHANGE_SYMREF:-}" ]]; then
+          git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/other
+        fi
+
+        if [[ -n "''${WRAPPER_TEST_DESCENDANT_TARGET:-}" ]]; then
+          (
+            (
+              descendant_git="$(
+                dirname "$(dirname "$WRAPPER_TEST_DESCENDANT_TARGET")"
+              )"
+              for _ in $(seq 1 1000); do
+                if [[ -d "$descendant_git" ]]; then
+                  printf '%s\n' escaped > "$WRAPPER_TEST_DESCENDANT_TARGET"
+                  exit
+                fi
+                sleep 0.01
+              done
+            ) </dev/null >/dev/null 2>&1 &
+          ) &
+        fi
+
         exit "''${WRAPPER_TEST_EXIT_CODE:-0}"
       '';
     };
@@ -339,6 +367,8 @@ pkgs.runCommand "nono-agent-wrappers-test"
       ${pkgs.diffutils}/bin/diff -u "$TMPDIR/$agent.expected" "$WRAPPER_TEST_AGENT_TRACE"
       test "$(${pkgs.jq}/bin/jq -r .token \
         "$HOME/.local/state/nono-agent-auth/$agent/$auth_relative")" = "refreshed-$agent"
+      test "$(${pkgs.jq}/bin/jq -r .token "$HOME/$auth_relative")" = "refreshed-$agent"
+      test -s "$HOME/.local/state/nono-agent-auth/$agent/.synchronized-fingerprint"
       ${pkgs.gnugrep}/bin/grep -Fx -- "--read" "$WRAPPER_TEST_NONO_TRACE"
       ${pkgs.gnugrep}/bin/grep -Fx -- "--allow" "$WRAPPER_TEST_NONO_TRACE"
       test -z "$(${pkgs.findutils}/bin/find "$HOME/.cache/nono" \
@@ -382,6 +412,82 @@ pkgs.runCommand "nono-agent-wrappers-test"
     test "$(<"$HOME/victim/attributes")" = victim
     test ! -e "$repo/.git/config.worktree"
 
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/descendant.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/descendant.nono.trace"
+    export WRAPPER_TEST_DESCENDANT_TARGET="$repo/.git/hooks/descendant"
+    "$wrappers_dir/bin/claude"
+    unset WRAPPER_TEST_DESCENDANT_TARGET
+    sleep 0.2
+    test ! -e "$repo/.git/hooks/descendant"
+
+    ${pkgs.git}/bin/git -C "$repo" update-ref refs/remotes/origin/main HEAD
+    ${pkgs.git}/bin/git -C "$repo" update-ref refs/remotes/origin/other HEAD
+    ${pkgs.git}/bin/git -C "$repo" symbolic-ref \
+      refs/remotes/origin/HEAD refs/remotes/origin/main
+    main_oid="$(${pkgs.git}/bin/git -C "$repo" rev-parse refs/remotes/origin/main)"
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/symref.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/symref.nono.trace"
+    export WRAPPER_TEST_CHANGE_SYMREF=1
+    "$wrappers_dir/bin/claude"
+    unset WRAPPER_TEST_CHANGE_SYMREF
+    test "$(${pkgs.git}/bin/git -C "$repo" symbolic-ref refs/remotes/origin/HEAD)" = \
+      refs/remotes/origin/other
+    test "$(${pkgs.git}/bin/git -C "$repo" rev-parse refs/remotes/origin/main)" = "$main_oid"
+
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/head-transition.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/head-transition.nono.trace"
+    export WRAPPER_TEST_SWITCH_BRANCH=1
+    "$wrappers_dir/bin/claude"
+    unset WRAPPER_TEST_SWITCH_BRANCH
+    test "$(${pkgs.git}/bin/git -C "$repo" symbolic-ref HEAD)" = refs/heads/session-branch
+    test "$(${pkgs.git}/bin/git -C "$repo" log -1 --format=%s)" = switched
+
+    printf '%s\n' '{"token":"unsafe-codex"}' > "$HOME/.codex/auth.json"
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-legacy.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-legacy.nono.trace"
+    export WRAPPER_TEST_AUTH_EXPECT=unsafe-codex
+    "$wrappers_dir/bin/codex"
+    unset WRAPPER_TEST_AUTH_EXPECT
+    test "$(${pkgs.jq}/bin/jq -r .token \
+      "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json")" = unsafe-codex
+
+    printf '%s\n' '{"token":"persistent-codex"}' \
+      > "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-persistent.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-persistent.nono.trace"
+    export WRAPPER_TEST_AUTH_EXPECT=persistent-codex
+    "$wrappers_dir/bin/codex"
+    unset WRAPPER_TEST_AUTH_EXPECT
+    test "$(${pkgs.jq}/bin/jq -r .token "$HOME/.codex/auth.json")" = persistent-codex
+
+    rm -rf "$HOME/.pi/agent"
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-missing-parent.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-missing-parent.nono.trace"
+    export WRAPPER_TEST_AUTH_EXPECT=refreshed-pi
+    "$wrappers_dir/bin/pi"
+    unset WRAPPER_TEST_AUTH_EXPECT
+    test "$(${pkgs.jq}/bin/jq -r .token "$HOME/.pi/agent/auth.json")" = refreshed-pi
+
+    unsupported_repo="$TMPDIR/unsupported"
+    ${pkgs.git}/bin/git init -q "$unsupported_repo"
+    ${pkgs.git}/bin/git -C "$unsupported_repo" config user.name test
+    ${pkgs.git}/bin/git -C "$unsupported_repo" config user.email test@example.com
+    printf '%s\n' initial > "$unsupported_repo/tracked"
+    ${pkgs.git}/bin/git -C "$unsupported_repo" add tracked
+    ${pkgs.git}/bin/git -C "$unsupported_repo" commit -qm initial
+    printf '%s\n' blocked > "$unsupported_repo/.git/MERGE_HEAD"
+    cd "$unsupported_repo"
+    rm -f "$WRAPPER_TEST_NONO_TRACE"
+    set +e
+    "$wrappers_dir/bin/codex" \
+      > "$TMPDIR/unsupported-state.stdout" 2> "$TMPDIR/unsupported-state.stderr"
+    unsupported_status=$?
+    set -e
+    test "$unsupported_status" -eq 78
+    test ! -e "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -F "unsupported Git state" \
+      "$TMPDIR/unsupported-state.stderr"
+
     linked="$TMPDIR/linked"
     ${pkgs.git}/bin/git -C "$repo" worktree add -qb linked "$linked"
     linked_git_directory="$(${pkgs.git}/bin/git -C "$linked" \
@@ -397,6 +503,20 @@ pkgs.runCommand "nono-agent-wrappers-test"
     test "$(<"$linked_git_directory/config.worktree")" = trusted
     ${pkgs.gnugrep}/bin/grep -F "value = trusted" "$common_directory/config"
     test "$(<"$common_directory/hooks/pre-push")" = trusted
+    cd "$repo"
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/main-linked.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/main-linked.nono.trace"
+    rm -f "$WRAPPER_TEST_AGENT_TRACE" "$WRAPPER_TEST_NONO_TRACE"
+    set +e
+    "$wrappers_dir/bin/codex" \
+      > "$TMPDIR/main-linked.stdout" 2> "$TMPDIR/main-linked.stderr"
+    main_linked_status=$?
+    set -e
+    test "$main_linked_status" -eq 78
+    test ! -e "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.git}/bin/git -C "$linked" status --short >/dev/null
+    ${pkgs.gnugrep}/bin/grep -F "main worktree with linked worktrees" \
+      "$TMPDIR/main-linked.stderr"
 
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/missing-profile.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/missing-profile.nono.trace"
