@@ -98,8 +98,10 @@
       nonoRuntimeTestFor =
         system:
         (pkgsFor system).callPackage ./tests/nono-runtime.nix {
+          inherit agentRegistry;
           nonoPackage = nonoPackageFor system;
           profiles = ./home/.config/nono/profiles;
+          wrapperModule = ./packages/nono-agent-wrappers.nix;
         };
       mkUbuntuHome =
         system:

@@ -40,6 +40,7 @@ pkgs.runCommand "nono-profiles-test"
       and (.filesystem.unix_socket // []) == []
       and .workdir.access == "none"
       and (.groups.exclude | contains([
+        "system_read_macos",
         "system_write_linux",
         "system_write_macos"
       ]))
@@ -53,21 +54,42 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_HOST_HOME/.local/share/gstack/repos/gstack"
       ]))
       and (.filesystem.read | index("$DOTFILES_HOST_HOME/.gstack") == null)
+      and (.filesystem.read_file | contains([
+        "$DOTFILES_AGENT_HOME/.config/git/config"
+      ]))
       and (.filesystem.deny | map(if type == "object" then .path else . end) | contains([
         "$DOTFILES_HOST_HOME/.cache/herdr/herdr.sock",
         "$DOTFILES_HOST_HOME/.config/herdr/herdr.sock",
         "$SSH_AUTH_SOCK"
       ]))
       and (.filesystem.write | map(if type == "object" then .path else . end) | contains([
-        "/dev/fd",
-        "/dev/pts"
+        "/dev/fd"
       ]))
-      and (.filesystem.write_file | map(if type == "object" then .path else . end) | contains([
+      and (.filesystem.write | map(if type == "object" then .path else . end) | index("/dev/pts") == null)
+      and (.filesystem.allow_file | map(if type == "object" then .path else . end) | contains([
         "/dev/null",
         "/dev/tty",
         "/dev/stdout",
         "/dev/stderr"
       ]))
+      and (.filesystem.read | map(if type == "object" then .path else . end) | contains([
+        "/dev/fd",
+        "/System/Library",
+        "/System/Cryptexes",
+        "/System/Volumes/Preboot/Cryptexes/OS/System/Library",
+        "/System/Volumes/Preboot/Cryptexes/OS/usr/lib",
+        "/nix"
+      ]))
+      and (.filesystem.read | map(if type == "object" then .path else . end) | all(
+        . != "/private"
+        and . != "/private/var"
+        and . != "/var"
+        and . != "/tmp"
+        and . != "/Volumes"
+        and . != "/System/Volumes"
+        and . != "/Applications"
+        and . != "/opt"
+      ))
       and (.environment.allow_vars | contains([
         "HOME",
         "PATH",
@@ -75,6 +97,7 @@ pkgs.runCommand "nono-profiles-test"
       ]))
       and (.environment.allow_vars | index("*") == null)
       and .environment.set_vars.HOME == "$HOME"
+      and .environment.set_vars.CFFIXED_USER_HOME == "$HOME"
       and .environment.set_vars.XDG_CACHE_HOME == "$HOME/.cache"
       and .environment.set_vars.XDG_CONFIG_HOME == "$HOME/.config"
       and .environment.set_vars.XDG_DATA_HOME == "$HOME/.local/share"
@@ -123,6 +146,7 @@ pkgs.runCommand "nono-profiles-test"
         .workdir.access == "none"
         and .security.capability_elevation == false
         and .network.block == false
+        and .network.network_profile == "developer"
         and (writable_grants | map(forbidden_path | not) | all)
         and ([.groups.include[]?] | map(forbidden_group | not) | all)
       ' "$resolved" >/dev/null

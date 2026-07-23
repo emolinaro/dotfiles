@@ -1,3 +1,19 @@
+let
+  commonWritableDirectories = [
+    ".gstack"
+  ];
+  commonStagedPaths = [
+    {
+      source = ".agents";
+      target = ".agents";
+    }
+    {
+      copy = true;
+      source = ".config/git/config";
+      target = ".config/git/config";
+    }
+  ];
+in
 {
   claude = {
     clientArguments = [ ];
@@ -12,11 +28,7 @@
       ".claude/.credentials.json"
     ];
     profile = "dotfiles-claude";
-    stagedPaths = [
-      {
-        source = ".agents";
-        target = ".agents";
-      }
+    stagedPaths = commonStagedPaths ++ [
       {
         source = ".claude/CLAUDE.md";
         target = ".claude/CLAUDE.md";
@@ -25,6 +37,17 @@
         source = ".claude/skills";
         target = ".claude/skills";
       }
+    ];
+    writableDirectories = commonWritableDirectories ++ [
+      ".claude"
+      ".cache/claude"
+      ".cache/claude-cli-nodejs"
+      ".local/state/claude/locks"
+    ];
+    writableFiles = [
+      ".claude.json"
+      ".claude.json.lock"
+      ".claude.lock"
     ];
   };
   codex = {
@@ -39,11 +62,7 @@
       ".codex/auth.json"
     ];
     profile = "dotfiles-codex";
-    stagedPaths = [
-      {
-        source = ".agents";
-        target = ".agents";
-      }
+    stagedPaths = commonStagedPaths ++ [
       {
         source = ".codex/AGENTS.md";
         target = ".codex/AGENTS.md";
@@ -69,6 +88,10 @@
         target = ".codex/skills";
       }
     ];
+    writableDirectories = commonWritableDirectories ++ [
+      ".codex"
+    ];
+    writableFiles = [ ];
   };
   opencode = {
     clientArguments = [ ];
@@ -77,11 +100,7 @@
       ".local/share/opencode/auth.json"
     ];
     profile = "dotfiles-opencode";
-    stagedPaths = [
-      {
-        source = ".agents";
-        target = ".agents";
-      }
+    stagedPaths = commonStagedPaths ++ [
       {
         source = ".config/opencode/AGENTS.md";
         target = ".config/opencode/AGENTS.md";
@@ -99,6 +118,15 @@
         target = ".config/opencode/skills";
       }
     ];
+    writableDirectories = commonWritableDirectories ++ [
+      ".opencode"
+      ".config/opencode"
+      ".cache/opencode"
+      ".local/share/opencode"
+      ".local/share/opentui"
+      ".local/state/opencode"
+    ];
+    writableFiles = [ ];
   };
   pi = {
     clientArguments = [ ];
@@ -107,11 +135,7 @@
       ".pi/agent/auth.json"
     ];
     profile = "dotfiles-pi";
-    stagedPaths = [
-      {
-        source = ".agents";
-        target = ".agents";
-      }
+    stagedPaths = commonStagedPaths ++ [
       {
         source = ".pi/agent/AGENTS.md";
         target = ".pi/agent/AGENTS.md";
@@ -121,5 +145,9 @@
         target = ".pi/agent/settings.json";
       }
     ];
+    writableDirectories = commonWritableDirectories ++ [
+      ".pi"
+    ];
+    writableFiles = [ ];
   };
 }
