@@ -14,11 +14,87 @@ setup, cloud and container tooling, managed agent extensions, isolated
 worktree workflows, and local validation before changes are completed. Push,
 pull request, merge, and deployment actions always require explicit approval.
 
+## Agent sandbox
+
+Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
+version-pinned Nono sandbox by default. The current Git worktree and an
+ephemeral per-session client home are writable. Trusted agent instructions,
+skills, plugins, and configuration are staged into that home while their host
+originals remain read-only. Of each client's durable state, only its dedicated
+authentication JSON file is copied into a separate persistent store and
+synchronized with its legacy client path using generation checks. Git metadata
+is isolated per session, then refs and the index are reconciled only if the
+host repository has not changed concurrently.
+Parallel linked-worktree sessions use separate lifecycle locks and serialize
+only snapshots and reconciliation against their shared Git directory. On
+macOS, the real `.git` path remains denied for the full sandbox lifetime while
+Git uses the session-local metadata directory.
+Launch from a linked worktree when a repository has registered linked
+worktrees. Main-checkout launches fail closed so the shared Git directory never
+moves out from under another worktree. Active merge, rebase, cherry-pick,
+revert, bisect, shallow, sparse-checkout, split-index, and submodule states are
+also rejected before isolation begins, as are repositories that use external
+Git object alternates.
+Launches outside a Git worktree fail closed. SSH keys, cloud configuration,
+browser data, unrelated repositories, the general macOS keychain, and
+container sockets are not granted.
+
+The first rollout restricts filesystem access, ambient environment variables,
+and Unix sockets. Outbound TCP is mediated by Nono's developer proxy so host
+control sockets remain unreachable without limiting normal provider, plugin,
+documentation, and package-registry traffic. API-key, cloud, Git-hosting,
+Docker, Kubernetes, and SSH-agent variables are stripped from the sandboxed
+process. Linux grants only the exact multi-user Nix daemon socket needed for
+normal Nix builds.
+
+Interrupted Git sessions are restored under a per-worktree lock and their
+session state is quarantined under `~/.cache/nono/recovery/` for manual
+inspection. Reflog-only recovery refs expire after 30 days.
+
+Explicit host commands remain available for trusted work that cannot run in
+the sandbox:
+
+```sh
+claude-unsafe
+codex-unsafe
+opencode-unsafe
+pi-unsafe
+```
+
+Each command prints an `UNSANDBOXED` warning before launching the real client.
+On macOS, a subscription-authenticated client that stores or refreshes
+credentials in the login keychain must use its unsafe wrapper for the complete
+session, not only for login. The normal wrapper intentionally cannot reach the
+keychain. Desktop applications and editor-launched processes do not pass
+through these terminal wrappers.
+
+Nono uses the official release tarballs with a separate SHA-256 hash for each
+supported target. To update it, change the version and target hashes in
+`packages/nono.nix`. First evaluate every target from any supported host:
+
+```sh
+nix flake check --all-systems --impure --no-build
+```
+
+Then run the following native builds on Apple Silicon macOS, Intel macOS,
+x86_64 Ubuntu, and aarch64 Ubuntu so every release archive, executable, and
+Linux ELF patch is exercised on its target platform:
+
+```sh
+system="$(nix eval --impure --raw --expr builtins.currentSystem)"
+nix build \
+  ".#checks.$system.nono-package" \
+  ".#checks.$system.nono-agent-wrappers" \
+  ".#checks.$system.nono-profiles" \
+  ".#checks.$system.nono-runtime-driver"
+nix run ".#nono-runtime-test"
+```
+
 ## Supported systems
 
 - macOS on Apple Silicon, by default.
-- Intel Mac: change one line.
-  In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
+- Intel Mac: set `nixpkgs.hostPlatform = "x86_64-darwin";` in
+  `configuration.nix`.
 - Headless Ubuntu 24.04 on x86_64 or ARM64. The Ubuntu bootstrap requires a
   non-root user with sudo access and selects the correct architecture automatically.
 
@@ -31,7 +107,7 @@ git clone https://github.com/emolinaro/dotfiles.git
 cd dotfiles
 ```
 
-Before you run it: open the config files and change the values listed in "Make it yours" below (git identity, host label, and Intel vs Apple Silicon), and read the Homebrew cleanup warning.
+Before you run it: open the config files and change the values listed in "Make it yours" below (git identity and host label), and read the Homebrew cleanup warning.
 `bootstrap.sh` applies the config to your machine, so do this first.
 
 ```sh
@@ -136,6 +212,13 @@ nix flake update superpowers
 nix flake update nixpkgs nixpkgs-linux
 ```
 
+The first rebuild after this layout change moves only the managed gstack
+checkout from `~/.gstack/repos/gstack` to
+`~/.local/share/gstack/repos/gstack`. Other repositories under
+`~/.gstack/repos` remain in place. Home Manager dry runs print the planned
+move, and recovery is a direct move back to the original path before the next
+rebuild.
+
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
@@ -161,10 +244,10 @@ This repo is mine.
 If you clone it, change these before you run `bootstrap.sh`:
 
 - **macOS user** is detected automatically from the account running the setup. When the scripts invoke `sudo`, the flake uses `SUDO_USER`; otherwise it uses `USER`. Evaluation is intentionally impure so any sudo-capable account can apply the configuration without code changes.
-- **Git identity**, in `home.nix:43-46` (`emolinaro` / `40191802+emolinaro@users.noreply.github.com`).
+- **Git identity**, in `programs.git.settings.user` in `home.nix`
+  (`emolinaro` / `40191802+emolinaro@users.noreply.github.com`).
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `scripts/macos/rebuild.sh` (the `#mac` at the end of the flake reference), and `scripts/macos/bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
-- **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
 That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
