@@ -24,8 +24,8 @@ let
         echo "ambient Git or Nono policy variable reached Nono" >&2
         exit 1
       fi
-      if [[ -n "''${TMPDIR:-}" || -n "''${TMP:-}" || -n "''${TEMP:-}" ]]; then
-        echo "ambient temporary-directory variable reached Nono" >&2
+      if [[ "''${TMPDIR:-}" != /tmp/.cache/nono/session.* || -n "''${TMP:-}" || -n "''${TEMP:-}" ]]; then
+        echo "Nono did not receive a dedicated temporary directory" >&2
         exit 1
       fi
       if [[ "''${XDG_CONFIG_HOME:-}" != /nix/store/* ]]; then
@@ -101,6 +101,9 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export GIT_DIR=/definitely/missing
     export NONO_ALLOW=/
     export NONO_PROFILE=untrusted
+    cat > "$TMPDIR/bash-env" <<'EOF'
+    touch "$WRAPPER_TEST_BASH_ENV_TRACE"
+    EOF
 
     assert_normal_wrapper() {
       local agent="$1"
@@ -108,8 +111,12 @@ pkgs.runCommand "nono-agent-wrappers-test"
       shift 2
 
       export WRAPPER_TEST_TRACE="$TMPDIR/$agent.trace"
+      export WRAPPER_TEST_BASH_ENV_TRACE="$TMPDIR/$agent.bash-env.trace"
+      export BASH_ENV="$TMPDIR/bash-env"
       unset WRAPPER_TEST_EXIT_CODE
       "${wrappers}/bin/$agent" "argument with spaces" -- literal
+      test ! -e "$WRAPPER_TEST_BASH_ENV_TRACE"
+      unset BASH_ENV WRAPPER_TEST_BASH_ENV_TRACE
 
       expected=(
         run

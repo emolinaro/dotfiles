@@ -29,16 +29,20 @@ pkgs.runCommand "nono-profiles-test"
     jq --exit-status '
       .linux.af_unix_mediation == "pathname"
       and .allow_launch_services != true
-      and (.filesystem.unix_socket | sort) == ([
-        "$HOME/.cache/herdr/herdr.sock",
-        "$HOME/.config/herdr/herdr.sock"
-      ] | sort)
+      and (.filesystem.unix_socket // []) == []
       and .workdir.access == "none"
+      and (.filesystem.allow | index("@git:common-dir") == null)
       and (.filesystem.allow | index("$HOME/.gstack") != null)
       and (.filesystem.read | index("$HOME/.local/share/gstack/repos/gstack") != null)
       and (.filesystem.read | index("$HOME/.gstack/repos/gstack") == null)
+      and (.filesystem.deny | contains([
+        "/tmp",
+        "/private/tmp",
+        "/private/var/folders",
+        "/var/folders",
+        "$SSH_AUTH_SOCK"
+      ]))
       and (.environment.allow_vars | contains([
-        "HERDR_SOCKET_PATH",
         "HOME",
         "PATH",
         "TERM"
@@ -94,6 +98,42 @@ pkgs.runCommand "nono-profiles-test"
         and ([.groups.include[]?] | map(forbidden_group | not) | all)
       ' "$resolved" >/dev/null
     done
+
+    jq --exit-status '
+      ([(.groups.include // [])[] | if type == "object" then .name else . end]
+        | index("claude_code_macos") == null)
+      and (.filesystem.deny | contains([
+        "$HOME/.claude/hooks",
+        "$HOME/.claude/plugins",
+        "$HOME/.claude/settings.json"
+      ]))
+    ' "$profile_dir/dotfiles-claude.json" >/dev/null
+
+    jq --exit-status '
+      ([(.groups.include // [])[] | if type == "object" then .name else . end]
+        | index("codex_macos") == null)
+      and (.filesystem.deny | contains([
+        "$HOME/.codex/AGENTS.md",
+        "$HOME/.codex/config.toml",
+        "$HOME/.codex/skills"
+      ]))
+    ' "$profile_dir/dotfiles-codex.json" >/dev/null
+
+    jq --exit-status '
+      .filesystem.deny | contains([
+        "$HOME/.config/opencode/AGENTS.md",
+        "$HOME/.config/opencode/opencode.json",
+        "$HOME/.config/opencode/plugins",
+        "$HOME/.config/opencode/skills"
+      ])
+    ' "$profile_dir/dotfiles-opencode.json" >/dev/null
+
+    jq --exit-status '
+      .filesystem.deny | contains([
+        "$HOME/.pi/agent/AGENTS.md",
+        "$HOME/.pi/agent/extensions"
+      ])
+    ' "$profile_dir/dotfiles-pi.json" >/dev/null
 
     touch "$out"
   ''
