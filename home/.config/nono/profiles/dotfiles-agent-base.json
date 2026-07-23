@@ -1,0 +1,627 @@
+{
+  "extends": "default",
+  "meta": {
+    "name": "dotfiles-agent-base",
+    "version": "1.0.0",
+    "description": "Shared sandbox boundary for terminal coding agents",
+    "author": "dotfiles"
+  },
+  "groups": {
+    "include": [
+      "node_runtime",
+      "python_runtime",
+      "rust_runtime",
+      "nix_runtime",
+      "git_config",
+      "unlink_protection",
+      {
+        "name": "linux_sysfs_read",
+        "when": "linux"
+      }
+    ],
+    "exclude": [
+      "homebrew_linux",
+      "homebrew_macos",
+      "system_read_linux_core",
+      "system_read_macos",
+      "system_write_linux",
+      "system_write_macos"
+    ]
+  },
+  "security": {
+    "signal_mode": "isolated",
+    "capability_elevation": false
+  },
+  "allow_parent_of_protected": true,
+  "filesystem": {
+    "allow": [
+      "$DOTFILES_AGENT_HOME/.gstack",
+      "$TMPDIR"
+    ],
+    "read": [
+      "@git:config-files",
+      "@git:hooks-path",
+      "$DOTFILES_HOST_HOME/.agents",
+      "$DOTFILES_HOST_HOME/.local/share/gstack/repos/gstack",
+      {
+        "path": "/bin",
+        "when": "linux"
+      },
+      {
+        "path": "/sbin",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/bin",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/sbin",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/local/bin",
+        "when": "linux"
+      },
+      {
+        "path": "/lib",
+        "when": "linux"
+      },
+      {
+        "path": "/lib64",
+        "when": "linux"
+      },
+      {
+        "path": "/lib/x86_64-linux-gnu",
+        "when": "linux"
+      },
+      {
+        "path": "/lib/aarch64-linux-gnu",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/lib",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/lib64",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/lib/x86_64-linux-gnu",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/local/lib",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/local/lib64",
+        "when": "linux"
+      },
+      {
+        "path": "/home/linuxbrew/.linuxbrew/bin",
+        "when": "linux"
+      },
+      {
+        "path": "/home/linuxbrew/.linuxbrew/sbin",
+        "when": "linux"
+      },
+      {
+        "path": "/home/linuxbrew/.linuxbrew/lib",
+        "when": "linux"
+      },
+      {
+        "path": "/home/linuxbrew/.linuxbrew/share",
+        "when": "linux"
+      },
+      {
+        "path": "/home/linuxbrew/.linuxbrew/Cellar",
+        "when": "linux"
+      },
+      {
+        "path": "/home/linuxbrew/.linuxbrew/opt",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/ssl",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/pki",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/ca-certificates",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/crypto-policies",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/ld.so.conf.d",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/alternatives",
+        "when": "linux"
+      },
+      {
+        "path": "/usr/share",
+        "when": "linux"
+      },
+      {
+        "path": "/lib/terminfo",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/terminfo",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/self",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/self/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/cpuinfo",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/meminfo",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/stat",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/loadavg",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/version",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/filesystems",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/fd",
+        "when": "macos"
+      },
+      {
+        "path": "/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/sbin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/sbin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/sbin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/share",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/Cellar",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/opt",
+        "when": "macos"
+      },
+      {
+        "path": "/opt/homebrew/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/opt/homebrew/sbin",
+        "when": "macos"
+      },
+      {
+        "path": "/opt/homebrew/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/opt/homebrew/share",
+        "when": "macos"
+      },
+      {
+        "path": "/opt/homebrew/Cellar",
+        "when": "macos"
+      },
+      {
+        "path": "/opt/homebrew/opt",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Library",
+        "when": "macos"
+      },
+      {
+        "path": "/Library/Frameworks",
+        "when": "macos"
+      },
+      {
+        "path": "/private/var/db/dyld",
+        "when": "macos"
+      },
+      {
+        "path": "/private/etc/ssl",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/ssl",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share/zoneinfo",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share/locale",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share/terminfo",
+        "when": "macos"
+      },
+      {
+        "path": "/var/db/timezone",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Cryptexes",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Volumes/Preboot/Cryptexes/OS",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Volumes/Preboot/Cryptexes/OS/usr/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/nix",
+        "when": "macos"
+      }
+    ],
+    "write": [
+      {
+        "path": "/dev/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/self/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/fd",
+        "when": "macos"
+      }
+    ],
+    "allow_file": [
+      {
+        "path": "/dev/null",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/zero",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/full",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/random",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/urandom",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/tty",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/stdout",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/stderr",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/stdin",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/null",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/zero",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/tty",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/dtracehelper",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/stdout",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/stderr",
+        "when": "macos"
+      }
+    ],
+    "read_file": [
+      "$DOTFILES_AGENT_HOME/.config/git/config",
+      "$DOTFILES_HOST_HOME/.dotfiles/home/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.dotfiles/home/.claude/settings.json",
+      {
+        "path": "/etc/resolv.conf",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/hosts",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/nsswitch.conf",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/gai.conf",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/ld.so.cache",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/ld.so.conf",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/localtime",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/timezone",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/locale.conf",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/locale.gen",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/os-release",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/services",
+        "when": "linux"
+      },
+      {
+        "path": "/etc/resolv.conf",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/hosts",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/nsswitch.conf",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/gai.conf",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/services",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/protocols",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/localtime",
+        "when": "macos"
+      },
+      {
+        "path": "/private/etc/localtime",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/autofs_nowait",
+        "when": "macos"
+      },
+      {
+        "path": "/Library/Preferences/Logging/com.apple.diagnosticd.filter.plist",
+        "when": "macos"
+      }
+    ],
+    "deny": [
+      {
+        "path": "$SSH_AUTH_SOCK",
+        "when": "macos"
+      },
+      "$DOTFILES_HOST_HOME/.cache/herdr/herdr.sock",
+      "$DOTFILES_HOST_HOME/.config/herdr/herdr.sock",
+      "/var/run/docker.sock",
+      "/run/docker.sock",
+      "$DOTFILES_HOST_HOME/.docker/run/docker.sock",
+      "$DOTFILES_HOST_HOME/.orbstack/run/docker.sock"
+    ],
+    "unix_socket": [
+      "$DOTFILES_JOB_CONTROL_SOCKET",
+      "/nix/var/nix/daemon-socket/socket"
+    ]
+  },
+  "linux": {
+    "af_unix_mediation": "pathname"
+  },
+  "network": {
+    "block": false,
+    "network_profile": "developer"
+  },
+  "workdir": {
+    "access": "none"
+  },
+  "environment": {
+    "allow_vars": [
+      "CDPATH",
+      "COLORTERM",
+      "DOTFILES_JOB_CONTROL_SOCKET",
+      "DOTFILES_JOB_CONTROL_TOKEN",
+      "DOTFILES_WORKTREE_ROOT",
+      "EDITOR",
+      "FORCE_COLOR",
+      "GIT_DIR",
+      "GIT_WORK_TREE",
+      "HOME",
+      "IN_NIX_SHELL",
+      "LANG",
+      "LANGUAGE",
+      "LC_*",
+      "LESS",
+      "LOGNAME",
+      "LS_COLORS",
+      "MANPATH",
+      "NIX_PATH",
+      "NIX_PROFILES",
+      "NIX_SSL_CERT_FILE",
+      "NO_COLOR",
+      "NO_MISTAKES_NO_UPDATE_CHECK",
+      "PAGER",
+      "PATH",
+      "PWD",
+      "SHELL",
+      "SHLVL",
+      "SSL_CERT_DIR",
+      "SSL_CERT_FILE",
+      "TERM",
+      "TERMINFO",
+      "TERMINFO_DIRS",
+      "TERM_PROGRAM",
+      "TERM_PROGRAM_VERSION",
+      "TMPDIR",
+      "TZ",
+      "USER",
+      "VISUAL"
+    ],
+    "deny_vars": [
+      "ANTHROPIC_*",
+      "OPENAI_*",
+      "GEMINI_*",
+      "AWS_*",
+      "AZURE_*",
+      "GOOGLE_*",
+      "GCP_*",
+      "GH_*",
+      "GITHUB_*",
+      "GITLAB_*",
+      "BITBUCKET_*",
+      "KUBECONFIG",
+      "KUBE_*",
+      "DOCKER_*",
+      "CONTAINER_*",
+      "PODMAN_*",
+      "SSH_*",
+      "NPM_TOKEN",
+      "NPM_CONFIG_*",
+      "TF_VAR_*",
+      "VAULT_*"
+    ],
+    "set_vars": {
+      "CFFIXED_USER_HOME": "$HOME",
+      "HOME": "$HOME",
+      "XDG_CACHE_HOME": "$HOME/.cache",
+      "XDG_CONFIG_HOME": "$HOME/.config",
+      "XDG_DATA_HOME": "$HOME/.local/share",
+      "XDG_RUNTIME_DIR": "$HOME/.run",
+      "XDG_STATE_HOME": "$HOME/.local/state"
+    }
+  },
+  "platform_overrides": {
+    "macos": {
+      "filesystem": {
+        "deny": [
+          "$DOTFILES_WORKTREE_ROOT/.git"
+        ]
+      }
+    }
+  },
+  "rollback": {
+    "exclude_patterns": [
+      "node_modules",
+      ".next",
+      "__pycache__",
+      "target"
+    ],
+    "exclude_globs": [
+      "*.tmp.[0-9]*.[0-9]*"
+    ]
+  },
+  "interactive": true
+}

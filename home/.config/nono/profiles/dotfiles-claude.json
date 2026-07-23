@@ -1,0 +1,28 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-claude",
+    "version": "1.0.0",
+    "description": "Claude Code with isolated session state",
+    "author": "dotfiles"
+  },
+  "filesystem": {
+    "allow": [
+      "$DOTFILES_AGENT_HOME/.claude",
+      "$DOTFILES_AGENT_HOME/.cache/claude",
+      "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs",
+      "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
+    ],
+    "read": [
+      "$DOTFILES_AGENT_HOME/.local/share/claude",
+      "$DOTFILES_HOST_HOME/.claude/CLAUDE.md",
+      "$DOTFILES_HOST_HOME/.claude/settings.json",
+      "$DOTFILES_HOST_HOME/.claude/skills"
+    ],
+    "allow_file": [
+      "$DOTFILES_AGENT_HOME/.claude.json",
+      "$DOTFILES_AGENT_HOME/.claude.json.lock",
+      "$DOTFILES_AGENT_HOME/.claude.lock"
+    ]
+  }
+}

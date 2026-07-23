@@ -1,13 +1,53 @@
-{ chromeDevtoolsAxiSkill, config, ghAxiSkill, gstackRev, herdrPackage, homeDirectory, lavishSkill, lib, pkgs, superpowersRev, superpowersSkill, username, ... }:
+{
+  chromeDevtoolsAxiSkill,
+  config,
+  ghAxiSkill,
+  gstackRev,
+  herdrPackage,
+  homeDirectory,
+  lavishSkill,
+  lib,
+  nonoPackage,
+  pkgs,
+  superpowersRev,
+  superpowersSkill,
+  username,
+  ...
+}:
 
 let
+  agentRegistry = import ./packages/nono-agents.nix;
+  agentNames = builtins.attrNames agentRegistry;
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
+  gstackCheckout = "${config.home.homeDirectory}/.local/share/gstack/repos/gstack";
+  gstackCheckoutMigration = pkgs.callPackage ./packages/gstack-checkout-migration.nix { };
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
+  nonoProfiles = ./home/.config/nono/profiles;
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
-  platformPath = if isLinux then "/usr/local/bin" else "/opt/homebrew/bin:/usr/local/bin";
-  herdrCommand = if isLinux then lib.getExe herdrPackage else "/opt/homebrew/bin/herdr";
+  homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
+  platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
+  herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
+  linuxAgentExecutables = {
+    claude = lib.getExe pkgs.claude-code;
+    codex = lib.getExe pkgs.codex;
+    opencode = lib.getExe pkgs.opencode;
+    pi = lib.getExe pkgs.pi-coding-agent;
+  };
+  agentExecutables = lib.genAttrs agentNames (
+    name: if isLinux then linuxAgentExecutables.${name} else "${homebrewPrefix}/bin/${name}"
+  );
+  agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
+    inherit
+      agentExecutables
+      agentRegistry
+      homeDirectory
+      nonoPackage
+      ;
+    profiles = nonoProfiles;
+  };
+  nonoProfileNames = map (name: agentRegistry.${name}.profile) agentNames;
 in
 
 {
@@ -18,71 +58,73 @@ in
   # Avoid re-evaluating every Home Manager option to generate options.json.
   manual.manpages.enable = false;
 
-  home.packages = with pkgs; [
-    # cli i use constantly
-    basedpyright
-    bash-language-server
-    btop
-    bun
-    coreutils # gstack uses gtimeout to bound nested Codex calls
-    delta
-    delve
-    dive
-    eza
-    fd        # fast find
-    fzf       # fuzzy finder
-    gh
-    git
-    gnumake
-    go
-    golangci-lint
-    gopls
-    gotools
-    grpcurl
-    hadolint
-    highlight
-    htop
-    httpie
-    jq        # json on the command line
-    just
-    k9s
-    kubectl
-    kubelogin-oidc
-    kubectx
-    kubernetes-helm
-    lazygit
-    neovim
-    nodejs
-    noMistakesPackage
-    pre-commit
-    python3
-    ripgrep   # fast search
-    ruff
-    shellcheck
-    shfmt
-    stern
-    tmux
-    tree
-    treehousePackage
-    tree-sitter
-    uv
-    watchexec
-    yq-go
-  ] ++ lib.optionals isLinux [
-    pkgs.claude-code
-    pkgs.codex
-    pkgs.docker-client
-    pkgs.docker-compose
-    pkgs.gcc # nvim-treesitter compiles parsers with cc
-    herdrPackage
-    pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
-    pkgs.opencode
-    pkgs.pi-coding-agent
-    pkgs.procps
-  ] ++ [
-    # the font everything renders in
-    nerd-fonts.hack
-  ];
+  home.packages =
+    with pkgs;
+    [
+      # cli i use constantly
+      basedpyright
+      bash-language-server
+      btop
+      bun
+      coreutils # gstack uses gtimeout to bound nested Codex calls
+      delta
+      delve
+      dive
+      eza
+      fd # fast find
+      fzf # fuzzy finder
+      gh
+      git
+      gnumake
+      go
+      golangci-lint
+      gopls
+      gotools
+      grpcurl
+      hadolint
+      highlight
+      htop
+      httpie
+      jq # json on the command line
+      just
+      k9s
+      kubectl
+      kubelogin-oidc
+      kubectx
+      kubernetes-helm
+      lazygit
+      neovim
+      nodejs
+      nonoPackage
+      noMistakesPackage
+      pre-commit
+      python3
+      ripgrep # fast search
+      ruff
+      shellcheck
+      shfmt
+      stern
+      tmux
+      tree
+      treehousePackage
+      tree-sitter
+      uv
+      watchexec
+      yq-go
+      agentWrappers
+    ]
+    ++ lib.optionals isLinux [
+      pkgs.docker-client
+      pkgs.docker-compose
+      pkgs.gcc # nvim-treesitter compiles parsers with cc
+      herdrPackage
+      pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
+      pkgs.procps
+    ]
+    ++ [
+      # the font everything renders in
+      nerd-fonts.hack
+    ];
   fonts.fontconfig.enable = true;
   home.sessionVariables = {
     EDITOR = "nvim";
@@ -91,15 +133,18 @@ in
     # GNU ls colors: directories blue, symlinks cyan, executables green.
     LS_COLORS = "di=1;34:ln=1;36:ex=1;32:fi=0";
     NO_MISTAKES_NO_UPDATE_CHECK = "1";
-  } // lib.optionalAttrs isLinux {
+    NONO_NO_PACK_UPDATE_HINTS = "1";
+    NONO_NO_UPDATE_CHECK = "1";
+  }
+  // lib.optionalAttrs isLinux {
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
     HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
   };
 
   programs.zsh = {
     enable = true;
-    autosuggestion.enable = true;      # ghost text from history
-    syntaxHighlighting.enable = true;  # commands turn green when valid
+    autosuggestion.enable = true; # ghost text from history
+    syntaxHighlighting.enable = true; # commands turn green when valid
     initContent = ''
       ${lib.optionalString isLinux ''
         # Set a consistent theme in xterm-compatible remote terminals.
@@ -416,85 +461,131 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/treehouse";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
+  home.file.".config/nono/profiles".source = nonoProfiles;
 
-  home.activation.treeSitterParsers = lib.mkIf isLinux (lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+  home.activation.treeSitterParsers = lib.mkIf isLinux (
+    lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      if [[ -z "''${DRY_RUN:-}" ]]; then
+        export PATH="${
+          lib.makeBinPath [
+            pkgs.curl
+            pkgs.gcc
+            pkgs.git
+            pkgs.tree-sitter
+          ]
+        }:$PATH"
+        ${pkgs.neovim}/bin/nvim --headless "+Lazy! build nvim-treesitter" +qa
+      fi
+    ''
+  );
+
+  home.activation.nonoProfiles = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
-      export PATH="${lib.makeBinPath [ pkgs.curl pkgs.gcc pkgs.git pkgs.tree-sitter ]}:$PATH"
-      ${pkgs.neovim}/bin/nvim --headless "+Lazy! build nvim-treesitter" +qa
-    fi
-  '');
-
-  # Keep gstack writable because it builds platform-specific tooling.
-  home.activation.codexExtensions = lib.hm.dag.entryAfter [ "installPackages" ] ''
-    set -euo pipefail
-    export PATH="${lib.makeBinPath [ pkgs.bun pkgs.coreutils pkgs.gawk pkgs.git pkgs.jq pkgs.perl ]}:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
-
-    gstack_dir="$HOME/.gstack/repos/gstack"
-    if [[ ! -d "$gstack_dir/.git" ]]; then
-      $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
-      $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
-        https://github.com/garrytan/gstack.git "$gstack_dir"
-    fi
-
-    if [[ -z "''${DRY_RUN:-}" ]]; then
-      setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
-      expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
-      current_setup_state=""
-      if [[ -r "$setup_state_file" ]]; then
-        current_setup_state="$(<"$setup_state_file")"
-      fi
-      legacy_setup_state="gstack=${gstackRev};superpowers=${superpowersRev};hosts=auto-prefix-v1"
-      if [[ "$current_setup_state" == "$legacy_setup_state" ]]; then
-        current_setup_state="$expected_setup_state"
-        printf '%s\n' "$expected_setup_state" > "$setup_state_file"
-      fi
-      current_gstack_rev="$(${pkgs.git}/bin/git -C "$gstack_dir" rev-parse HEAD 2>/dev/null || true)"
-
-      needs_gstack_setup=0
-      if [[ "$current_setup_state" != "$expected_setup_state" \
-        || "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} \
-        || ! -x "$gstack_dir/browse/dist/browse" \
-        || ! -e "$HOME/.claude/skills/gstack" \
-        || ! -e "$HOME/.codex/skills/gstack" \
-        || ! -e "$HOME/.config/opencode/skills/gstack" ]]; then
-        needs_gstack_setup=1
-      fi
-
-      if [[ "$needs_gstack_setup" -eq 1 ]]; then
-        # A prefixed Claude install rewrites tracked skill names. Normalize only
-        # before an update so the guard still detects genuine local changes.
-        "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
-        if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
-          echo "error: $gstack_dir has local changes; refusing to replace them" >&2
-          exit 1
-        fi
-        if [[ "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} ]]; then
-          ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
-          ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
-        fi
-
-        # One auto setup installs every available agent host without regenerating
-        # the shared Codex skill set once per host.
-        "$gstack_dir/setup" --host auto --prefix --quiet
-        printf '%s\n' "$expected_setup_state" > "$setup_state_file"
-      fi
-
-      gstack_link="$HOME/.agents/skills/gstack"
-      mkdir -p "$(dirname "$gstack_link")"
-      if [[ -L "$gstack_link" ]]; then
-        ln -sfn "$gstack_dir/.agents/skills" "$gstack_link"
-      elif [[ ! -e "$gstack_link" ]]; then
-        ln -s "$gstack_dir/.agents/skills" "$gstack_link"
-      else
-        echo "error: $gstack_link exists and is not a symlink" >&2
-        exit 1
-      fi
-
+      export DOTFILES_AGENT_HOME="$HOME/.cache/nono/profile-validation"
+      export DOTFILES_HOST_HOME="$HOME"
+      export SSH_AUTH_SOCK="''${SSH_AUTH_SOCK:-/nonexistent/nono-ssh-agent.sock}"
+      for profile in ${lib.escapeShellArgs nonoProfileNames}; do
+        ${lib.getExe nonoPackage} profile validate --strict \
+          "${nonoProfiles}/$profile.json"
+      done
     fi
   '';
 
+  home.activation.gstackCheckoutMigration = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
+    set -euo pipefail
+    if [[ -z "''${DRY_RUN:-}" ]]; then
+      ${lib.getExe gstackCheckoutMigration} ${lib.escapeShellArg gstackCheckout}
+    else
+      ${lib.getExe gstackCheckoutMigration} --dry-run ${lib.escapeShellArg gstackCheckout}
+    fi
+  '';
+
+  # Keep gstack writable because it builds platform-specific tooling.
+  home.activation.codexExtensions =
+    lib.hm.dag.entryAfter
+      [
+        "gstackCheckoutMigration"
+        "installPackages"
+      ]
+      ''
+        set -euo pipefail
+        export PATH="${
+          lib.makeBinPath [
+            pkgs.bun
+            pkgs.coreutils
+            pkgs.gawk
+            pkgs.git
+            pkgs.jq
+            pkgs.perl
+          ]
+        }:${platformPath}:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+
+        gstack_dir=${lib.escapeShellArg gstackCheckout}
+        if [[ ! -d "$gstack_dir/.git" ]]; then
+          $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
+          $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
+            https://github.com/garrytan/gstack.git "$gstack_dir"
+        fi
+
+        if [[ -z "''${DRY_RUN:-}" ]]; then
+          setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
+          expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
+          current_setup_state=""
+          if [[ -r "$setup_state_file" ]]; then
+            current_setup_state="$(<"$setup_state_file")"
+          fi
+          legacy_setup_state="gstack=${gstackRev};superpowers=${superpowersRev};hosts=auto-prefix-v1"
+          if [[ "$current_setup_state" == "$legacy_setup_state" ]]; then
+            current_setup_state="$expected_setup_state"
+            printf '%s\n' "$expected_setup_state" > "$setup_state_file"
+          fi
+          current_gstack_rev="$(${pkgs.git}/bin/git -C "$gstack_dir" rev-parse HEAD 2>/dev/null || true)"
+
+          needs_gstack_setup=0
+          if [[ "$current_setup_state" != "$expected_setup_state" \
+            || "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} \
+            || ! -x "$gstack_dir/browse/dist/browse" \
+            || ! -e "$HOME/.claude/skills/gstack" \
+            || ! -e "$HOME/.codex/skills/gstack" \
+            || ! -e "$HOME/.config/opencode/skills/gstack" ]]; then
+            needs_gstack_setup=1
+          fi
+
+          if [[ "$needs_gstack_setup" -eq 1 ]]; then
+            # A prefixed Claude install rewrites tracked skill names. Normalize only
+            # before an update so the guard still detects genuine local changes.
+            "$gstack_dir/bin/gstack-patch-names" "$gstack_dir" 0
+            if [[ -n "$(${pkgs.git}/bin/git -C "$gstack_dir" status --porcelain)" ]]; then
+              echo "error: $gstack_dir has local changes; refusing to replace them" >&2
+              exit 1
+            fi
+            if [[ "$current_gstack_rev" != ${lib.escapeShellArg gstackRev} ]]; then
+              ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+              ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+            fi
+
+            # One auto setup installs every available agent host without regenerating
+            # the shared Codex skill set once per host.
+            "$gstack_dir/setup" --host auto --prefix --quiet
+            printf '%s\n' "$expected_setup_state" > "$setup_state_file"
+          fi
+
+          gstack_link="$HOME/.agents/skills/gstack"
+          mkdir -p "$(dirname "$gstack_link")"
+          if [[ -L "$gstack_link" ]]; then
+            ln -sfn "$gstack_dir/.agents/skills" "$gstack_link"
+          elif [[ ! -e "$gstack_link" ]]; then
+            ln -s "$gstack_dir/.agents/skills" "$gstack_link"
+          else
+            echo "error: $gstack_link exists and is not a symlink" >&2
+            exit 1
+          fi
+
+        fi
+      '';
+
   # Install Herdr's official hooks/plugins after the managed agent configs exist.
-  home.activation.herdrIntegrations = lib.hm.dag.entryAfter [ "codexExtensions" ] ''
+  home.activation.herdrIntegrations = lib.hm.dag.entryAfter [ "codexExtensions" "nonoProfiles" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
       mkdir -p "$HOME/.pi/agent/extensions"
       ${herdrCommand} integration install claude

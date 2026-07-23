@@ -1,0 +1,25 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-opencode",
+    "version": "1.0.0",
+    "description": "OpenCode with isolated session state",
+    "author": "dotfiles"
+  },
+  "filesystem": {
+    "allow": [
+      "$DOTFILES_AGENT_HOME/.opencode",
+      "$DOTFILES_AGENT_HOME/.config/opencode",
+      "$DOTFILES_AGENT_HOME/.cache/opencode",
+      "$DOTFILES_AGENT_HOME/.local/share/opencode",
+      "$DOTFILES_AGENT_HOME/.local/share/opentui",
+      "$DOTFILES_AGENT_HOME/.local/state/opencode"
+    ],
+    "read": [
+      "$DOTFILES_HOST_HOME/.config/opencode/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.config/opencode/opencode.json",
+      "$DOTFILES_HOST_HOME/.config/opencode/plugins",
+      "$DOTFILES_HOST_HOME/.config/opencode/skills"
+    ]
+  }
+}

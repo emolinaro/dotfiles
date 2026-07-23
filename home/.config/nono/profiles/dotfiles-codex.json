@@ -1,0 +1,22 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-codex",
+    "version": "1.0.0",
+    "description": "Codex with isolated session state",
+    "author": "dotfiles"
+  },
+  "filesystem": {
+    "allow": [
+      "$DOTFILES_AGENT_HOME/.codex"
+    ],
+    "read": [
+      "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.codex/config.toml",
+      "$DOTFILES_HOST_HOME/.codex/hooks.json",
+      "$DOTFILES_HOST_HOME/.codex/plugins",
+      "$DOTFILES_HOST_HOME/.codex/rules",
+      "$DOTFILES_HOST_HOME/.codex/skills"
+    ]
+  }
+}

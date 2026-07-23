@@ -1,0 +1,18 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-pi",
+    "version": "1.0.0",
+    "description": "Pi with isolated session state",
+    "author": "dotfiles"
+  },
+  "filesystem": {
+    "allow": [
+      "$DOTFILES_AGENT_HOME/.pi"
+    ],
+    "read": [
+      "$DOTFILES_HOST_HOME/.pi/agent/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.pi/agent/settings.json"
+    ]
+  }
+}
