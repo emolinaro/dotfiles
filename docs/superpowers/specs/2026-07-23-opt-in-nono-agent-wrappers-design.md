@@ -48,6 +48,11 @@ ordinary wrapper, including validation of the working tree, isolated Git
 metadata, staged agent configuration, persistent authentication import and
 export, and cleanup or recovery after the session.
 
+Authentication remains fail-safe. If only the host credential file disappears,
+the next Nono session restores it from Nono's persistent credential store. To
+clear both copies, the user performs the client's logout flow from inside its
+`*-nono` session.
+
 Missing profiles, missing upstream executables, unsafe home paths, unsupported
 Git states, and sandbox failures retain their current errors and exit codes.
 
@@ -70,10 +75,9 @@ failing before production code changes. Wrapper tests will then verify:
 - missing-profile and missing-executable failures use the renamed commands.
 
 The runtime driver will invoke `codex-nono`, `pi-nono`, and the other renamed
-wrappers wherever it currently invokes sandboxed ordinary commands. Its unsafe
-logout scenario will be replaced with a host-side authentication change
-followed by a sandboxed launch, preserving coverage of authentication
-synchronization without an unsafe wrapper.
+wrappers wherever it currently invokes sandboxed ordinary commands. It will
+verify that a missing host credential is restored, then perform logout inside
+the Nono session and verify that both credential copies are deleted.
 
 Repository formatting, evaluation, wrapper checks, profile checks, package
 checks, and the native runtime test will be run before completion.

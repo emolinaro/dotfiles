@@ -865,7 +865,7 @@ let
     '';
   };
 
-  mkNormalWrapper =
+  mkNonoWrapper =
     name:
     let
       definition = agentRegistry.${name};
@@ -932,8 +932,8 @@ let
       '';
     in
     writeTextFile {
-      inherit name;
-      destination = "/bin/${name}";
+      name = "${name}-nono";
+      destination = "/bin/${name}-nono";
       executable = true;
       text = ''
         #!${launcherBashPath} -p
@@ -2447,174 +2447,6 @@ let
       '';
     };
 
-  mkUnsafeWrapper =
-    name:
-    let
-      definition = agentRegistry.${name};
-      realExecutable = agentExecutables.${name};
-      persistentFile = builtins.head definition.persistentFiles;
-    in
-    writeShellApplication {
-      name = "${name}-unsafe";
-      text = ''
-        set -euo pipefail
-
-        readonly real_executable=${lib.escapeShellArg realExecutable}
-        readonly configured_home=${lib.escapeShellArg homeDirectory}
-        readonly persistent_file=${lib.escapeShellArg persistentFile}
-
-        if [[ ! -x "$real_executable" ]]; then
-          echo "error: real ${name} executable is unavailable: $real_executable" >&2
-          exit 127
-        fi
-        if [[ "''${HOME:-}" != "$configured_home" ]]; then
-          echo "error: refusing unexpected HOME: ''${HOME:-<unset>}" >&2
-          exit 78
-        fi
-        configured_home_canonical="$(cd "$configured_home" && pwd -P)"
-        readonly configured_home_canonical
-        readonly state_root="$configured_home_canonical/.local/state/nono-agent-auth/${name}"
-        readonly persistent_target="$state_root/$persistent_file"
-        readonly legacy_source="$configured_home_canonical/$persistent_file"
-        readonly auth_generation="$state_root/.synchronized-fingerprint"
-        readonly lock_root="$configured_home_canonical/.cache/nono/locks/auth-${name}"
-
-        ensure_safe_parent() {
-          local relative_file="$1"
-          local component
-          local current="$configured_home_canonical"
-          local relative_parent
-          local -a components
-
-          relative_parent="$(${lib.getExe' coreutils "dirname"} "$relative_file")"
-          [[ "$relative_parent" != . ]] || return 0
-          IFS=/ read -r -a components <<< "$relative_parent"
-          for component in "''${components[@]}"; do
-            [[ -n "$component" && "$component" != . && "$component" != .. ]] || return 1
-            current="$current/$component"
-            [[ ! -L "$current" ]] || return 1
-            if [[ ! -e "$current" ]]; then
-              ${lib.getExe' coreutils "mkdir"} -m 0700 -- "$current" || return 1
-            fi
-            [[ -d "$current" && ! -L "$current" ]] || return 1
-          done
-          [[ "$(${lib.getExe' coreutils "realpath"} -e -- "$current")" \
-            == "$configured_home_canonical/$relative_parent" ]]
-        }
-
-        acquire_auth_lock() {
-          local attempt
-          local lock_parent
-          local owner
-          local stale
-          lock_parent="$(${lib.getExe' coreutils "dirname"} "$lock_root")"
-          ${lib.getExe' coreutils "mkdir"} -p -- "$lock_parent"
-          ${lib.getExe' coreutils "chmod"} 0700 -- "$lock_parent"
-          for ((attempt = 0; attempt < 300; attempt++)); do
-            if ${lib.getExe' coreutils "mkdir"} -m 0700 -- "$lock_root" 2>/dev/null; then
-              printf '%s\n' "$$" > "$lock_root/pid"
-              return 0
-            fi
-            owner=
-            if [[ -f "$lock_root/pid" && ! -L "$lock_root/pid" ]]; then
-              IFS= read -r owner < "$lock_root/pid" || owner=
-            fi
-            if [[ "$owner" =~ ^[0-9]+$ ]] && ! kill -0 "$owner" 2>/dev/null; then
-              stale="$lock_root.stale.$$"
-              if ${lib.getExe' coreutils "mv"} -- "$lock_root" "$stale" 2>/dev/null; then
-                ${lib.getExe' coreutils "rm"} -rf -- "$stale"
-                continue
-              fi
-            fi
-            ${lib.getExe' coreutils "sleep"} 0.1
-          done
-          return 1
-        }
-
-        release_auth_lock() {
-          local owner=
-          if [[ -f "$lock_root/pid" && ! -L "$lock_root/pid" ]]; then
-            IFS= read -r owner < "$lock_root/pid" || owner=
-          fi
-          if [[ "$owner" == "$$" ]]; then
-            ${lib.getExe' coreutils "rm"} -f -- "$lock_root/pid"
-            ${lib.getExe' coreutils "rmdir"} -- "$lock_root" 2>/dev/null || true
-          fi
-        }
-
-        synchronize_unsafe_auth() {
-          local desired_fingerprint
-          local digest
-          local generation_temporary="$auth_generation.tmp.$$"
-          local persistent_temporary="$persistent_target.tmp.$$"
-
-          ensure_safe_parent ".local/state/nono-agent-auth/${name}/$persistent_file" \
-            || return 1
-          ensure_safe_parent "$persistent_file" || return 1
-          ensure_safe_parent ".cache/nono/locks/.lock" || return 1
-          acquire_auth_lock || return 1
-          if [[ -f "$legacy_source" && ! -L "$legacy_source" ]]; then
-            digest="$(${lib.getExe' coreutils "sha256sum"} -- "$legacy_source")"
-            desired_fingerprint="sha256:''${digest%% *}"
-            ${lib.getExe' coreutils "cp"} -- "$legacy_source" "$persistent_temporary" \
-              || {
-                release_auth_lock
-                return 1
-              }
-            ${lib.getExe' coreutils "chmod"} 0600 -- "$persistent_temporary" \
-              || {
-                release_auth_lock
-                return 1
-              }
-            ${lib.getExe' coreutils "mv"} -f -- \
-              "$persistent_temporary" "$persistent_target" || {
-                release_auth_lock
-                return 1
-              }
-          elif [[ ! -e "$legacy_source" && ! -L "$legacy_source" ]]; then
-            desired_fingerprint=absent
-            ${lib.getExe' coreutils "rm"} -f -- "$persistent_target" || {
-              release_auth_lock
-              return 1
-            }
-          else
-            release_auth_lock
-            return 1
-          fi
-          printf '%s\n' "$desired_fingerprint" > "$generation_temporary" || {
-            release_auth_lock
-            return 1
-          }
-          ${lib.getExe' coreutils "chmod"} 0600 -- "$generation_temporary" || {
-            release_auth_lock
-            return 1
-          }
-          ${lib.getExe' coreutils "mv"} -f -- \
-            "$generation_temporary" "$auth_generation" || {
-              release_auth_lock
-              return 1
-            }
-          release_auth_lock
-        }
-
-        cleanup_unsafe() {
-          local original_status=$?
-          local sync_status=0
-          trap - EXIT HUP INT TERM
-          set +e
-          synchronize_unsafe_auth
-          sync_status=$?
-          if [[ "$original_status" -eq 0 && "$sync_status" -ne 0 ]]; then
-            exit 75
-          fi
-          exit "$original_status"
-        }
-        trap cleanup_unsafe EXIT HUP INT TERM
-
-        echo "warning: launching ${name} UNSANDBOXED" >&2
-        "$real_executable" "$@"
-      '';
-    };
 in
 assert lib.assertMsg (
   missingAgents == [ ]
@@ -2631,8 +2463,5 @@ assert lib.assertMsg (invalidPersistentPaths == [ ])
   "agents must declare safe relative authentication paths: ${lib.concatStringsSep ", " invalidPersistentPaths}";
 symlinkJoin {
   name = "nono-agent-wrappers";
-  paths = builtins.concatMap (name: [
-    (mkNormalWrapper name)
-    (mkUnsafeWrapper name)
-  ]) agentNames;
+  paths = map mkNonoWrapper agentNames;
 }

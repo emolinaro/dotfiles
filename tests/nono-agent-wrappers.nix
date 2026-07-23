@@ -293,6 +293,11 @@ pkgs.runCommand "nono-agent-wrappers-test"
     materialize_wrappers ${wrappersWithMissingPi} "$TMPDIR/wrappers-missing-pi"
     materialize_wrappers ${wrappersWithHomeWorktree} "$TMPDIR/wrappers-home-worktree"
     wrappers_dir="$TMPDIR/wrappers"
+    ${pkgs.lib.concatMapStringsSep "\n" (name: ''
+      test -x "$wrappers_dir/bin/${name}-nono"
+      test ! -e "$wrappers_dir/bin/${name}"
+      test ! -e "$wrappers_dir/bin/${name}-unsafe"
+    '') agentNames}
     mkdir -p \
       "$HOME/.agents" \
       "$HOME/.claude/skills" \
@@ -350,7 +355,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       chmod +x "$malicious_path/$command_name"
     done
 
-    assert_normal_wrapper() {
+    assert_nono_wrapper() {
       local agent="$1"
       local real_executable="$2"
       local auth_relative="$3"
@@ -365,7 +370,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       export BASH_ENV="$TMPDIR/bash-env"
       export PATH="$malicious_path"
       unset WRAPPER_TEST_EXIT_CODE
-      "$wrappers_dir/bin/$agent" "argument with spaces" -- literal
+      "$wrappers_dir/bin/$agent-nono" "argument with spaces" -- literal
       export PATH="$original_path"
       test ! -e "$WRAPPER_TEST_BASH_ENV_TRACE"
       test ! -e "$WRAPPER_TEST_PATH_TRACE"
@@ -396,7 +401,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
 
     ${pkgs.lib.concatMapStringsSep "\n" (
       name:
-      "assert_normal_wrapper ${name} ${agentExecutables.${name}} "
+      "assert_nono_wrapper ${name} ${agentExecutables.${name}} "
       + pkgs.lib.escapeShellArg (builtins.head agentRegistry.${name}.persistentFiles)
     ) agentNames}
     unset GIT_DIR NONO_ALLOW NONO_PROFILE
@@ -404,7 +409,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/stdin.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/stdin.nono.trace"
     export WRAPPER_TEST_STDIN_EXPECT=wrapper-stdin
-    printf '%s\n' wrapper-stdin | "$wrappers_dir/bin/codex"
+    printf '%s\n' wrapper-stdin | "$wrappers_dir/bin/codex-nono"
     unset WRAPPER_TEST_STDIN_EXPECT
 
     ${pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
@@ -412,7 +417,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       export WRAPPER_TEST_NONO_TRACE="$TMPDIR/preload.nono.trace"
       export WRAPPER_TEST_PRELOAD_TRACE="$TMPDIR/preload.loaded"
       export LD_PRELOAD=${preloadLibrary}/lib/preload.so
-      "$wrappers_dir/bin/claude"
+      "$wrappers_dir/bin/claude-nono"
       test ! -e "$WRAPPER_TEST_PRELOAD_TRACE"
       unset LD_PRELOAD WRAPPER_TEST_PRELOAD_TRACE
     ''}
@@ -428,7 +433,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/git-isolation.nono.trace"
     export WRAPPER_TEST_MUTATE_GIT=1
     export WRAPPER_TEST_VICTIM="$HOME/victim"
-    "$wrappers_dir/bin/claude"
+    "$wrappers_dir/bin/claude-nono"
     unset WRAPPER_TEST_MUTATE_GIT WRAPPER_TEST_VICTIM
     ${pkgs.gnugrep}/bin/grep -F "value = trusted" "$repo/.git/config"
     test "$(<"$repo/.git/hooks/pre-push")" = trusted
@@ -440,7 +445,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/descendant.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/descendant.nono.trace"
     export WRAPPER_TEST_DESCENDANT_TARGET="$repo/.git/hooks/descendant"
-    "$wrappers_dir/bin/claude"
+    "$wrappers_dir/bin/claude-nono"
     unset WRAPPER_TEST_DESCENDANT_TARGET
     sleep 0.2
     test ! -e "$repo/.git/hooks/descendant"
@@ -453,7 +458,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/symref.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/symref.nono.trace"
     export WRAPPER_TEST_CHANGE_SYMREF=1
-    "$wrappers_dir/bin/claude"
+    "$wrappers_dir/bin/claude-nono"
     unset WRAPPER_TEST_CHANGE_SYMREF
     test "$(${pkgs.git}/bin/git -C "$repo" symbolic-ref refs/remotes/origin/HEAD)" = \
       refs/remotes/origin/other
@@ -462,7 +467,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/head-transition.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/head-transition.nono.trace"
     export WRAPPER_TEST_SWITCH_BRANCH=1
-    "$wrappers_dir/bin/claude"
+    "$wrappers_dir/bin/claude-nono"
     unset WRAPPER_TEST_SWITCH_BRANCH
     test "$(${pkgs.git}/bin/git -C "$repo" symbolic-ref HEAD)" = refs/heads/session-branch
     test "$(${pkgs.git}/bin/git -C "$repo" log -1 --format=%s)" = switched
@@ -471,7 +476,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-legacy.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-legacy.nono.trace"
     export WRAPPER_TEST_AUTH_EXPECT=unsafe-codex
-    "$wrappers_dir/bin/codex"
+    "$wrappers_dir/bin/codex-nono"
     unset WRAPPER_TEST_AUTH_EXPECT
     test "$(${pkgs.jq}/bin/jq -r .token \
       "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json")" = unsafe-codex
@@ -481,13 +486,24 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-persistent.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-persistent.nono.trace"
     export WRAPPER_TEST_AUTH_EXPECT=persistent-codex
-    "$wrappers_dir/bin/codex"
+    "$wrappers_dir/bin/codex-nono"
     unset WRAPPER_TEST_AUTH_EXPECT
     test "$(${pkgs.jq}/bin/jq -r .token "$HOME/.codex/auth.json")" = persistent-codex
 
+    rm -f -- "$HOME/.codex/auth.json"
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-host-missing.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-host-missing.nono.trace"
+    export WRAPPER_TEST_AUTH_EXPECT=persistent-codex
+    "$wrappers_dir/bin/codex-nono"
+    unset WRAPPER_TEST_AUTH_EXPECT
+    test "$(${pkgs.jq}/bin/jq -r .token "$HOME/.codex/auth.json")" = persistent-codex
+    test "$(${pkgs.jq}/bin/jq -r .token \
+      "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json")" = persistent-codex
+
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-logout.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-logout.nono.trace"
     export WRAPPER_TEST_AUTH_DELETE=1
-    "$wrappers_dir/bin/codex-unsafe"
+    "$wrappers_dir/bin/codex-nono"
     unset WRAPPER_TEST_AUTH_DELETE
     test ! -e "$HOME/.codex/auth.json"
     test ! -e "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
@@ -497,7 +513,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-missing-parent.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-missing-parent.nono.trace"
     export WRAPPER_TEST_AUTH_EXPECT=refreshed-pi
-    "$wrappers_dir/bin/pi"
+    "$wrappers_dir/bin/pi-nono"
     unset WRAPPER_TEST_AUTH_EXPECT
     test "$(${pkgs.jq}/bin/jq -r .token "$HOME/.pi/agent/auth.json")" = refreshed-pi
 
@@ -512,7 +528,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     cd "$unsupported_repo"
     rm -f "$WRAPPER_TEST_NONO_TRACE"
     set +e
-    "$wrappers_dir/bin/codex" \
+    "$wrappers_dir/bin/codex-nono" \
       > "$TMPDIR/unsupported-state.stdout" 2> "$TMPDIR/unsupported-state.stderr"
     unsupported_status=$?
     set -e
@@ -533,7 +549,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     cd "$alternate_repo"
     rm -f "$WRAPPER_TEST_NONO_TRACE"
     set +e
-    "$wrappers_dir/bin/codex" \
+    "$wrappers_dir/bin/codex-nono" \
       > "$TMPDIR/alternates.stdout" 2> "$TMPDIR/alternates.stderr"
     alternates_status=$?
     set -e
@@ -563,7 +579,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       export WRAPPER_TEST_NONO_TRACE="$TMPDIR/nested.nono.trace"
       export WRAPPER_TEST_HOLD_READY="$nested_ready"
       export WRAPPER_TEST_HOLD_RELEASE="$nested_release"
-      "$wrappers_dir/bin/codex"
+      "$wrappers_dir/bin/codex-nono"
     ) &
     nested_pid=$!
     for _ in $(seq 1 1000); do
@@ -588,7 +604,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     cd "$linked"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/linked.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/linked.nono.trace"
-    "$wrappers_dir/bin/codex" linked
+    "$wrappers_dir/bin/codex-nono" linked
     test "$(<"$linked/.git")" = "gitdir: $linked_git_directory"
     test "$(<"$linked_git_directory/config.worktree")" = trusted
     ${pkgs.gnugrep}/bin/grep -F "value = trusted" "$common_directory/config"
@@ -604,7 +620,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       export WRAPPER_TEST_NONO_TRACE="$TMPDIR/linked-hold.nono.trace"
       export WRAPPER_TEST_HOLD_READY="$linked_ready"
       export WRAPPER_TEST_HOLD_RELEASE="$linked_release"
-      "$wrappers_dir/bin/codex"
+      "$wrappers_dir/bin/codex-nono"
     ) &
     linked_pid=$!
     for _ in $(seq 1 1000); do
@@ -618,7 +634,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       export WRAPPER_TEST_NONO_TRACE="$TMPDIR/linked-two-hold.nono.trace"
       export WRAPPER_TEST_HOLD_READY="$linked_two_ready"
       export WRAPPER_TEST_HOLD_RELEASE="$linked_two_release"
-      "$wrappers_dir/bin/codex"
+      "$wrappers_dir/bin/codex-nono"
     ) &
     linked_two_pid=$!
     for _ in $(seq 1 1000); do
@@ -635,7 +651,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/main-linked.nono.trace"
     rm -f "$WRAPPER_TEST_AGENT_TRACE" "$WRAPPER_TEST_NONO_TRACE"
     set +e
-    "$wrappers_dir/bin/codex" \
+    "$wrappers_dir/bin/codex-nono" \
       > "$TMPDIR/main-linked.stdout" 2> "$TMPDIR/main-linked.stderr"
     main_linked_status=$?
     set -e
@@ -648,7 +664,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/missing-profile.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/missing-profile.nono.trace"
     rm -f "$WRAPPER_TEST_AGENT_TRACE" "$WRAPPER_TEST_NONO_TRACE"
-    if "$TMPDIR/wrappers-missing-profile/bin/opencode" \
+    if "$TMPDIR/wrappers-missing-profile/bin/opencode-nono" \
       > "$TMPDIR/missing-profile.stdout" 2> "$TMPDIR/missing-profile.stderr"; then
       echo "opencode unexpectedly started without its local profile" >&2
       exit 1
@@ -660,7 +676,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     mkdir -p "$outside"
     cd "$outside"
     rm -f "$WRAPPER_TEST_AGENT_TRACE" "$WRAPPER_TEST_NONO_TRACE"
-    if "$wrappers_dir/bin/claude" \
+    if "$wrappers_dir/bin/claude-nono" \
       > "$TMPDIR/outside-worktree.stdout" 2> "$TMPDIR/outside-worktree.stderr"; then
       echo "claude unexpectedly started outside a worktree" >&2
       exit 1
@@ -672,7 +688,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     cd "$repo/subdir"
     rm -f "$WRAPPER_TEST_AGENT_TRACE" "$WRAPPER_TEST_NONO_TRACE"
     set +e
-    "$TMPDIR/wrappers-home-worktree/bin/codex" \
+    "$TMPDIR/wrappers-home-worktree/bin/codex-nono" \
       > "$TMPDIR/home-worktree.stdout" 2> "$TMPDIR/home-worktree.stderr"
     home_status=$?
     set -e
@@ -685,7 +701,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     mkdir -p "$HOME"
     rm -f "$WRAPPER_TEST_AGENT_TRACE" "$WRAPPER_TEST_NONO_TRACE"
     set +e
-    "$wrappers_dir/bin/codex" \
+    "$wrappers_dir/bin/codex-nono" \
       > "$TMPDIR/unexpected-home.stdout" 2> "$TMPDIR/unexpected-home.stderr"
     unexpected_home_status=$?
     set -e
@@ -695,20 +711,9 @@ pkgs.runCommand "nono-agent-wrappers-test"
       "$TMPDIR/unexpected-home.stderr"
 
     export HOME="$test_home"
-    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/unsafe.agent.trace"
-    export WRAPPER_TEST_EXIT_CODE=23
-    set +e
-    "$wrappers_dir/bin/pi-unsafe" "unsafe argument" 2> "$TMPDIR/unsafe.stderr"
-    unsafe_status=$?
-    set -e
-    test "$unsafe_status" -eq 23
-    printf '%s\n' "unsafe argument" > "$TMPDIR/unsafe.expected"
-    ${pkgs.diffutils}/bin/diff -u "$TMPDIR/unsafe.expected" "$WRAPPER_TEST_AGENT_TRACE"
-    ${pkgs.gnugrep}/bin/grep -F "UNSANDBOXED" "$TMPDIR/unsafe.stderr"
-
     unset WRAPPER_TEST_EXIT_CODE
     set +e
-    "$TMPDIR/wrappers-missing-pi/bin/pi" \
+    "$TMPDIR/wrappers-missing-pi/bin/pi-nono" \
       > "$TMPDIR/missing-executable.stdout" 2> "$TMPDIR/missing-executable.stderr"
     missing_status=$?
     set -e
