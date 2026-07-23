@@ -108,6 +108,63 @@ let
           rm -rf "$HOME/.pi/agent"
           ln -s "$host_codex_directory" "$HOME/.pi/agent"
           ;;
+        git-state)
+          git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/other
+          git switch -qc runtime-switch
+          printf '%s\n' switched >> tracked
+          git add tracked
+          git commit -qm switched
+          ;;
+        reflog-only)
+          output="$1"
+          starting_branch="$(git symbolic-ref --short HEAD)"
+          git switch -qc disposable
+          printf '%s\n' disposable >> tracked
+          git add tracked
+          git commit -qm disposable
+          disposable_oid="$(git rev-parse HEAD)"
+          git switch -q "$starting_branch"
+          git branch -qD disposable
+          printf '%s\n' "$disposable_oid" > "$output"
+          ;;
+        descendant)
+          target="$1"
+          if [[ "$(uname -s)" == Linux ]]; then
+            python3 - "$target" <<'PY'
+      import os
+      import sys
+      import time
+
+      if os.fork() != 0:
+          raise SystemExit(0)
+      os.setsid()
+      if os.fork() != 0:
+          os._exit(0)
+      git_directory = os.path.dirname(os.path.dirname(sys.argv[1]))
+      for _ in range(1000):
+          if os.path.isdir(git_directory):
+              with open(sys.argv[1], "w", encoding="utf-8") as target:
+                  target.write("escaped\n")
+              break
+          time.sleep(0.01)
+      PY
+          else
+            (
+            (
+                descendant_git="$(dirname "$(dirname "$target")")"
+                for _ in $(seq 1 1000); do
+                  if [[ -d "$descendant_git" ]]; then
+                    printf '%s\n' escaped > "$target"
+                    exit
+                  fi
+                  sleep 0.01
+                done
+              ) </dev/null >/dev/null 2>&1 &
+            ) &
+          fi
+          ;;
+        noop)
+          ;;
         *)
           exit 64
           ;;
@@ -128,7 +185,9 @@ pkgs.writeShellApplication {
   name = "nono-runtime-test";
   runtimeInputs = [
     pkgs.coreutils
+    pkgs.findutils
     pkgs.git
+    pkgs.gnugrep
     pkgs.jq
     pkgs.python3
   ];
@@ -231,12 +290,81 @@ pkgs.writeShellApplication {
     test -d "$repo/.git"
     test -z "$(find "$HOME/.cache/nono" -mindepth 1 -maxdepth 1 -name 'session.*' -print -quit)"
 
+    git -C "$repo" update-ref refs/remotes/origin/main HEAD
+    git -C "$repo" update-ref refs/remotes/origin/other HEAD
+    git -C "$repo" symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+    main_oid="$(git -C "$repo" rev-parse refs/remotes/origin/main)"
+    cd "$repo"
+    "${runtimeWrappers}/bin/codex" git-state
+    test "$(git symbolic-ref refs/remotes/origin/HEAD)" = refs/remotes/origin/other
+    test "$(git rev-parse refs/remotes/origin/main)" = "$main_oid"
+    test "$(git symbolic-ref HEAD)" = refs/heads/runtime-switch
+    test "$(git log -1 --format=%s)" = switched
+
+    reflog_oid_file="$repo/reflog-oid"
+    "${runtimeWrappers}/bin/codex" reflog-only "$reflog_oid_file"
+    reflog_oid="$(<"$reflog_oid_file")"
+    canonical_repo="$(cd "$repo" && pwd -P)"
+    worktree_digest="$(printf '%s' "$canonical_repo" | sha256sum)"
+    recovery_ref="refs/nono/recovery/''${worktree_digest%% *}/$reflog_oid"
+    test "$(git rev-parse "$recovery_ref")" = "$reflog_oid"
+
+    descendant_target="$repo/.git/hooks/descendant"
+    "${runtimeWrappers}/bin/codex" descendant "$descendant_target"
+    sleep 0.2
+    test ! -e "$descendant_target"
+
     linked="$HOME/linked"
     git -C "$repo" worktree add -qb linked "$linked"
     cd "$linked"
     "${runtimeWrappers}/bin/codex" linked
     test "$(git log -1 --format=%s)" = linked
     test -f "$linked/.git"
+    cd "$repo"
+    set +e
+    "${runtimeWrappers}/bin/codex" noop \
+      > "$HOME/main-linked.stdout" 2> "$HOME/main-linked.stderr"
+    main_linked_status=$?
+    set -e
+    test "$main_linked_status" -eq 78
+    git -C "$linked" status --short >/dev/null
+    grep -F "main worktree with linked worktrees" "$HOME/main-linked.stderr"
+
+    unsupported_repo="$HOME/unsupported"
+    create_repo "$unsupported_repo"
+    printf '%s\n' blocked > "$unsupported_repo/.git/MERGE_HEAD"
+    cd "$unsupported_repo"
+    set +e
+    "${runtimeWrappers}/bin/codex" noop \
+      > "$HOME/unsupported.stdout" 2> "$HOME/unsupported.stderr"
+    unsupported_status=$?
+    set -e
+    test "$unsupported_status" -eq 78
+    test -d "$unsupported_repo/.git"
+    grep -F "unsupported Git state" "$HOME/unsupported.stderr"
+
+    recovery_repo="$HOME/recovery"
+    create_repo "$recovery_repo"
+    recovery_repo="$(cd "$recovery_repo" && pwd -P)"
+    recovery_metadata="$(mktemp -d "$HOME/.nono-git-metadata.XXXXXXXXXX")"
+    recovery_metadata="$(cd "$recovery_metadata" && pwd -P)"
+    mv "$recovery_repo/.git" "$recovery_metadata/original-git"
+    recovery_digest="$(printf '%s' "$recovery_repo" | sha256sum)"
+    recovery_record="$HOME/.cache/nono/recovery/git-''${recovery_digest%% *}"
+    recovery_session="$(mktemp -d "$HOME/.cache/nono/session.XXXXXXXXXX")"
+    recovery_session="$(cd "$recovery_session" && pwd -P)"
+    mkdir -p "$recovery_record"
+    printf '%s\n' "$recovery_repo" > "$recovery_record/worktree"
+    printf '%s\n' "$recovery_metadata" > "$recovery_record/metadata"
+    printf '%s\n' directory > "$recovery_record/kind"
+    printf '%s\n' 999999999 > "$recovery_record/owner"
+    printf '%s\n' "$recovery_session" > "$recovery_record/session"
+    cd "$recovery_repo"
+    "${runtimeWrappers}/bin/codex" noop
+    test -d "$recovery_repo/.git"
+    test ! -e "$recovery_record"
+    test ! -e "$recovery_metadata"
+    test ! -e "$recovery_session"
 
     first_repo="$HOME/first"
     second_repo="$HOME/second"
@@ -272,11 +400,13 @@ pkgs.writeShellApplication {
     test "$(jq -r .token "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json")" = newer
     test "$(jq -r .token "$HOME/.codex/auth.json")" = newer
 
-    lock_ready="$repo/lock-ready"
-    lock_release="$repo/lock-release"
-    second_lock_ready="$repo/second-lock-ready"
+    linked_two="$HOME/linked-two"
+    git -C "$repo" worktree add -qb linked-two "$linked_two"
+    lock_ready="$linked/lock-ready"
+    lock_release="$linked/lock-release"
+    second_lock_ready="$linked_two/second-lock-ready"
     (
-      cd "$repo"
+      cd "$linked"
       "${runtimeWrappers}/bin/codex" lock "$lock_ready" "$lock_release"
     ) &
     lock_session=$!
@@ -286,7 +416,7 @@ pkgs.writeShellApplication {
     done
     test -e "$lock_ready"
     (
-      cd "$repo"
+      cd "$linked_two"
       "${runtimeWrappers}/bin/codex" lock "$second_lock_ready" -
     ) &
     second_session=$!
