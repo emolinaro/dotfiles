@@ -66,8 +66,6 @@ nix build \
 ## Supported systems
 
 - macOS on Apple Silicon, by default.
-- Intel Mac: change one line.
-  In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
 - Headless Ubuntu 24.04 on x86_64 or ARM64. The Ubuntu bootstrap requires a
   non-root user with sudo access and selects the correct architecture automatically.
 
@@ -80,7 +78,7 @@ git clone https://github.com/emolinaro/dotfiles.git
 cd dotfiles
 ```
 
-Before you run it: open the config files and change the values listed in "Make it yours" below (git identity, host label, and Intel vs Apple Silicon), and read the Homebrew cleanup warning.
+Before you run it: open the config files and change the values listed in "Make it yours" below (git identity and host label), and read the Homebrew cleanup warning.
 `bootstrap.sh` applies the config to your machine, so do this first.
 
 ```sh
@@ -210,10 +208,10 @@ This repo is mine.
 If you clone it, change these before you run `bootstrap.sh`:
 
 - **macOS user** is detected automatically from the account running the setup. When the scripts invoke `sudo`, the flake uses `SUDO_USER`; otherwise it uses `USER`. Evaluation is intentionally impure so any sudo-capable account can apply the configuration without code changes.
-- **Git identity**, in `home.nix:43-46` (`emolinaro` / `40191802+emolinaro@users.noreply.github.com`).
+- **Git identity**, in `programs.git.settings.user` in `home.nix`
+  (`emolinaro` / `40191802+emolinaro@users.noreply.github.com`).
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `scripts/macos/rebuild.sh` (the `#mac` at the end of the flake reference), and `scripts/macos/bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
-- **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
 That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
