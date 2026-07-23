@@ -37,7 +37,10 @@ pkgs.runCommand "nono-profiles-test"
       .linux.af_unix_mediation == "pathname"
       and .allow_launch_services != true
       and .allow_parent_of_protected == true
-      and (.filesystem.unix_socket // []) == []
+      and (.filesystem.unix_socket // [] | contains([
+        "$DOTFILES_JOB_CONTROL_SOCKET",
+        "/nix/var/nix/daemon-socket/socket"
+      ]))
       and .workdir.access == "none"
       and (.groups.exclude | contains([
         "homebrew_linux",
@@ -108,6 +111,10 @@ pkgs.runCommand "nono-profiles-test"
         "/Library/Preferences/Logging/com.apple.diagnosticd.filter.plist"
       ]))
       and (.environment.allow_vars | contains([
+        "DOTFILES_JOB_CONTROL_SOCKET",
+        "DOTFILES_JOB_CONTROL_TOKEN",
+        "GIT_DIR",
+        "GIT_WORK_TREE",
         "HOME",
         "PATH",
         "TERM"
@@ -118,6 +125,9 @@ pkgs.runCommand "nono-profiles-test"
       and .environment.set_vars.XDG_CACHE_HOME == "$HOME/.cache"
       and .environment.set_vars.XDG_CONFIG_HOME == "$HOME/.config"
       and .environment.set_vars.XDG_DATA_HOME == "$HOME/.local/share"
+      and (.platform_overrides.macos.filesystem.deny | contains([
+        "$DOTFILES_WORKTREE_ROOT/.git"
+      ]))
       and .environment.set_vars.XDG_RUNTIME_DIR == "$HOME/.run"
       and .environment.set_vars.XDG_STATE_HOME == "$HOME/.local/state"
       and .environment.set_vars.HERDR_SOCKET_PATH == null

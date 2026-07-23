@@ -32,6 +32,21 @@ let
           mkdir -p "$(dirname "$auth_path")"
           printf '{"token":"%s"}\n' "$WRAPPER_TEST_AUTH_REPLACEMENT" > "$auth_path"
         fi
+        if [[ -n "''${WRAPPER_TEST_AUTH_DELETE:-}" ]]; then
+          rm -f -- "$auth_path"
+        fi
+        if [[ -n "''${WRAPPER_TEST_STDIN_EXPECT:-}" ]]; then
+          IFS= read -r stdin_value
+          test "$stdin_value" = "$WRAPPER_TEST_STDIN_EXPECT"
+        fi
+        if [[ -n "''${WRAPPER_TEST_HOLD_READY:-}" ]]; then
+          printf '%s\n' ready > "$WRAPPER_TEST_HOLD_READY"
+          for _ in $(seq 1 1000); do
+            [[ -e "$WRAPPER_TEST_HOLD_RELEASE" ]] && break
+            sleep 0.01
+          done
+          test -e "$WRAPPER_TEST_HOLD_RELEASE"
+        fi
 
         if [[ -n "''${WRAPPER_TEST_MUTATE_GIT:-}" ]]; then
           git_directory="$(git rev-parse --path-format=absolute --git-dir)"
@@ -86,7 +101,7 @@ let
     text = ''
       : "''${WRAPPER_TEST_NONO_TRACE:?WRAPPER_TEST_NONO_TRACE must name a trace file}"
       : "''${WRAPPER_TEST_CONFIGURED_HOME:?WRAPPER_TEST_CONFIGURED_HOME must name the test home}"
-      if [[ -n "''${BASH_ENV:-}" || -n "''${GIT_DIR:-}" || -n "''${LD_PRELOAD:-}" \
+      if [[ -n "''${BASH_ENV:-}" || -n "''${LD_PRELOAD:-}" \
         || -n "''${NONO_ALLOW:-}" || -n "''${NONO_PROFILE:-}" ]]; then
         echo "ambient loader, Git, or Nono variable reached Nono" >&2
         exit 1
@@ -94,6 +109,10 @@ let
       if [[ "''${DOTFILES_AGENT_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.cache/nono/session.*/home \
         || "''${HOME:-}" != "$DOTFILES_AGENT_HOME" \
         || "''${DOTFILES_HOST_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME" \
+        || "''${DOTFILES_WORKTREE_ROOT:-}" != "$(${pkgs.git}/bin/git rev-parse --show-toplevel)" \
+        || "''${GIT_DIR:-}" != "$DOTFILES_AGENT_HOME/.run/git" \
+        || "''${GIT_WORK_TREE:-}" != "$DOTFILES_WORKTREE_ROOT" \
+        || "''${XDG_STATE_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.nono-s/* \
         || "''${TMPDIR:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.cache/nono/session.*/tmp \
         || -n "''${TMP:-}" || -n "''${TEMP:-}" ]]; then
         echo "Nono did not receive isolated session paths" >&2
@@ -382,6 +401,12 @@ pkgs.runCommand "nono-agent-wrappers-test"
     ) agentNames}
     unset GIT_DIR NONO_ALLOW NONO_PROFILE
 
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/stdin.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/stdin.nono.trace"
+    export WRAPPER_TEST_STDIN_EXPECT=wrapper-stdin
+    printf '%s\n' wrapper-stdin | "$wrappers_dir/bin/codex"
+    unset WRAPPER_TEST_STDIN_EXPECT
+
     ${pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
       export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/preload.agent.trace"
       export WRAPPER_TEST_NONO_TRACE="$TMPDIR/preload.nono.trace"
@@ -460,6 +485,14 @@ pkgs.runCommand "nono-agent-wrappers-test"
     unset WRAPPER_TEST_AUTH_EXPECT
     test "$(${pkgs.jq}/bin/jq -r .token "$HOME/.codex/auth.json")" = persistent-codex
 
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-logout.agent.trace"
+    export WRAPPER_TEST_AUTH_DELETE=1
+    "$wrappers_dir/bin/codex-unsafe"
+    unset WRAPPER_TEST_AUTH_DELETE
+    test ! -e "$HOME/.codex/auth.json"
+    test ! -e "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
+    test "$(<"$HOME/.local/state/nono-agent-auth/codex/.synchronized-fingerprint")" = absent
+
     rm -rf "$HOME/.pi/agent"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/auth-missing-parent.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/auth-missing-parent.nono.trace"
@@ -488,8 +521,65 @@ pkgs.runCommand "nono-agent-wrappers-test"
     ${pkgs.gnugrep}/bin/grep -F "unsupported Git state" \
       "$TMPDIR/unsupported-state.stderr"
 
+    alternate_source="$TMPDIR/alternate-source"
+    alternate_repo="$TMPDIR/alternate-repo"
+    ${pkgs.git}/bin/git init -q "$alternate_source"
+    ${pkgs.git}/bin/git -C "$alternate_source" config user.name test
+    ${pkgs.git}/bin/git -C "$alternate_source" config user.email test@example.com
+    printf '%s\n' alternate > "$alternate_source/tracked"
+    ${pkgs.git}/bin/git -C "$alternate_source" add tracked
+    ${pkgs.git}/bin/git -C "$alternate_source" commit -qm alternate
+    ${pkgs.git}/bin/git clone -q --shared "$alternate_source" "$alternate_repo"
+    cd "$alternate_repo"
+    rm -f "$WRAPPER_TEST_NONO_TRACE"
+    set +e
+    "$wrappers_dir/bin/codex" \
+      > "$TMPDIR/alternates.stdout" 2> "$TMPDIR/alternates.stderr"
+    alternates_status=$?
+    set -e
+    test "$alternates_status" -eq 78
+    test ! -e "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -F "object-alternates" "$TMPDIR/alternates.stderr"
+
+    outer_repo="$TMPDIR/outer"
+    nested_repo="$outer_repo/nested"
+    ${pkgs.git}/bin/git init -q "$outer_repo"
+    ${pkgs.git}/bin/git -C "$outer_repo" config user.name test
+    ${pkgs.git}/bin/git -C "$outer_repo" config user.email test@example.com
+    printf '%s\n' outer > "$outer_repo/tracked"
+    ${pkgs.git}/bin/git -C "$outer_repo" add tracked
+    ${pkgs.git}/bin/git -C "$outer_repo" commit -qm outer
+    ${pkgs.git}/bin/git init -q "$nested_repo"
+    ${pkgs.git}/bin/git -C "$nested_repo" config user.name test
+    ${pkgs.git}/bin/git -C "$nested_repo" config user.email test@example.com
+    printf '%s\n' nested > "$nested_repo/tracked"
+    ${pkgs.git}/bin/git -C "$nested_repo" add tracked
+    ${pkgs.git}/bin/git -C "$nested_repo" commit -qm nested
+    nested_ready="$TMPDIR/nested-ready"
+    nested_release="$TMPDIR/nested-release"
+    (
+      cd "$nested_repo"
+      export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/nested.agent.trace"
+      export WRAPPER_TEST_NONO_TRACE="$TMPDIR/nested.nono.trace"
+      export WRAPPER_TEST_HOLD_READY="$nested_ready"
+      export WRAPPER_TEST_HOLD_RELEASE="$nested_release"
+      "$wrappers_dir/bin/codex"
+    ) &
+    nested_pid=$!
+    for _ in $(seq 1 1000); do
+      [[ -e "$nested_ready" ]] && break
+      sleep 0.01
+    done
+    test -e "$nested_ready"
+    test -z "$(${pkgs.findutils}/bin/find "$outer_repo" -maxdepth 2 \
+      -name '.nono-git-metadata.*' -print -quit)"
+    touch "$nested_release"
+    wait "$nested_pid"
+
     linked="$TMPDIR/linked"
+    linked_two="$TMPDIR/linked-two"
     ${pkgs.git}/bin/git -C "$repo" worktree add -qb linked "$linked"
+    ${pkgs.git}/bin/git -C "$repo" worktree add -qb linked-two "$linked_two"
     linked_git_directory="$(${pkgs.git}/bin/git -C "$linked" \
       rev-parse --path-format=absolute --git-dir)"
     common_directory="$(${pkgs.git}/bin/git -C "$linked" \
@@ -503,6 +593,43 @@ pkgs.runCommand "nono-agent-wrappers-test"
     test "$(<"$linked_git_directory/config.worktree")" = trusted
     ${pkgs.gnugrep}/bin/grep -F "value = trusted" "$common_directory/config"
     test "$(<"$common_directory/hooks/pre-push")" = trusted
+
+    linked_ready="$TMPDIR/linked-ready"
+    linked_release="$TMPDIR/linked-release"
+    linked_two_ready="$TMPDIR/linked-two-ready"
+    linked_two_release="$TMPDIR/linked-two-release"
+    (
+      cd "$linked"
+      export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/linked-hold.agent.trace"
+      export WRAPPER_TEST_NONO_TRACE="$TMPDIR/linked-hold.nono.trace"
+      export WRAPPER_TEST_HOLD_READY="$linked_ready"
+      export WRAPPER_TEST_HOLD_RELEASE="$linked_release"
+      "$wrappers_dir/bin/codex"
+    ) &
+    linked_pid=$!
+    for _ in $(seq 1 1000); do
+      [[ -e "$linked_ready" ]] && break
+      sleep 0.01
+    done
+    test -e "$linked_ready"
+    (
+      cd "$linked_two"
+      export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/linked-two-hold.agent.trace"
+      export WRAPPER_TEST_NONO_TRACE="$TMPDIR/linked-two-hold.nono.trace"
+      export WRAPPER_TEST_HOLD_READY="$linked_two_ready"
+      export WRAPPER_TEST_HOLD_RELEASE="$linked_two_release"
+      "$wrappers_dir/bin/codex"
+    ) &
+    linked_two_pid=$!
+    for _ in $(seq 1 1000); do
+      [[ -e "$linked_two_ready" ]] && break
+      sleep 0.01
+    done
+    test -e "$linked_two_ready"
+    touch "$linked_release" "$linked_two_release"
+    wait "$linked_pid"
+    wait "$linked_two_pid"
+
     cd "$repo"
     export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/main-linked.agent.trace"
     export WRAPPER_TEST_NONO_TRACE="$TMPDIR/main-linked.nono.trace"
@@ -590,6 +717,10 @@ pkgs.runCommand "nono-agent-wrappers-test"
       "$TMPDIR/missing-executable.stderr"
     test -z "$(${pkgs.findutils}/bin/find "$TMPDIR" \
       -mindepth 1 -maxdepth 1 -name '.nono-git-metadata.*' -print -quit)"
+    if [[ -d "$HOME/.nono-s" ]]; then
+      test -z "$(${pkgs.findutils}/bin/find "$HOME/.nono-s" \
+        -mindepth 1 -maxdepth 1 -type d -print -quit)"
+    fi
 
     touch "$out"
   ''

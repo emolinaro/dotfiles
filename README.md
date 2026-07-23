@@ -24,11 +24,16 @@ Only each client's dedicated authentication JSON file is copied through a
 separate persistent store and synchronized with its legacy client path using
 generation checks. Git metadata is isolated per session, then refs and the
 index are reconciled only if the host repository has not changed concurrently.
+Parallel linked-worktree sessions use separate lifecycle locks and serialize
+only snapshots and reconciliation against their shared Git directory. On
+macOS, the real `.git` path remains denied for the full sandbox lifetime while
+Git uses the session-local metadata directory.
 Launch from a linked worktree when a repository has registered linked
 worktrees. Main-checkout launches fail closed so the shared Git directory never
 moves out from under another worktree. Active merge, rebase, cherry-pick,
 revert, bisect, shallow, sparse-checkout, split-index, and submodule states are
-also rejected before isolation begins.
+also rejected before isolation begins, as are repositories that use external
+Git object alternates.
 Launches outside a Git worktree fail closed. SSH keys, cloud configuration,
 browser data, unrelated repositories, the general macOS keychain, and
 container sockets are not granted.
@@ -38,7 +43,12 @@ and Unix sockets. Outbound TCP is mediated by Nono's developer proxy so host
 control sockets remain unreachable without limiting normal provider, plugin,
 documentation, and package-registry traffic. API-key, cloud, Git-hosting,
 Docker, Kubernetes, and SSH-agent variables are stripped from the sandboxed
-process.
+process. Linux grants only the exact multi-user Nix daemon socket needed for
+normal Nix builds.
+
+Interrupted Git sessions are restored under a per-worktree lock and their
+session state is quarantined under `~/.cache/nono/recovery/` for manual
+inspection. Reflog-only recovery refs expire after 30 days.
 
 Explicit host commands remain available for trusted work that cannot run in
 the sandbox:

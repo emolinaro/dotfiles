@@ -26,6 +26,9 @@ let
       mode="$1"
       shift
 
+      test -z "''${DOTFILES_JOB_CONTROL_SOCKET:-}"
+      test -z "''${DOTFILES_JOB_CONTROL_TOKEN:-}"
+
       case "$mode" in
         standard)
           host_config="$1"
@@ -129,8 +132,8 @@ let
           ;;
         descendant)
           target="$1"
-          if [[ "$(uname -s)" == Linux ]]; then
-            python3 - "$target" <<'PY'
+          attempted="$2"
+          python3 - "$target" "$attempted" <<'PY'
       import os
       import sys
       import time
@@ -140,28 +143,33 @@ let
       os.setsid()
       if os.fork() != 0:
           os._exit(0)
-      git_directory = os.path.dirname(os.path.dirname(sys.argv[1]))
+      target_parent = os.path.dirname(sys.argv[1])
       for _ in range(1000):
-          if os.path.isdir(git_directory):
-              with open(sys.argv[1], "w", encoding="utf-8") as target:
-                  target.write("escaped\n")
+          if os.path.isdir(target_parent):
+              try:
+                  with open(sys.argv[1], "w", encoding="utf-8") as target:
+                      target.write("escaped\n")
+              except OSError:
+                  pass
+              with open(sys.argv[2], "w", encoding="utf-8") as marker:
+                  marker.write("attempted\n")
               break
           time.sleep(0.01)
       PY
-          else
-            (
-            (
-                descendant_git="$(dirname "$(dirname "$target")")"
-                for _ in $(seq 1 1000); do
-                  if [[ -d "$descendant_git" ]]; then
-                    printf '%s\n' escaped > "$target"
-                    exit
-                  fi
-                  sleep 0.01
-                done
-              ) </dev/null >/dev/null 2>&1 &
-            ) &
-          fi
+          ;;
+        stdin)
+          expected="$1"
+          IFS= read -r received
+          test "$received" = "$expected"
+          ;;
+        suspend)
+          printf '%s\n' READY
+          IFS= read -r resume
+          test "$resume" = resume
+          printf '%s\n' DONE
+          ;;
+        logout)
+          rm -f "$HOME/.codex/auth.json"
           ;;
         noop)
           ;;
@@ -249,6 +257,73 @@ pkgs.writeShellApplication {
     printf '%s\n' trusted > "$repo/.git/hooks/pre-push"
     printf '%s\n' trusted > "$repo/.git/info/attributes"
     printf '%s\n' trusted > "$repo/.git/modules/example/hooks/pre-push"
+    cd "$repo"
+    printf '%s\n' runtime-stdin | "${runtimeWrappers}/bin/codex" stdin runtime-stdin
+    python3 - "${runtimeWrappers}/bin/codex" "$repo" <<'PY'
+    import os
+    import pty
+    import select
+    import signal
+    import sys
+    import time
+
+    wrapper, repository = sys.argv[1:]
+    child, descriptor = pty.fork()
+    if child == 0:
+        os.chdir(repository)
+        os.execv(wrapper, [wrapper, "suspend"])
+
+    output = bytearray()
+    try:
+        deadline = time.monotonic() + 20
+        while b"READY" not in output and time.monotonic() < deadline:
+            readable, _, _ = select.select([descriptor], [], [], 0.1)
+            if readable:
+                output.extend(os.read(descriptor, 4096))
+        if b"READY" not in output:
+            raise RuntimeError(f"suspend probe did not become ready: {output!r}")
+
+        os.write(descriptor, b"\x1a")
+        stopped = False
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            waited, status = os.waitpid(child, os.WNOHANG | os.WUNTRACED)
+            if waited == child and os.WIFSTOPPED(status):
+                stopped = True
+                break
+            time.sleep(0.05)
+        if not stopped:
+            raise RuntimeError("wrapper did not propagate terminal suspension")
+
+        os.killpg(child, signal.SIGCONT)
+        os.write(descriptor, b"resume\n")
+        deadline = time.monotonic() + 20
+        waited = 0
+        status = 0
+        while time.monotonic() < deadline:
+            readable, _, _ = select.select([descriptor], [], [], 0.1)
+            if readable:
+                try:
+                    output.extend(os.read(descriptor, 4096))
+                except OSError:
+                    pass
+            waited, status = os.waitpid(child, os.WNOHANG)
+            if waited == child:
+                break
+        if b"DONE" not in output:
+            raise RuntimeError(f"suspend probe did not resume: {output!r}")
+        if waited != child or not os.WIFEXITED(status) or os.WEXITSTATUS(status) != 0:
+            raise RuntimeError(f"suspend probe exited unsuccessfully: {status}")
+    finally:
+        try:
+            os.killpg(child, signal.SIGKILL)
+        except OSError:
+            pass
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+    PY
 
     socket_path="$HOME/control.sock"
     python3 - "$socket_path" <<'PY' &
@@ -306,13 +381,40 @@ pkgs.writeShellApplication {
     reflog_oid="$(<"$reflog_oid_file")"
     canonical_repo="$(cd "$repo" && pwd -P)"
     worktree_digest="$(printf '%s' "$canonical_repo" | sha256sum)"
-    recovery_ref="refs/nono/recovery/''${worktree_digest%% *}/$reflog_oid"
+    recovery_ref="$(
+      git for-each-ref --format='%(refname)' \
+        "refs/nono/recovery/''${worktree_digest%% *}/" \
+        | grep -F -- "$reflog_oid" | head -n 1
+    )"
+    test -n "$recovery_ref"
     test "$(git rev-parse "$recovery_ref")" = "$reflog_oid"
+    old_recovery_ref="refs/nono/recovery/''${worktree_digest%% *}/1-$reflog_oid"
+    git update-ref "$old_recovery_ref" "$reflog_oid"
+    "${runtimeWrappers}/bin/codex" noop
+    test -z "$(git for-each-ref --format='%(refname)' "$old_recovery_ref")"
+    legacy_recovery_ref="refs/nono/recovery/''${worktree_digest%% *}/$reflog_oid"
+    git update-ref "$legacy_recovery_ref" "$reflog_oid"
+    "${runtimeWrappers}/bin/codex" noop
+    test -z "$(git for-each-ref --format='%(refname)' "$legacy_recovery_ref")"
+    test -n "$(
+      git for-each-ref --points-at="$reflog_oid" --format='%(refname)' \
+        "refs/nono/recovery/''${worktree_digest%% *}/"
+    )"
 
     descendant_target="$repo/.git/hooks/descendant"
-    "${runtimeWrappers}/bin/codex" descendant "$descendant_target"
-    sleep 0.2
-    test ! -e "$descendant_target"
+    descendant_attempted="$repo/descendant-attempted"
+    "${runtimeWrappers}/bin/codex" descendant \
+      "$descendant_target" "$descendant_attempted"
+    for _ in $(seq 1 1000); do
+      [[ -e "$descendant_attempted" ]] && break
+      sleep 0.01
+    done
+    test -e "$descendant_attempted"
+    if [[ -e "$descendant_target" ]]; then
+      echo "detached sandbox descendant modified restored Git metadata" >&2
+      exit 1
+    fi
+    rm -f "$descendant_attempted"
 
     linked="$HOME/linked"
     git -C "$repo" worktree add -qb linked "$linked"
@@ -346,9 +448,13 @@ pkgs.writeShellApplication {
     recovery_repo="$HOME/recovery"
     create_repo "$recovery_repo"
     recovery_repo="$(cd "$recovery_repo" && pwd -P)"
-    recovery_metadata="$(mktemp -d "$HOME/.nono-git-metadata.XXXXXXXXXX")"
+    recovery_metadata_parent="$HOME/.cache/nono/git-metadata"
+    mkdir -p "$recovery_metadata_parent"
+    recovery_metadata_parent="$(cd "$recovery_metadata_parent" && pwd -P)"
+    recovery_metadata="$(mktemp -d "$recovery_metadata_parent/.nono-git-metadata.XXXXXXXXXX")"
     recovery_metadata="$(cd "$recovery_metadata" && pwd -P)"
     mv "$recovery_repo/.git" "$recovery_metadata/original-git"
+    mkdir -m 0700 "$recovery_repo/.git"
     recovery_digest="$(printf '%s' "$recovery_repo" | sha256sum)"
     recovery_record="$HOME/.cache/nono/recovery/git-''${recovery_digest%% *}"
     recovery_session="$(mktemp -d "$HOME/.cache/nono/session.XXXXXXXXXX")"
@@ -356,6 +462,7 @@ pkgs.writeShellApplication {
     mkdir -p "$recovery_record"
     printf '%s\n' "$recovery_repo" > "$recovery_record/worktree"
     printf '%s\n' "$recovery_metadata" > "$recovery_record/metadata"
+    printf '%s\n' "$recovery_metadata_parent" > "$recovery_record/metadata-parent"
     printf '%s\n' directory > "$recovery_record/kind"
     printf '%s\n' 999999999 > "$recovery_record/owner"
     printf '%s\n' "$recovery_session" > "$recovery_record/session"
@@ -364,7 +471,72 @@ pkgs.writeShellApplication {
     test -d "$recovery_repo/.git"
     test ! -e "$recovery_record"
     test ! -e "$recovery_metadata"
+    recovery_quarantine="$(
+      find "$HOME/.cache/nono/recovery" -mindepth 1 -maxdepth 1 \
+        -type d -name "quarantined-git-''${recovery_digest%% *}.*" -print -quit
+    )"
+    test -n "$recovery_quarantine"
+    test -d "$recovery_quarantine"
     test ! -e "$recovery_session"
+
+    repaired_repo="$HOME/repaired"
+    create_repo "$repaired_repo"
+    repaired_repo="$(cd "$repaired_repo" && pwd -P)"
+    repaired_metadata="$(mktemp -d "$recovery_metadata_parent/.nono-git-metadata.XXXXXXXXXX")"
+    repaired_metadata="$(cd "$repaired_metadata" && pwd -P)"
+    mv "$repaired_repo/.git" "$repaired_metadata/original-git"
+    mkdir -m 0700 "$repaired_repo/.git"
+    repaired_digest="$(printf '%s' "$repaired_repo" | sha256sum)"
+    repaired_record="$HOME/.cache/nono/recovery/git-''${repaired_digest%% *}"
+    repaired_session="$(mktemp -d "$HOME/.cache/nono/session.XXXXXXXXXX")"
+    repaired_session="$(cd "$repaired_session" && pwd -P)"
+    mkdir -p "$repaired_record"
+    printf '%s\n' "$repaired_repo" > "$repaired_record/worktree"
+    printf '%s\n' "$repaired_metadata" > "$repaired_record/metadata"
+    printf '%s\n' "$recovery_metadata_parent" > "$repaired_record/metadata-parent"
+    printf '%s\n' directory > "$repaired_record/kind"
+    printf '%s\n' 999999999 > "$repaired_record/owner"
+    printf '%s\n' "$repaired_session" > "$repaired_record/session"
+    printf '%s\n' manually-repaired > "$repaired_repo/.git/config"
+    cd "$repaired_repo"
+    set +e
+    "${runtimeWrappers}/bin/codex" noop \
+      > "$HOME/repaired.stdout" 2> "$HOME/repaired.stderr"
+    repaired_status=$?
+    set -e
+    test "$repaired_status" -eq 78
+    test "$(<"$repaired_repo/.git/config")" = manually-repaired
+    test -d "$repaired_metadata/original-git"
+    test -d "$repaired_record"
+    test -d "$repaired_session"
+    grep -F "refusing to replace repaired Git metadata" "$HOME/repaired.stderr"
+    rm -rf "$repaired_repo/.git"
+    mv "$repaired_metadata/original-git" "$repaired_repo/.git"
+    rmdir "$repaired_metadata"
+    rm -rf "$repaired_record" "$repaired_session"
+
+    completed_repo="$HOME/completed"
+    create_repo "$completed_repo"
+    completed_repo="$(cd "$completed_repo" && pwd -P)"
+    completed_metadata="$(mktemp -d "$recovery_metadata_parent/.nono-git-metadata.XXXXXXXXXX")"
+    completed_metadata="$(cd "$completed_metadata" && pwd -P)"
+    completed_digest="$(printf '%s' "$completed_repo" | sha256sum)"
+    completed_record="$HOME/.cache/nono/recovery/completed-git-''${completed_digest%% *}.12345"
+    completed_session="$(mktemp -d "$HOME/.cache/nono/session.XXXXXXXXXX")"
+    completed_session="$(cd "$completed_session" && pwd -P)"
+    mkdir -p "$completed_record"
+    printf '%s\n' "$completed_repo" > "$completed_record/worktree"
+    printf '%s\n' "$completed_metadata" > "$completed_record/metadata"
+    printf '%s\n' "$recovery_metadata_parent" > "$completed_record/metadata-parent"
+    printf '%s\n' directory > "$completed_record/kind"
+    printf '%s\n' 999999999 > "$completed_record/owner"
+    printf '%s\n' "$completed_session" > "$completed_record/session"
+    cd "$repaired_repo"
+    "${runtimeWrappers}/bin/codex" noop
+    test -d "$completed_repo/.git"
+    test ! -e "$completed_record"
+    test ! -e "$completed_metadata"
+    test ! -e "$completed_session"
 
     first_repo="$HOME/first"
     second_repo="$HOME/second"
@@ -420,14 +592,25 @@ pkgs.writeShellApplication {
       "${runtimeWrappers}/bin/codex" lock "$second_lock_ready" -
     ) &
     second_session=$!
-    sleep 0.2
-    test ! -e "$second_lock_ready"
+    for _ in $(seq 1 1000); do
+      [[ -e "$second_lock_ready" ]] && break
+      sleep 0.01
+    done
+    test -e "$second_lock_ready"
     touch "$lock_release"
     wait "$lock_session"
     lock_session=
     wait "$second_session"
     second_session=
     test -e "$second_lock_ready"
+
+    "${runtimeWrappers}/bin/codex-unsafe" logout
+    test ! -e "$HOME/.codex/auth.json"
+    test ! -e "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
+    test "$(<"$HOME/.local/state/nono-agent-auth/codex/.synchronized-fingerprint")" = absent
+    "${runtimeWrappers}/bin/codex" noop
+    test ! -e "$HOME/.codex/auth.json"
+    test ! -e "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
 
     pi_repo="$HOME/pi-repo"
     create_repo "$pi_repo"
