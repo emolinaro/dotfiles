@@ -9,8 +9,13 @@ writeShellApplication {
   text = ''
     set -euo pipefail
 
+    dry_run=0
+    if [[ "''${1:-}" == "--dry-run" ]]; then
+      dry_run=1
+      shift
+    fi
     if [[ "$#" -ne 1 ]]; then
-      echo "usage: migrate-gstack-checkout TARGET_CHECKOUT" >&2
+      echo "usage: migrate-gstack-checkout [--dry-run] TARGET_CHECKOUT" >&2
       exit 64
     fi
 
@@ -37,29 +42,18 @@ writeShellApplication {
       [[ -e "$1" || -L "$1" ]]
     }
 
-    if ! path_exists "$legacy_repositories"; then
+    if ! path_exists "$legacy_checkout" || path_exists "$target_checkout"; then
       exit 0
     fi
 
-    if ! path_exists "$target_checkout" && path_exists "$legacy_checkout"; then
-      mkdir -p "$(dirname "$target_checkout")"
-      mv "$legacy_checkout" "$target_checkout"
-    fi
-
-    if rmdir "$legacy_repositories" 2>/dev/null; then
+    if [[ "$dry_run" -eq 1 ]]; then
+      echo "Would move $legacy_checkout to $target_checkout" >&2
       exit 0
     fi
 
-    archive_root="$HOME/.local/share/gstack"
-    archive="$archive_root/legacy-repos"
-    suffix=0
-    while path_exists "$archive"; do
-      suffix=$((suffix + 1))
-      archive="$archive_root/legacy-repos-$suffix"
-    done
-
-    mkdir -p "$archive_root"
-    mv "$legacy_repositories" "$archive"
-    echo "Moved deprecated gstack repositories to $archive" >&2
+    mkdir -p "$(dirname "$target_checkout")"
+    mv "$legacy_checkout" "$target_checkout"
+    rmdir "$legacy_repositories" 2>/dev/null || true
+    echo "Moved deprecated gstack checkout to $target_checkout" >&2
   '';
 }

@@ -3,16 +3,16 @@
   "meta": {
     "name": "dotfiles-pi",
     "version": "1.0.0",
-    "description": "Pi with repository-scoped access",
+    "description": "Pi with isolated session state",
     "author": "dotfiles"
   },
   "filesystem": {
     "allow": [
-      "$HOME/.pi"
+      "$DOTFILES_AGENT_HOME/.pi"
     ],
-    "deny": [
-      "$HOME/.pi/agent/AGENTS.md",
-      "$HOME/.pi/agent/extensions"
+    "read": [
+      "$DOTFILES_HOST_HOME/.pi/agent/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.pi/agent/settings.json"
     ]
   }
 }

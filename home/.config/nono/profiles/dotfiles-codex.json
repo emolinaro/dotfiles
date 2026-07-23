@@ -3,17 +3,20 @@
   "meta": {
     "name": "dotfiles-codex",
     "version": "1.0.0",
-    "description": "Codex with repository-scoped access",
+    "description": "Codex with isolated session state",
     "author": "dotfiles"
   },
   "filesystem": {
     "allow": [
-      "$HOME/.codex"
+      "$DOTFILES_AGENT_HOME/.codex"
     ],
-    "deny": [
-      "$HOME/.codex/AGENTS.md",
-      "$HOME/.codex/config.toml",
-      "$HOME/.codex/skills"
+    "read": [
+      "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
+      "$DOTFILES_HOST_HOME/.codex/config.toml",
+      "$DOTFILES_HOST_HOME/.codex/hooks.json",
+      "$DOTFILES_HOST_HOME/.codex/plugins",
+      "$DOTFILES_HOST_HOME/.codex/rules",
+      "$DOTFILES_HOST_HOME/.codex/skills"
     ]
   }
 }
