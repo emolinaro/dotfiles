@@ -19,18 +19,21 @@ pull request, merge, and deployment actions always require explicit approval.
 Terminal launches of `claude`, `codex`, `opencode`, and `pi` run inside a
 version-pinned Nono sandbox by default. The current Git worktree and an
 ephemeral per-session client home are writable. Trusted agent instructions,
-skills, plugins, and configuration are linked into that home read-only.
+skills, plugins, and configuration are staged into that home read-only.
 Only each client's dedicated authentication JSON file is copied through a
-separate persistent store.
+separate persistent store and synchronized with its legacy client path using
+generation checks. Git metadata is isolated per session, then refs and the
+index are reconciled only if the host repository has not changed concurrently.
 Launches outside a Git worktree fail closed. SSH keys, cloud configuration,
 browser data, unrelated repositories, the general macOS keychain, and
 container sockets are not granted.
 
 The first rollout restricts filesystem access, ambient environment variables,
-and Unix sockets. Outbound IP networking remains unrestricted until each
-client's provider, login, plugin, and package-registry endpoints have been
-captured and tested. API-key, cloud, Git-hosting, Docker, Kubernetes, and
-SSH-agent variables are stripped from the sandboxed process.
+and Unix sockets. Outbound TCP is mediated by Nono's developer proxy so host
+control sockets remain unreachable without limiting normal provider, plugin,
+documentation, and package-registry traffic. API-key, cloud, Git-hosting,
+Docker, Kubernetes, and SSH-agent variables are stripped from the sandboxed
+process.
 
 Explicit host commands remain available for trusted work that cannot run in
 the sandbox:

@@ -20,6 +20,7 @@
       }
     ],
     "exclude": [
+      "system_read_macos",
       "system_write_linux",
       "system_write_macos"
     ]
@@ -38,15 +39,9 @@
       "@git:config-files",
       "@git:hooks-path",
       "$DOTFILES_HOST_HOME/.agents",
-      "$DOTFILES_HOST_HOME/.local/share/gstack/repos/gstack"
-    ],
-    "write": [
+      "$DOTFILES_HOST_HOME/.local/share/gstack/repos/gstack",
       {
         "path": "/dev/fd",
-        "when": "linux"
-      },
-      {
-        "path": "/dev/pts",
         "when": "linux"
       },
       {
@@ -58,11 +53,105 @@
         "when": "macos"
       },
       {
-        "path": "/dev/pts",
+        "path": "/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/sbin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/sbin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/bin",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/local/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Library",
+        "when": "macos"
+      },
+      {
+        "path": "/Library/Frameworks",
+        "when": "macos"
+      },
+      {
+        "path": "/private/var/db/dyld",
+        "when": "macos"
+      },
+      {
+        "path": "/private/etc/ssl",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/ssl",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share/zoneinfo",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share/locale",
+        "when": "macos"
+      },
+      {
+        "path": "/usr/share/terminfo",
+        "when": "macos"
+      },
+      {
+        "path": "/var/db/timezone",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Cryptexes",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library",
+        "when": "macos"
+      },
+      {
+        "path": "/System/Volumes/Preboot/Cryptexes/OS/usr/lib",
+        "when": "macos"
+      },
+      {
+        "path": "/nix",
         "when": "macos"
       }
     ],
-    "write_file": [
+    "write": [
+      {
+        "path": "/dev/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/proc/self/fd",
+        "when": "linux"
+      },
+      {
+        "path": "/dev/fd",
+        "when": "macos"
+      }
+    ],
+    "allow_file": [
       {
         "path": "/dev/null",
         "when": "linux"
@@ -109,8 +198,45 @@
       }
     ],
     "read_file": [
+      "$DOTFILES_AGENT_HOME/.config/git/config",
       "$DOTFILES_HOST_HOME/.dotfiles/home/AGENTS.md",
-      "$DOTFILES_HOST_HOME/.dotfiles/home/.claude/settings.json"
+      "$DOTFILES_HOST_HOME/.dotfiles/home/.claude/settings.json",
+      {
+        "path": "/etc/resolv.conf",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/hosts",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/nsswitch.conf",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/gai.conf",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/services",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/protocols",
+        "when": "macos"
+      },
+      {
+        "path": "/etc/localtime",
+        "when": "macos"
+      },
+      {
+        "path": "/private/etc/localtime",
+        "when": "macos"
+      },
+      {
+        "path": "/dev/autofs_nowait",
+        "when": "macos"
+      }
     ],
     "deny": [
       {
@@ -129,7 +255,8 @@
     "af_unix_mediation": "pathname"
   },
   "network": {
-    "block": false
+    "block": false,
+    "network_profile": "developer"
   },
   "workdir": {
     "access": "none"
@@ -195,6 +322,7 @@
       "VAULT_*"
     ],
     "set_vars": {
+      "CFFIXED_USER_HOME": "$HOME",
       "HOME": "$HOME",
       "XDG_CACHE_HOME": "$HOME/.cache",
       "XDG_CONFIG_HOME": "$HOME/.config",
