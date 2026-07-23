@@ -65,7 +65,7 @@ pkgs.runCommand "nono-profiles-test"
     for agent in claude codex opencode pi; do
       resolved="$TMPDIR/dotfiles-$agent.resolved.json"
       nono profile show --raw --json "dotfiles-$agent" > "$resolved"
-      jq --exit-status '
+      jq --exit-status --arg agent "$agent" '
         def filesystem_grants: [
           .filesystem.allow[],
           .filesystem.read[],
@@ -80,8 +80,8 @@ pkgs.runCommand "nono-profiles-test"
             "i"
           );
         def forbidden_group:
-          . == "claude_code_macos"
-          or . == "codex_macos"
+          (. == "claude_code_macos" and $agent != "claude")
+          or (. == "codex_macos" and $agent != "codex")
           or . == "user_caches_macos"
           or . == "user_caches_linux"
           or . == "vscode_macos"

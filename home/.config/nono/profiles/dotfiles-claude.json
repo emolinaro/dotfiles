@@ -3,7 +3,7 @@
   "meta": {
     "name": "dotfiles-claude",
     "version": "1.0.0",
-    "description": "Claude Code with repository-scoped access and no keychain grant",
+    "description": "Claude Code with repository-scoped access",
     "author": "dotfiles"
   },
   "groups": {
@@ -11,6 +11,10 @@
       {
         "name": "claude_cache_linux",
         "when": "linux"
+      },
+      {
+        "name": "claude_code_macos",
+        "when": "macos"
       }
     ]
   },

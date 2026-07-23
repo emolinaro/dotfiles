@@ -3,8 +3,16 @@
   "meta": {
     "name": "dotfiles-codex",
     "version": "1.0.0",
-    "description": "Codex with repository-scoped access and no keychain grant",
+    "description": "Codex with repository-scoped access",
     "author": "dotfiles"
+  },
+  "groups": {
+    "include": [
+      {
+        "name": "codex_macos",
+        "when": "macos"
+      }
+    ]
   },
   "filesystem": {
     "allow": [

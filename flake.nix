@@ -82,6 +82,7 @@
       ubuntuHomeDirectory = envOr "DOTFILES_HOME" "/home/${ubuntuUsername}";
       supportedSystems = [
         "aarch64-darwin"
+        "x86_64-darwin"
         "x86_64-linux"
         "aarch64-linux"
       ];
@@ -133,7 +134,7 @@
               username = darwinUsername;
               homeDirectory = darwinHomeDirectory;
               herdrPackage = null;
-              nonoPackage = nonoPackageFor "aarch64-darwin";
+              nonoPackage = nonoPackageFor config.nixpkgs.hostPlatform.system;
               ghAxiSkill = "${ghAxi}/skills/gh-axi";
               lavishSkill = "${lavish}/skills/lavish";
               gstackRev = gstack.rev;
