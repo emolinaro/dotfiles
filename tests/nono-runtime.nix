@@ -258,8 +258,8 @@ pkgs.writeShellApplication {
     printf '%s\n' trusted > "$repo/.git/info/attributes"
     printf '%s\n' trusted > "$repo/.git/modules/example/hooks/pre-push"
     cd "$repo"
-    printf '%s\n' runtime-stdin | "${runtimeWrappers}/bin/codex" stdin runtime-stdin
-    python3 - "${runtimeWrappers}/bin/codex" "$repo" <<'PY'
+    printf '%s\n' runtime-stdin | "${runtimeWrappers}/bin/codex-nono" stdin runtime-stdin
+    python3 - "${runtimeWrappers}/bin/codex-nono" "$repo" <<'PY'
     import os
     import pty
     import select
@@ -346,7 +346,7 @@ pkgs.writeShellApplication {
     shared_temp="$HOME/shared-temp"
     mkdir -p "$shared_temp"
     cd "$repo"
-    "${runtimeWrappers}/bin/codex" \
+    "${runtimeWrappers}/bin/codex-nono" \
       standard \
       "$HOME/.codex/config.toml" \
       "$shared_temp" \
@@ -370,14 +370,14 @@ pkgs.writeShellApplication {
     git -C "$repo" symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
     main_oid="$(git -C "$repo" rev-parse refs/remotes/origin/main)"
     cd "$repo"
-    "${runtimeWrappers}/bin/codex" git-state
+    "${runtimeWrappers}/bin/codex-nono" git-state
     test "$(git symbolic-ref refs/remotes/origin/HEAD)" = refs/remotes/origin/other
     test "$(git rev-parse refs/remotes/origin/main)" = "$main_oid"
     test "$(git symbolic-ref HEAD)" = refs/heads/runtime-switch
     test "$(git log -1 --format=%s)" = switched
 
     reflog_oid_file="$repo/reflog-oid"
-    "${runtimeWrappers}/bin/codex" reflog-only "$reflog_oid_file"
+    "${runtimeWrappers}/bin/codex-nono" reflog-only "$reflog_oid_file"
     reflog_oid="$(<"$reflog_oid_file")"
     canonical_repo="$(cd "$repo" && pwd -P)"
     worktree_digest="$(printf '%s' "$canonical_repo" | sha256sum)"
@@ -390,11 +390,11 @@ pkgs.writeShellApplication {
     test "$(git rev-parse "$recovery_ref")" = "$reflog_oid"
     old_recovery_ref="refs/nono/recovery/''${worktree_digest%% *}/1-$reflog_oid"
     git update-ref "$old_recovery_ref" "$reflog_oid"
-    "${runtimeWrappers}/bin/codex" noop
+    "${runtimeWrappers}/bin/codex-nono" noop
     test -z "$(git for-each-ref --format='%(refname)' "$old_recovery_ref")"
     legacy_recovery_ref="refs/nono/recovery/''${worktree_digest%% *}/$reflog_oid"
     git update-ref "$legacy_recovery_ref" "$reflog_oid"
-    "${runtimeWrappers}/bin/codex" noop
+    "${runtimeWrappers}/bin/codex-nono" noop
     test -z "$(git for-each-ref --format='%(refname)' "$legacy_recovery_ref")"
     test -n "$(
       git for-each-ref --points-at="$reflog_oid" --format='%(refname)' \
@@ -403,7 +403,7 @@ pkgs.writeShellApplication {
 
     descendant_target="$repo/.git/hooks/descendant"
     descendant_attempted="$repo/descendant-attempted"
-    "${runtimeWrappers}/bin/codex" descendant \
+    "${runtimeWrappers}/bin/codex-nono" descendant \
       "$descendant_target" "$descendant_attempted"
     for _ in $(seq 1 1000); do
       [[ -e "$descendant_attempted" ]] && break
@@ -419,12 +419,12 @@ pkgs.writeShellApplication {
     linked="$HOME/linked"
     git -C "$repo" worktree add -qb linked "$linked"
     cd "$linked"
-    "${runtimeWrappers}/bin/codex" linked
+    "${runtimeWrappers}/bin/codex-nono" linked
     test "$(git log -1 --format=%s)" = linked
     test -f "$linked/.git"
     cd "$repo"
     set +e
-    "${runtimeWrappers}/bin/codex" noop \
+    "${runtimeWrappers}/bin/codex-nono" noop \
       > "$HOME/main-linked.stdout" 2> "$HOME/main-linked.stderr"
     main_linked_status=$?
     set -e
@@ -437,7 +437,7 @@ pkgs.writeShellApplication {
     printf '%s\n' blocked > "$unsupported_repo/.git/MERGE_HEAD"
     cd "$unsupported_repo"
     set +e
-    "${runtimeWrappers}/bin/codex" noop \
+    "${runtimeWrappers}/bin/codex-nono" noop \
       > "$HOME/unsupported.stdout" 2> "$HOME/unsupported.stderr"
     unsupported_status=$?
     set -e
@@ -467,7 +467,7 @@ pkgs.writeShellApplication {
     printf '%s\n' 999999999 > "$recovery_record/owner"
     printf '%s\n' "$recovery_session" > "$recovery_record/session"
     cd "$recovery_repo"
-    "${runtimeWrappers}/bin/codex" noop
+    "${runtimeWrappers}/bin/codex-nono" noop
     test -d "$recovery_repo/.git"
     test ! -e "$recovery_record"
     test ! -e "$recovery_metadata"
@@ -500,7 +500,7 @@ pkgs.writeShellApplication {
     printf '%s\n' manually-repaired > "$repaired_repo/.git/config"
     cd "$repaired_repo"
     set +e
-    "${runtimeWrappers}/bin/codex" noop \
+    "${runtimeWrappers}/bin/codex-nono" noop \
       > "$HOME/repaired.stdout" 2> "$HOME/repaired.stderr"
     repaired_status=$?
     set -e
@@ -532,7 +532,7 @@ pkgs.writeShellApplication {
     printf '%s\n' 999999999 > "$completed_record/owner"
     printf '%s\n' "$completed_session" > "$completed_record/session"
     cd "$repaired_repo"
-    "${runtimeWrappers}/bin/codex" noop
+    "${runtimeWrappers}/bin/codex-nono" noop
     test -d "$completed_repo/.git"
     test ! -e "$completed_record"
     test ! -e "$completed_metadata"
@@ -548,7 +548,7 @@ pkgs.writeShellApplication {
 
     (
       cd "$first_repo"
-      "${runtimeWrappers}/bin/codex" credential refreshed stale "$first_ready" "$first_release"
+      "${runtimeWrappers}/bin/codex-nono" credential refreshed stale "$first_ready" "$first_release"
     ) &
     first_session=$!
     for _ in $(seq 1 1000); do
@@ -559,7 +559,7 @@ pkgs.writeShellApplication {
 
     (
       cd "$second_repo"
-      "${runtimeWrappers}/bin/codex" credential refreshed newer "$second_ready" -
+      "${runtimeWrappers}/bin/codex-nono" credential refreshed newer "$second_ready" -
     )
     test -e "$second_ready"
     touch "$first_release"
@@ -579,7 +579,7 @@ pkgs.writeShellApplication {
     second_lock_ready="$linked_two/second-lock-ready"
     (
       cd "$linked"
-      "${runtimeWrappers}/bin/codex" lock "$lock_ready" "$lock_release"
+      "${runtimeWrappers}/bin/codex-nono" lock "$lock_ready" "$lock_release"
     ) &
     lock_session=$!
     for _ in $(seq 1 1000); do
@@ -589,7 +589,7 @@ pkgs.writeShellApplication {
     test -e "$lock_ready"
     (
       cd "$linked_two"
-      "${runtimeWrappers}/bin/codex" lock "$second_lock_ready" -
+      "${runtimeWrappers}/bin/codex-nono" lock "$second_lock_ready" -
     ) &
     second_session=$!
     for _ in $(seq 1 1000); do
@@ -604,20 +604,23 @@ pkgs.writeShellApplication {
     second_session=
     test -e "$second_lock_ready"
 
-    "${runtimeWrappers}/bin/codex-unsafe" logout
+    rm -f -- "$HOME/.codex/auth.json"
+    cd "$second_repo"
+    "${runtimeWrappers}/bin/codex-nono" noop
+    test "$(jq -r .token "$HOME/.codex/auth.json")" = newer
+    test "$(jq -r .token \
+      "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json")" = newer
+    "${runtimeWrappers}/bin/codex-nono" logout
     test ! -e "$HOME/.codex/auth.json"
     test ! -e "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
     test "$(<"$HOME/.local/state/nono-agent-auth/codex/.synchronized-fingerprint")" = absent
-    "${runtimeWrappers}/bin/codex" noop
-    test ! -e "$HOME/.codex/auth.json"
-    test ! -e "$HOME/.local/state/nono-agent-auth/codex/.codex/auth.json"
 
     pi_repo="$HOME/pi-repo"
     create_repo "$pi_repo"
     printf '%s\n' '{"token":"host-codex-secret"}' > "$HOME/.codex/auth.json"
     cd "$pi_repo"
     set +e
-    "${runtimeWrappers}/bin/pi" pi-symlink "$HOME/.codex"
+    "${runtimeWrappers}/bin/pi-nono" pi-symlink "$HOME/.codex"
     pi_status=$?
     set -e
     test "$pi_status" -ne 0
