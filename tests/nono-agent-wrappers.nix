@@ -148,6 +148,7 @@ let
           test -d "$DOTFILES_AGENT_HOME/.cache/claude"
           test -d "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs"
           test -d "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
+          test -L "$DOTFILES_AGENT_HOME/.claude.json"
           test -f "$DOTFILES_AGENT_HOME/.claude.json"
           ;;
         *dotfiles-codex.json)
@@ -309,6 +310,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       "$HOME/.pi/agent"
     touch \
       "$HOME/.claude/CLAUDE.md" \
+      "$HOME/.claude.json" \
       "$HOME/.codex/AGENTS.md" \
       "$HOME/.codex/config.toml" \
       "$HOME/.codex/hooks.json" \
@@ -394,6 +396,8 @@ pkgs.runCommand "nono-agent-wrappers-test"
       test -s "$HOME/.local/state/nono-agent-auth/$agent/.synchronized-fingerprint"
       ${pkgs.gnugrep}/bin/grep -Fx -- "--read" "$WRAPPER_TEST_NONO_TRACE"
       ${pkgs.gnugrep}/bin/grep -Fx -- "--allow" "$WRAPPER_TEST_NONO_TRACE"
+      ${pkgs.gnugrep}/bin/grep -Fx -- "--allow-domain" "$WRAPPER_TEST_NONO_TRACE"
+      ${pkgs.gnugrep}/bin/grep -Fx -- "chatgpt.com" "$WRAPPER_TEST_NONO_TRACE"
       test -z "$(${pkgs.findutils}/bin/find "$HOME/.cache/nono" \
         -mindepth 1 -maxdepth 1 -name 'session.*' -print -quit)"
     }
@@ -410,6 +414,19 @@ pkgs.runCommand "nono-agent-wrappers-test"
     export WRAPPER_TEST_STDIN_EXPECT=wrapper-stdin
     printf '%s\n' wrapper-stdin | "$wrappers_dir/bin/codex-nono"
     unset WRAPPER_TEST_STDIN_EXPECT
+
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/network-overrides.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/network-overrides.nono.trace"
+    export DOTFILES_NONO_ALLOW_DOMAINS="chatgpt.com,localhost,https://llm.example.internal/v1/**"
+    export DOTFILES_NONO_OPEN_PORTS="11434 8080"
+    "$wrappers_dir/bin/codex-nono"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "--allow-domain" "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "localhost" "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "https://llm.example.internal/v1/**" "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "--open-port" "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "11434" "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "8080" "$WRAPPER_TEST_NONO_TRACE"
+    unset DOTFILES_NONO_ALLOW_DOMAINS DOTFILES_NONO_OPEN_PORTS
 
     ${pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
       export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/preload.agent.trace"

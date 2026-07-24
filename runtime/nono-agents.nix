@@ -37,6 +37,10 @@ in
         source = ".claude/skills";
         target = ".claude/skills";
       }
+      {
+        source = ".claude.json";
+        target = ".claude.json";
+      }
     ];
     writableDirectories = commonWritableDirectories ++ [
       ".claude"
@@ -143,6 +147,10 @@ in
       {
         source = ".pi/agent/settings.json";
         target = ".pi/agent/settings.json";
+      }
+      {
+        source = ".pi/agent/trust.json";
+        target = ".pi/agent/trust.json";
       }
     ];
     writableDirectories = commonWritableDirectories ++ [

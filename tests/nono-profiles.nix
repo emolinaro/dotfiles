@@ -157,11 +157,22 @@ pkgs.runCommand "nono-profiles-test"
           .filesystem.allow_file[],
           .filesystem.write_file[]
         ];
+        def allowlisted_host_writable:
+          . == "$DOTFILES_HOST_HOME/.codex"
+          or . == "$DOTFILES_HOST_HOME/.codex/config.toml"
+          or . == "$DOTFILES_HOST_HOME/.claude.json"
+          or . == "$DOTFILES_HOST_HOME/.pi/agent"
+          or . == "$DOTFILES_HOST_HOME/.pi/agent/trust.json";
         def forbidden_path:
-          test(
-            "\\$DOTFILES_HOST_HOME/(\\.claude($|/)|\\.codex($|/)|\\.config/opencode($|/)|\\.local/share/opencode($|/)|\\.pi($|/)|\\.gstack($|/)|Library/Keychains)|(^|/)\\.ssh($|/)|(^|/)\\.aws($|/)|(^|/)\\.kube($|/)|(^|/)\\.docker($|/)|Documents/GITHUB|Application Support/(Google/Chrome|Chromium|Firefox|Microsoft Edge|Arc|BraveSoftware|Vivaldi)|Library/Safari";
-            "i"
-          );
+          if type == "string" then
+            test(
+              "\\$DOTFILES_HOST_HOME/(\\.claude($|/)|\\.codex($|/)|\\.config/opencode($|/)|\\.local/share/opencode($|/)|\\.pi($|/)|\\.gstack($|/)|Library/Keychains)|(^|/)\\.ssh($|/)|(^|/)\\.aws($|/)|(^|/)\\.kube($|/)|(^|/)\\.docker($|/)|Documents/GITHUB|Application Support/(Google/Chrome|Chromium|Firefox|Microsoft Edge|Arc|BraveSoftware|Vivaldi)|Library/Safari";
+              "i"
+            )
+            and (allowlisted_host_writable | not)
+          else
+            false
+          end;
         def forbidden_group:
           . == "claude_code_macos"
           or . == "codex_macos"
@@ -189,7 +200,8 @@ pkgs.runCommand "nono-profiles-test"
       and (.filesystem.allow_file | contains([
         "$DOTFILES_AGENT_HOME/.claude.json",
         "$DOTFILES_AGENT_HOME/.claude.json.lock",
-        "$DOTFILES_AGENT_HOME/.claude.lock"
+        "$DOTFILES_AGENT_HOME/.claude.lock",
+        "$DOTFILES_HOST_HOME/.claude.json"
       ]))
       and (.filesystem.read | contains([
         "$DOTFILES_HOST_HOME/.claude/CLAUDE.md",
@@ -201,14 +213,19 @@ pkgs.runCommand "nono-profiles-test"
 
     jq --exit-status '
       (.filesystem.allow | contains(["$DOTFILES_AGENT_HOME/.codex"]))
+      and (.filesystem.write | contains(["$DOTFILES_HOST_HOME/.codex"]))
+      and (.filesystem.allow_file | contains(["$DOTFILES_HOST_HOME/.codex/config.toml"]))
       and (.filesystem.read | contains([
         "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
         "$DOTFILES_HOST_HOME/.codex/config.toml",
+        "$DOTFILES_HOST_HOME/.codex/herdr-agent-state.sh",
         "$DOTFILES_HOST_HOME/.codex/hooks.json",
         "$DOTFILES_HOST_HOME/.codex/plugins",
         "$DOTFILES_HOST_HOME/.codex/rules",
         "$DOTFILES_HOST_HOME/.codex/skills"
       ]))
+      and .platform_overrides.macos.environment.set_vars.SSL_CERT_FILE == "/private/etc/ssl/cert.pem"
+      and .platform_overrides.macos.environment.set_vars.CODEX_CA_CERTIFICATE == "/private/etc/ssl/cert.pem"
       and ((.filesystem.deny // []) | length == 0)
     ' "$profile_dir/dotfiles-codex.json" >/dev/null
 
@@ -232,10 +249,13 @@ pkgs.runCommand "nono-profiles-test"
 
     jq --exit-status '
       (.filesystem.allow | contains(["$DOTFILES_AGENT_HOME/.pi"]))
+      and (.filesystem.write | contains(["$DOTFILES_HOST_HOME/.pi/agent"]))
+      and (.filesystem.allow_file | contains(["$DOTFILES_HOST_HOME/.pi/agent/trust.json"]))
       and (.filesystem.read | contains([
         "$DOTFILES_HOST_HOME/.pi/agent/AGENTS.md",
         "$DOTFILES_HOST_HOME/.pi/agent/settings.json"
       ]))
+      and .platform_overrides.macos.environment.set_vars.OPENSSL_CONF == "/private/etc/ssl/openssl.cnf"
       and ((.filesystem.deny // []) | length == 0)
     ' "$profile_dir/dotfiles-pi.json" >/dev/null
 

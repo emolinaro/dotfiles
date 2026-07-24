@@ -56,6 +56,23 @@ Docker, Kubernetes, and SSH-agent variables are stripped from the sandboxed
 process. Linux grants only the exact multi-user Nix daemon socket needed for
 normal Nix builds.
 
+Each `*-nono` wrapper accepts dynamic network allowlist overrides via
+environment variables:
+
+- `DOTFILES_NONO_ALLOW_DOMAINS` (default: `chatgpt.com`) adds one or more
+  `--allow-domain` entries. Use a comma or space separated list of hostnames or
+  URL globs.
+- `DOTFILES_NONO_OPEN_PORTS` adds one or more localhost `--open-port` entries
+  (for example `11434` for Ollama).
+
+On macOS, the codex profile also pins `SSL_CERT_FILE` and
+`CODEX_CA_CERTIFICATE` to `/private/etc/ssl/cert.pem` so Codex can validate TLS
+certificates inside the sandbox without requiring keychain access.
+
+On macOS, the pi profile pins `OPENSSL_CONF` to
+`/private/etc/ssl/openssl.cnf` so Homebrew Node does not try to read
+`/opt/homebrew/etc/openssl@3/openssl.cnf`, which is outside the sandbox policy.
+
 Interrupted Git sessions are restored under a per-worktree lock and their
 session state is quarantined under `~/.cache/nono/recovery/` for manual
 inspection. Reflog-only recovery refs expire after 30 days.

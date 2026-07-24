@@ -188,10 +188,12 @@ in
       ".." = "cd ..";
       ls = "eza --icons=${ezaIcons}";
       ll = "eza -laF --icons=${ezaIcons}";
+      llo = "eza -laF --sort=new --icons=${ezaIcons}";
       la = "eza -aF --icons=${ezaIcons}";
       add = "git add .";
       push = "git push";
       pull = "git pull";
+      status = "git status";
       m = "git switch main";
       k = "kubectl";
       grep = "grep --color=auto";
