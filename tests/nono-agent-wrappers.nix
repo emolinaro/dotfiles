@@ -160,6 +160,7 @@ let
           test -d "$DOTFILES_AGENT_HOME/.cache/opencode"
           test -d "$DOTFILES_AGENT_HOME/.local/share/opencode"
           test -d "$DOTFILES_AGENT_HOME/.local/share/opentui"
+          test -d "$DOTFILES_AGENT_HOME/.npm"
           test -d "$DOTFILES_AGENT_HOME/.local/state/opencode"
           ;;
         *dotfiles-pi.json)
@@ -307,6 +308,8 @@ pkgs.runCommand "nono-agent-wrappers-test"
       "$HOME/.config/git" \
       "$HOME/.config/opencode/plugins" \
       "$HOME/.config/opencode/skills" \
+      "$HOME/.npm" \
+      "$HOME/.local/state/opencode" \
       "$HOME/.pi/agent"
     touch \
       "$HOME/.claude/CLAUDE.md" \

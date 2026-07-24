@@ -128,6 +128,7 @@ in
       ".cache/opencode"
       ".local/share/opencode"
       ".local/share/opentui"
+      ".npm"
       ".local/state/opencode"
     ];
     writableFiles = [ ];

@@ -448,9 +448,39 @@ in
   home.file.".pi/agent/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/opencode.json".text = builtins.toJSON {
+    model = "openai/gpt-5.6-sol";
     plugin = [
       "superpowers@git+https://github.com/obra/superpowers.git#${superpowersRev}"
     ];
+    provider.openai.models."gpt-5.6-sol" = {
+      attachment = true;
+      cost = {
+        cache_read = 0.5;
+        input = 5;
+        output = 30;
+      };
+      family = "gpt-sol";
+      id = "gpt-5.6-sol";
+      limit = {
+        context = 1050000;
+        input = 922000;
+        output = 128000;
+      };
+      modalities = {
+        input = [
+          "text"
+          "image"
+          "pdf"
+        ];
+        output = [ "text" ];
+      };
+      name = "GPT-5.6 Sol";
+      reasoning = true;
+      release_date = "2026-07-09";
+      temperature = false;
+      tool_call = true;
+    };
+    small_model = "openai/gpt-5.6-sol";
   };
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
