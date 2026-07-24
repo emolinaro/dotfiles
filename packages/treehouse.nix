@@ -1,4 +1,10 @@
-{ fetchurl, lib, stdenvNoCC }:
+{
+  autoPatchelfHook,
+  fetchurl,
+  lib,
+  stdenv,
+  stdenvNoCC,
+}:
 
 let
   version = "2.1.0";
@@ -39,9 +45,15 @@ stdenvNoCC.mkDerivation {
   sourceRoot = ".";
   dontBuild = true;
 
+  nativeBuildInputs = lib.optionals stdenvNoCC.hostPlatform.isLinux [ autoPatchelfHook ];
+  buildInputs = lib.optionals stdenvNoCC.hostPlatform.isLinux [ stdenv.cc.cc.lib ];
+
   installPhase = ''
     runHook preInstall
     install -Dm755 treehouse "$out/bin/treehouse"
+    ${lib.optionalString stdenvNoCC.hostPlatform.isLinux ''
+      autoPatchelf -- "$out/bin/treehouse"
+    ''}
     mkdir -p "$out/share/zsh/site-functions"
     HOME="$TMPDIR" "$out/bin/treehouse" completion zsh \
       > "$out/share/zsh/site-functions/_treehouse"
