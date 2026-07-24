@@ -15,3 +15,4 @@
 - Before presenting implementation as complete, run the relevant formatter, linter, tests, and repository-level validation commands.
 - Treat review as read-only unless the user explicitly asks for fixes.
 - Require explicit user approval before pushing, opening or merging pull requests, deploying, or running destructive commands.
+- For simple tasks (single command, quick lookup, or tiny edit), do not invoke skills by default and execute directly.
