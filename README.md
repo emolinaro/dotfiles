@@ -89,6 +89,7 @@ system="$(nix eval --impure --raw --expr builtins.currentSystem)"
 nix build \
   ".#checks.$system.nono-package" \
   ".#checks.$system.nono-agent-wrappers" \
+  ".#checks.$system.nono-home-command-surface" \
   ".#checks.$system.nono-profiles" \
   ".#checks.$system.nono-runtime-driver"
 nix run ".#nono-runtime-test"
