@@ -1,27 +1,27 @@
 { fetchurl, lib, stdenvNoCC }:
 
 let
-  version = "1.40.0";
+  version = "1.40.3";
   releases = {
     aarch64-darwin = {
       os = "darwin";
       arch = "arm64";
-      hash = "sha256-jU6Avifov7BB/E7X6TW/SysO76HZTllmNMlPxtyU+m0=";
+      hash = "sha256-wFdmSihooUmKF2trx1bwc9xop+P/OibYeHQQrCWlpNY=";
     };
     x86_64-darwin = {
       os = "darwin";
       arch = "amd64";
-      hash = "sha256-jxOq0KiSdiz6huHgXLG+VVUomp2Lo9OrkEwfZ1cMSyk=";
+      hash = "sha256-0vw4isEsoP551Pc4KZp5heSUybm5ZBOKTb1bBG8HQ6A=";
     };
     aarch64-linux = {
       os = "linux";
       arch = "arm64";
-      hash = "sha256-5nk3DM/iDjAoxZ7ZhFEOcHeZag0XuNwZblsZkhjx250=";
+      hash = "sha256-+GKTxPs32D00yPUcyK6xEW+pqeIOwz4nCdgENUosilE=";
     };
     x86_64-linux = {
       os = "linux";
       arch = "amd64";
-      hash = "sha256-JEW2UXnQ6Om79AgyL1cZDzRPmUbP7TlxyE+hbOQSLpE=";
+      hash = "sha256-DzJbh6Cv5hqXoirv/ix1WCfIzWe2s8qkppZHW6HoTGk=";
     };
   };
   release = releases.${stdenvNoCC.hostPlatform.system}
