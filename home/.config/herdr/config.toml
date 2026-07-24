@@ -44,3 +44,13 @@ new_workspace = "prefix+shift+n"
 rename_workspace = "prefix+shift+w"
 close_workspace = "prefix+shift+d"
 toggle_sidebar = "prefix+b"
+
+[ui]
+# Drag-select text and copy it to the system clipboard on mouse release.
+copy_on_select = true
+# Keep Herdr's mouse-native UI enabled.
+mouse_capture = true
+
+[ui.toast.clipboard]
+# Show visual confirmation when clipboard copy succeeds.
+enabled = true

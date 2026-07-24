@@ -42,6 +42,9 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
     install -Dm755 treehouse "$out/bin/treehouse"
+    mkdir -p "$out/share/zsh/site-functions"
+    HOME="$TMPDIR" "$out/bin/treehouse" completion zsh \
+      > "$out/share/zsh/site-functions/_treehouse"
     runHook postInstall
   '';
 
