@@ -160,6 +160,7 @@ pkgs.runCommand "nono-profiles-test"
         def allowlisted_host_writable:
           . == "$DOTFILES_HOST_HOME/.codex"
           or . == "$DOTFILES_HOST_HOME/.codex/config.toml"
+          or . == "$DOTFILES_HOST_HOME/.codex/hooks.json"
           or . == "$DOTFILES_HOST_HOME/.claude.json"
           or . == "$DOTFILES_HOST_HOME/.pi/agent"
           or . == "$DOTFILES_HOST_HOME/.pi/agent/trust.json";
@@ -214,7 +215,10 @@ pkgs.runCommand "nono-profiles-test"
     jq --exit-status '
       (.filesystem.allow | contains(["$DOTFILES_AGENT_HOME/.codex"]))
       and (.filesystem.write | contains(["$DOTFILES_HOST_HOME/.codex"]))
-      and (.filesystem.allow_file | contains(["$DOTFILES_HOST_HOME/.codex/config.toml"]))
+      and (.filesystem.allow_file | contains([
+        "$DOTFILES_HOST_HOME/.codex/config.toml",
+        "$DOTFILES_HOST_HOME/.codex/hooks.json"
+      ]))
       and (.filesystem.read | contains([
         "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
         "$DOTFILES_HOST_HOME/.codex/config.toml",
