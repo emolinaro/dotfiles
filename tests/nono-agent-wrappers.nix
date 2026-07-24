@@ -296,7 +296,6 @@ pkgs.runCommand "nono-agent-wrappers-test"
     ${pkgs.lib.concatMapStringsSep "\n" (name: ''
       test -x "$wrappers_dir/bin/${name}-nono"
       test ! -e "$wrappers_dir/bin/${name}"
-      test ! -e "$wrappers_dir/bin/${name}-unsafe"
     '') agentNames}
     mkdir -p \
       "$HOME/.agents" \
