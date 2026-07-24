@@ -14,7 +14,8 @@
       "$DOTFILES_HOST_HOME/.codex"
     ],
     "allow_file": [
-      "$DOTFILES_HOST_HOME/.codex/config.toml"
+      "$DOTFILES_HOST_HOME/.codex/config.toml",
+      "$DOTFILES_HOST_HOME/.codex/hooks.json"
     ],
     "read": [
       "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
