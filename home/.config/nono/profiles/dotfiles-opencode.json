@@ -13,6 +13,7 @@
       "$DOTFILES_AGENT_HOME/.cache/opencode",
       "$DOTFILES_AGENT_HOME/.local/share/opencode",
       "$DOTFILES_AGENT_HOME/.local/share/opentui",
+      "$DOTFILES_AGENT_HOME/.npm",
       "$DOTFILES_AGENT_HOME/.local/state/opencode"
     ],
     "read": [

@@ -213,8 +213,10 @@ pkgs.runCommand "nono-profiles-test"
     ' "$profile_dir/dotfiles-claude.json" >/dev/null
 
     jq --exit-status '
-      (.filesystem.allow | contains(["$DOTFILES_AGENT_HOME/.codex"]))
-      and (.filesystem.write | contains(["$DOTFILES_HOST_HOME/.codex"]))
+      (.filesystem.allow | contains([
+        "$DOTFILES_AGENT_HOME/.codex",
+        "$DOTFILES_HOST_HOME/.codex"
+      ]))
       and (.filesystem.allow_file | contains([
         "$DOTFILES_HOST_HOME/.codex/config.toml",
         "$DOTFILES_HOST_HOME/.codex/hooks.json"
@@ -240,6 +242,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_AGENT_HOME/.cache/opencode",
         "$DOTFILES_AGENT_HOME/.local/share/opencode",
         "$DOTFILES_AGENT_HOME/.local/share/opentui",
+        "$DOTFILES_AGENT_HOME/.npm",
         "$DOTFILES_AGENT_HOME/.local/state/opencode"
       ]))
       and (.filesystem.read | contains([

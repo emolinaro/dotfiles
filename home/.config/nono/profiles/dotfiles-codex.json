@@ -8,9 +8,7 @@
   },
   "filesystem": {
     "allow": [
-      "$DOTFILES_AGENT_HOME/.codex"
-    ],
-    "write": [
+      "$DOTFILES_AGENT_HOME/.codex",
       "$DOTFILES_HOST_HOME/.codex"
     ],
     "allow_file": [
