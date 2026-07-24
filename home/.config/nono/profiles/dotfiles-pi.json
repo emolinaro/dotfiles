@@ -10,9 +10,24 @@
     "allow": [
       "$DOTFILES_AGENT_HOME/.pi"
     ],
+    "write": [
+      "$DOTFILES_HOST_HOME/.pi/agent"
+    ],
+    "allow_file": [
+      "$DOTFILES_HOST_HOME/.pi/agent/trust.json"
+    ],
     "read": [
       "$DOTFILES_HOST_HOME/.pi/agent/AGENTS.md",
       "$DOTFILES_HOST_HOME/.pi/agent/settings.json"
     ]
+  },
+  "platform_overrides": {
+    "macos": {
+      "environment": {
+        "set_vars": {
+          "OPENSSL_CONF": "/private/etc/ssl/openssl.cnf"
+        }
+      }
+    }
   }
 }

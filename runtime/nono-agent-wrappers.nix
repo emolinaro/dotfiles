@@ -899,6 +899,9 @@ let
               ''
             else
               ''
+                if [[ -f "$staged_target" || -L "$staged_target" ]]; then
+                  ${lib.getExe' coreutils "rm"} -f -- "$staged_target"
+                fi
                 ${lib.getExe' coreutils "ln"} -s -- "$staged_source" "$staged_target"
               '';
         in
@@ -2412,6 +2415,8 @@ let
         export XDG_STATE_HOME="$nono_state_root"
         export HOME="$session_home"
 
+        allow_domain_values="''${DOTFILES_NONO_ALLOW_DOMAINS:-chatgpt.com}"
+        allow_domain_values="''${allow_domain_values//,/ }"
         nono_arguments=(
           run
           --profile "$profile_path"
@@ -2419,6 +2424,30 @@ let
           --allow "$session_git"
           --read "$real_objects_directory"
           --allow "$export_root"
+        )
+        allow_domain_added=0
+        for allow_domain_value in $allow_domain_values; do
+          if [[ -n "$allow_domain_value" ]]; then
+            nono_arguments+=(--allow-domain "$allow_domain_value")
+            allow_domain_added=1
+          fi
+        done
+        if [[ "$allow_domain_added" -eq 0 ]]; then
+          nono_arguments+=(--allow-domain chatgpt.com)
+        fi
+
+        open_port_values="''${DOTFILES_NONO_OPEN_PORTS:-}"
+        open_port_values="''${open_port_values//,/ }"
+        for open_port_value in $open_port_values; do
+          if [[ "$open_port_value" =~ ^[0-9]+$ ]]; then
+            nono_arguments+=(--open-port "$open_port_value")
+          else
+            echo "error: invalid DOTFILES_NONO_OPEN_PORTS entry: $open_port_value" >&2
+            exit 78
+          fi
+        done
+
+        nono_arguments+=(
           --workdir "$current_directory"
           --
           ${lib.escapeShellArg (lib.getExe sandboxSupervisor)}

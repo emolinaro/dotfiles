@@ -22,7 +22,8 @@
     "allow_file": [
       "$DOTFILES_AGENT_HOME/.claude.json",
       "$DOTFILES_AGENT_HOME/.claude.json.lock",
-      "$DOTFILES_AGENT_HOME/.claude.lock"
+      "$DOTFILES_AGENT_HOME/.claude.lock",
+      "$DOTFILES_HOST_HOME/.claude.json"
     ]
   }
 }
