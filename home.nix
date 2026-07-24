@@ -16,11 +16,11 @@
 }:
 
 let
-  agentRegistry = import ./packages/nono-agents.nix;
+  agentRegistry = import ./runtime/nono-agents.nix;
   agentNames = builtins.attrNames agentRegistry;
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   gstackCheckout = "${config.home.homeDirectory}/.local/share/gstack/repos/gstack";
-  gstackCheckoutMigration = pkgs.callPackage ./packages/gstack-checkout-migration.nix { };
+  gstackCheckoutMigration = pkgs.callPackage ./runtime/gstack-checkout-migration.nix { };
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
@@ -38,7 +38,7 @@ let
   agentExecutables = lib.genAttrs agentNames (
     name: if isLinux then lib.getExe linuxAgentPackages.${name} else "${homebrewPrefix}/bin/${name}"
   );
-  agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
+  agentWrappers = pkgs.callPackage ./runtime/nono-agent-wrappers.nix {
     inherit
       agentExecutables
       agentRegistry

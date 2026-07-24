@@ -62,7 +62,7 @@
       superpowers,
     }:
     let
-      agentRegistry = import ./packages/nono-agents.nix;
+      agentRegistry = import ./runtime/nono-agents.nix;
       envOr =
         name: fallback:
         let
@@ -101,7 +101,7 @@
           inherit agentRegistry;
           nonoPackage = nonoPackageFor system;
           profiles = ./home/.config/nono/profiles;
-          wrapperModule = ./packages/nono-agent-wrappers.nix;
+          wrapperModule = ./runtime/nono-agent-wrappers.nix;
         };
       mkUbuntuHome =
         system:
@@ -171,7 +171,7 @@
       });
       checks = forAllSystems (system: {
         gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
-          migrationPackage = (pkgsFor system).callPackage ./packages/gstack-checkout-migration.nix { };
+          migrationPackage = (pkgsFor system).callPackage ./runtime/gstack-checkout-migration.nix { };
         };
         nono-package = (pkgsFor system).callPackage ./tests/nono-package.nix {
           nonoPackage = nonoPackageFor system;
@@ -179,7 +179,7 @@
         nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
           inherit agentRegistry;
           profiles = ./home/.config/nono/profiles;
-          wrapperModule = ./packages/nono-agent-wrappers.nix;
+          wrapperModule = ./runtime/nono-agent-wrappers.nix;
         };
         nono-home-command-surface =
           if (pkgsFor system).stdenv.hostPlatform.isLinux then
