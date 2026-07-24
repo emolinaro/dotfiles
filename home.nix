@@ -29,14 +29,14 @@ let
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
-  linuxAgentExecutables = {
-    claude = lib.getExe pkgs.claude-code;
-    codex = lib.getExe pkgs.codex;
-    opencode = lib.getExe pkgs.opencode;
-    pi = lib.getExe pkgs.pi-coding-agent;
+  linuxAgentPackages = {
+    claude = pkgs.claude-code;
+    codex = pkgs.codex;
+    opencode = pkgs.opencode;
+    pi = pkgs.pi-coding-agent;
   };
   agentExecutables = lib.genAttrs agentNames (
-    name: if isLinux then linuxAgentExecutables.${name} else "${homebrewPrefix}/bin/${name}"
+    name: if isLinux then lib.getExe linuxAgentPackages.${name} else "${homebrewPrefix}/bin/${name}"
   );
   agentWrappers = pkgs.callPackage ./packages/nono-agent-wrappers.nix {
     inherit
@@ -113,14 +113,17 @@ in
       yq-go
       agentWrappers
     ]
-    ++ lib.optionals isLinux [
-      pkgs.docker-client
-      pkgs.docker-compose
-      pkgs.gcc # nvim-treesitter compiles parsers with cc
-      herdrPackage
-      pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
-      pkgs.procps
-    ]
+    ++ lib.optionals isLinux (
+      builtins.attrValues linuxAgentPackages
+      ++ [
+        pkgs.docker-client
+        pkgs.docker-compose
+        pkgs.gcc # nvim-treesitter compiles parsers with cc
+        herdrPackage
+        pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
+        pkgs.procps
+      ]
+    )
     ++ [
       # the font everything renders in
       nerd-fonts.hack
