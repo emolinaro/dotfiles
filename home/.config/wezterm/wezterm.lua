@@ -2,40 +2,82 @@ local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
 
+local function with_alpha(color, alpha)
+  local h, s, l, _ = wezterm.color.parse(color):hsla()
+  return wezterm.color.from_hsla(h, s, l, alpha)
+end
+
+local function first_non_nil(...)
+  for i = 1, select("#", ...) do
+    local value = select(i, ...)
+    if value ~= nil then
+      return value
+    end
+  end
+  return nil
+end
+
 -- ui
 -- Use the WebGpu/Metal renderer: the default OpenGL front end freezes/crashes
 -- when resuming from the macOS lock screen or display sleep (wezterm#7291).
 config.front_end = "WebGpu"
 config.color_scheme = "rose-pine-moon"
+local window_bg_opacity = 0.8
+local builtin_schemes = wezterm.color.get_builtin_schemes()
+local active_scheme = builtin_schemes[config.color_scheme] or {}
+local scheme_tab_bar = active_scheme.tab_bar or {}
+local scheme_bg = active_scheme.background or "#232136"
+local scheme_fg = active_scheme.foreground or "#e0def4"
+local scheme_selection_bg = active_scheme.selection_bg or "#f6c177"
+local scheme_selection_fg = active_scheme.selection_fg or scheme_bg
+local terminal_bg_with_alpha = with_alpha(scheme_bg, window_bg_opacity)
+local inactive_tab_fg = first_non_nil(scheme_tab_bar.inactive_tab and scheme_tab_bar.inactive_tab.fg_color, scheme_fg)
+local new_tab_fg = first_non_nil(scheme_tab_bar.new_tab and scheme_tab_bar.new_tab.fg_color, inactive_tab_fg)
+local active_tab_bg = "#f6c177"
+local active_tab_fg = "#232136"
+local hover_tab_bg = "#9ccfd8"
+local hover_tab_fg = "#232136"
 config.colors = {
-  selection_bg = "#f6c177",
-  selection_fg = "#232136",
+  selection_bg = scheme_selection_bg,
+  selection_fg = scheme_selection_fg,
   tab_bar = {
+    background = terminal_bg_with_alpha,
     active_tab = {
-      bg_color = "#f6c177",
-      fg_color = "#232136",
+      bg_color = active_tab_bg,
+      fg_color = active_tab_fg,
       intensity = "Bold",
     },
+    inactive_tab = {
+      bg_color = terminal_bg_with_alpha,
+      fg_color = inactive_tab_fg,
+    },
     inactive_tab_hover = {
-      bg_color = "#9ccfd8",
-      fg_color = "#232136",
+      bg_color = hover_tab_bg,
+      fg_color = hover_tab_fg,
+    },
+    new_tab = {
+      bg_color = terminal_bg_with_alpha,
+      fg_color = new_tab_fg,
     },
     new_tab_hover = {
-      bg_color = "#9ccfd8",
-      fg_color = "#232136",
+      bg_color = hover_tab_bg,
+      fg_color = hover_tab_fg,
     },
+    inactive_tab_edge = terminal_bg_with_alpha,
   },
 }
 config.max_fps = 120
 config.font = wezterm.font("Hack Nerd Font", { weight = "Regular" })
 config.font_size = 15.0
-config.window_background_opacity = 0.8
+config.window_background_opacity = window_bg_opacity
 config.macos_window_background_blur = 50
 config.hide_tab_bar_if_only_one_tab = true
 config.window_decorations = "RESIZE"
 config.window_frame = {
   font = wezterm.font("Hack Nerd Font", { weight = "Bold" }),
   font_size = 15.0,
+  active_titlebar_bg = terminal_bg_with_alpha,
+  inactive_titlebar_bg = terminal_bg_with_alpha,
 }
 
 config.inactive_pane_hsb = {
