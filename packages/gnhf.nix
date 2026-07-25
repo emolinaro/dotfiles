@@ -47,6 +47,8 @@ stdenv.mkDerivation (finalAttrs: {
     runHook preInstall
 
     pnpm prune --prod --ignore-scripts
+    rm -r node_modules/.bin
+    rm node_modules/.modules.yaml node_modules/.pnpm-workspace-state-v1.json
 
     mkdir -p "$out/bin" "$out/lib/gnhf" "$out/share/gnhf/skills"
     cp -R dist node_modules package.json "$out/lib/gnhf/"
