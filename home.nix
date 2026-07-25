@@ -9,7 +9,7 @@
   lib,
   nonoPackage,
   pkgs,
-  quotaAxiSkill,
+  quotaAxiPackage,
   superpowersRev,
   superpowersSkill,
   username,
@@ -100,6 +100,7 @@ in
       noMistakesPackage
       pre-commit
       python3
+      quotaAxiPackage
       ripgrep # fast search
       ruff
       shellcheck
@@ -459,7 +460,7 @@ in
   home.file.".agents/skills/chrome-devtools-axi".source = chromeDevtoolsAxiSkill;
   home.file.".agents/skills/gh-axi".source = ghAxiSkill;
   home.file.".agents/skills/lavish".source = lavishSkill;
-  home.file.".agents/skills/quota-axi".source = quotaAxiSkill;
+  home.file.".agents/skills/quota-axi".source = "${quotaAxiPackage}/share/agent-skills/quota-axi";
   home.file.".agents/skills/superpowers" = {
     force = true;
     source = superpowersSkill;

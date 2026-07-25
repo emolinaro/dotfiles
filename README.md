@@ -10,7 +10,8 @@ workflow, and shared user configuration through Home Manager. macOS also gets
 desktop applications and system settings managed by nix-darwin and Homebrew.
 
 The managed AXI agent skills include chrome-devtools-axi, gh-axi, Lavish, and
-quota-axi. Their source revisions are locked in `flake.lock`, while their CLIs
+quota-axi. Their source revisions are locked in `flake.lock`. The quota-axi CLI
+and its dependencies are built from that locked source, while the other CLIs
 run on demand through npx.
 
 The configuration provides a fast Zsh environment, a language-aware Neovim
@@ -253,6 +254,9 @@ targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `quotaAxi`,
 `gstack`, `superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be
 updated independently. Treehouse and No Mistakes are versioned separately in
 `packages/treehouse.nix` and `packages/no-mistakes.nix`.
+
+After updating `quotaAxi`, replace the `pnpmDeps` hash in
+`packages/quota-axi.nix` with the fixed-output hash reported by Nix.
 
 Review and validate every lock update before applying it:
 

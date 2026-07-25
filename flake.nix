@@ -35,7 +35,7 @@
       flake = false;
     };
 
-    # Expose quota-axi as a global agent skill; its CLI runs on demand through npx.
+    # Lock quota-axi so its skill and CLI are managed from the same source revision.
     quotaAxi = {
       url = "github:kunchenguid/quota-axi";
       flake = false;
@@ -102,6 +102,11 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      quotaAxiPackageFor =
+        system:
+        (pkgsFor system).callPackage ./packages/quota-axi.nix {
+          quotaAxiSource = quotaAxi;
+        };
       nonoRuntimeTestFor =
         system:
         (pkgsFor system).callPackage ./tests/nono-runtime.nix {
@@ -122,7 +127,7 @@
             nonoPackage = nonoPackageFor system;
             ghAxiSkill = "${ghAxi}/skills/gh-axi";
             lavishSkill = "${lavish}/skills/lavish";
-            quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
+            quotaAxiPackage = quotaAxiPackageFor system;
             gstackRev = gstack.rev;
             superpowersSkill = "${superpowers}/skills";
             superpowersRev = superpowers.rev;
@@ -154,7 +159,7 @@
               nonoPackage = nonoPackageFor config.nixpkgs.hostPlatform.system;
               ghAxiSkill = "${ghAxi}/skills/gh-axi";
               lavishSkill = "${lavish}/skills/lavish";
-              quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
+              quotaAxiPackage = quotaAxiPackageFor config.nixpkgs.hostPlatform.system;
               gstackRev = gstack.rev;
               superpowersSkill = "${superpowers}/skills";
               superpowersRev = superpowers.rev;
@@ -170,6 +175,7 @@
       packages = forAllSystems (system: {
         nono = nonoPackageFor system;
         nono-runtime-test = nonoRuntimeTestFor system;
+        quota-axi = quotaAxiPackageFor system;
         default = nonoPackageFor system;
       });
       apps = forAllSystems (system: {
@@ -184,6 +190,9 @@
         };
         nono-package = (pkgsFor system).callPackage ./tests/nono-package.nix {
           nonoPackage = nonoPackageFor system;
+        };
+        quota-axi-package = (pkgsFor system).callPackage ./tests/quota-axi-package.nix {
+          quotaAxiPackage = quotaAxiPackageFor system;
         };
         nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
           inherit agentRegistry;
