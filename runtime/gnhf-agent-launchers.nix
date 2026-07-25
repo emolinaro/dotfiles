@@ -22,13 +22,22 @@ let
     variant:
     let
       launcherName = "gnhf-${variant.name}";
-      launcher = writeShellScript launcherName ''
+    launcher = writeShellScript launcherName ''
         set -euo pipefail
+
+        ${lib.optionalString (variant.name == "opencode-nono") ''
+          has_required_worktree=0
+        ''}
 
         for argument in "$@"; do
           case "$argument" in
             --)
               break
+              ;;
+            --worktree | --worktree=*)
+              ${lib.optionalString (variant.name == "opencode-nono") ''
+                has_required_worktree=1
+              ''}
               ;;
             --agent | --agent=* | --agent-path | --agent-path=*)
               echo \
@@ -38,6 +47,14 @@ let
               ;;
           esac
         done
+
+        ${lib.optionalString (variant.name == "opencode-nono") ''
+          if [[ "$has_required_worktree" -ne 1 ]]; then
+            echo "error: ${launcherName} requires --worktree when routing through opencode-nono" >&2
+            echo "error: ${launcherName} avoids shared worktree mutation with OpenCode's long-lived serve process" >&2
+            exit 64
+          fi
+        ''}
 
         exec ${lib.escapeShellArg (toString gnhfExecutable)} \
           --agent ${lib.escapeShellArg variant.agent} \

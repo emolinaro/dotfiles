@@ -86,10 +86,16 @@ pkgs.runCommand "gnhf-agent-launchers-test" { nativeBuildInputs = [ launchers ];
     "opencode|opencode-direct|objective|--max-iterations"
   test "$(gnhf-codex-nono objective --max-iterations)" = \
     "codex|codex-nono|objective|--max-iterations"
-  test "$(gnhf-opencode-nono objective --max-iterations)" = \
-    "opencode|opencode-nono|objective|--max-iterations"
+  test "$(gnhf-opencode-nono objective --worktree --max-iterations)" = \
+    "opencode|opencode-nono|objective|--worktree"
   test "$(gnhf-codex -- --agent)" = \
     "codex|codex-direct|--|--agent"
+
+  test "$(${fakeGnhf} \
+    --agent opencode-nono \
+    --agent-path ${overrideAgent} \
+    --probe-raw combined --max-iterations)" = \
+    "opencode-nono|caller-override|--probe-raw|combined"
 
   rejection_failures=0
   assert_rejects_controlled_option() {
@@ -124,6 +130,24 @@ pkgs.runCommand "gnhf-agent-launchers-test" { nativeBuildInputs = [ launchers ];
     gnhf-codex-nono objective --agent-path ${overrideAgent}
   assert_rejects_controlled_option \
     gnhf-opencode-nono objective --agent-path=${overrideAgent}
+
+  if GNHF_TEST_INVOCATION_TRACE="$TMPDIR/opencode-nono.no-worktree.invoked" \
+    gnhf-opencode-nono objective --max-iterations \
+    > "$TMPDIR/opencode-nono.no-worktree.stdout" \
+    2> "$TMPDIR/opencode-nono.no-worktree.stderr"; then
+    echo "gnhf-opencode-nono did not fail without --worktree" >&2
+    exit 1
+  fi
+  if [[ -e "$TMPDIR/opencode-nono.no-worktree.invoked" ]]; then
+    echo "gnhf-opencode-nono invoked GNHF before rejecting missing --worktree" >&2
+    exit 1
+  fi
+  if ! ${pkgs.gnugrep}/bin/grep -Fq "requires --worktree" \
+    "$TMPDIR/opencode-nono.no-worktree.stderr"; then
+    echo "gnhf-opencode-nono did not fail with a clear --worktree error" >&2
+    sed -n '1,40p' "$TMPDIR/opencode-nono.no-worktree.stderr" >&2
+    exit 1
+  fi
   test "$rejection_failures" -eq 0
 
   mkdir "$out"
