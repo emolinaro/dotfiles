@@ -1,6 +1,6 @@
-{
-  launcherModule,
-  pkgs,
+{ launcherModule
+, pkgs
+,
 }:
 
 let

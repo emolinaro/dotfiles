@@ -1,8 +1,8 @@
-{
-  agentRegistry,
-  pkgs,
-  profiles,
-  wrapperModule,
+{ agentRegistry
+, pkgs
+, profiles
+, wrapperModule
+,
 }:
 
 let
@@ -217,14 +217,16 @@ let
     nonoPackage = fakeNono;
   };
   unexpectedAgentEvaluation = builtins.tryEval (
-    builtins.deepSeq (pkgs.callPackage wrapperModule {
-      agentExecutables = agentExecutables // {
-        unexpected = "/nix/store/unexpected/bin/unexpected";
-      };
-      inherit agentRegistry profiles;
-      homeDirectory = configuredHome;
-      nonoPackage = fakeNono;
-    }) true
+    builtins.deepSeq
+      (pkgs.callPackage wrapperModule {
+        agentExecutables = agentExecutables // {
+          unexpected = "/nix/store/unexpected/bin/unexpected";
+        };
+        inherit agentRegistry profiles;
+        homeDirectory = configuredHome;
+        nonoPackage = fakeNono;
+      })
+      true
   );
   preloadSource = pkgs.writeText "nono-wrapper-preload.c" ''
     #include <fcntl.h>
@@ -245,30 +247,31 @@ let
   '';
   preloadLibrary =
     if pkgs.stdenv.hostPlatform.isLinux then
-      pkgs.stdenv.mkDerivation {
-        name = "nono-wrapper-preload";
-        dontUnpack = true;
-        buildPhase = ''
-          $CC -shared -fPIC ${preloadSource} -o preload.so
-        '';
-        installPhase = ''
-          mkdir -p "$out/lib"
-          cp preload.so "$out/lib/"
-        '';
-      }
+      pkgs.stdenv.mkDerivation
+        {
+          name = "nono-wrapper-preload";
+          dontUnpack = true;
+          buildPhase = ''
+            $CC -shared -fPIC ${preloadSource} -o preload.so
+          '';
+          installPhase = ''
+            mkdir -p "$out/lib"
+            cp preload.so "$out/lib/"
+          '';
+        }
     else
       null;
 in
 assert !unexpectedAgentEvaluation.success;
 pkgs.runCommand "nono-agent-wrappers-test"
-  {
-    nativeBuildInputs = [
-      pkgs.diffutils
-      pkgs.findutils
-      pkgs.gnugrep
-      pkgs.jq
-    ];
-  }
+{
+  nativeBuildInputs = [
+    pkgs.diffutils
+    pkgs.findutils
+    pkgs.gnugrep
+    pkgs.jq
+  ];
+}
   ''
     set -euo pipefail
 

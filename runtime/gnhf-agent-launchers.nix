@@ -1,28 +1,30 @@
-{
-  lib,
-  runCommand,
-  writeShellScript,
+{ lib
+, runCommand
+, writeShellScript
+,
 }:
 
-{
-  gnhfExecutable,
-  variants,
+{ gnhfExecutable
+, variants
+,
 }:
 
 let
   names = map (variant: variant.name) variants;
-  invalidVariants = builtins.filter (
-    variant:
-    builtins.match "^[a-z0-9][a-z0-9-]*$" variant.name == null
-    || builtins.match "^[a-z0-9][a-z0-9-]*$" variant.agent == null
-    || !(lib.hasPrefix "/" (toString variant.executable))
-  ) variants;
+  invalidVariants = builtins.filter
+    (
+      variant:
+      builtins.match "^[a-z0-9][a-z0-9-]*$" variant.name == null
+      || builtins.match "^[a-z0-9][a-z0-9-]*$" variant.agent == null
+      || !(lib.hasPrefix "/" (toString variant.executable))
+    )
+    variants;
   duplicateNames = builtins.length names != builtins.length (lib.unique names);
   mkLauncher =
     variant:
     let
       launcherName = "gnhf-${variant.name}";
-    launcher = writeShellScript launcherName ''
+      launcher = writeShellScript launcherName ''
         set -euo pipefail
 
         ${lib.optionalString (variant.name == "opencode-nono") ''
@@ -68,9 +70,10 @@ let
 in
 assert lib.assertMsg (variants != [ ]) "GNHF requires at least one agent launcher variant";
 assert lib.assertMsg (!duplicateNames) "GNHF agent launcher names must be unique";
-assert lib.assertMsg (
-  invalidVariants == [ ]
-) "GNHF agent launchers require safe names and absolute executable paths";
+assert lib.assertMsg
+  (
+    invalidVariants == [ ]
+  ) "GNHF agent launchers require safe names and absolute executable paths";
 runCommand "gnhf-agent-launchers" { } ''
   set -euo pipefail
 

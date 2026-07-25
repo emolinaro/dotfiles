@@ -1,6 +1,6 @@
-{
-  gnhfPackage,
-  pkgs,
+{ gnhfPackage
+, pkgs
+,
 }:
 
 let
@@ -10,13 +10,13 @@ let
   '';
 in
 pkgs.runCommand "gnhf-package-test"
-  {
-    nativeBuildInputs = [
-      gnhfPackage
-      pkgs.git
-      pkgs.nodejs
-    ];
-  }
+{
+  nativeBuildInputs = [
+    gnhfPackage
+    pkgs.git
+    pkgs.nodejs
+  ];
+}
   ''
     set -euo pipefail
 

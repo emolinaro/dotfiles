@@ -1,23 +1,26 @@
-{
-  gnhfPackage,
-  homeConfig,
-  pkgs,
+{ gnhfPackage
+, homeConfig
+, pkgs
+,
 }:
 
 let
   gnhfSkill = homeConfig.home.file.".agents/skills/gnhf" or null;
-  launcherPackages = builtins.filter (
-    package: pkgs.lib.getName package == "gnhf-agent-launchers"
-  ) homeConfig.home.packages;
+  launcherPackages = builtins.filter
+    (
+      package: pkgs.lib.getName package == "gnhf-agent-launchers"
+    )
+    homeConfig.home.packages;
   launchers = if builtins.length launcherPackages == 1 then builtins.head launcherPackages else null;
   packageIsManaged = builtins.elem gnhfPackage homeConfig.home.packages;
   configIsUnmanaged = !(builtins.hasAttr ".gnhf/config.yml" homeConfig.home.file);
   telemetryIsDisabled = homeConfig.home.sessionVariables.GNHF_TELEMETRY or null == "0";
 in
 assert pkgs.lib.assertMsg packageIsManaged "Home Manager must install the GNHF package";
-assert pkgs.lib.assertMsg (
-  launchers != null
-) "Home Manager must install exactly one GNHF agent launcher package";
+assert pkgs.lib.assertMsg
+  (
+    launchers != null
+  ) "Home Manager must install exactly one GNHF agent launcher package";
 assert pkgs.lib.assertMsg (gnhfSkill != null) "Home Manager must expose the GNHF agent skill";
 assert pkgs.lib.assertMsg configIsUnmanaged
   "Home Manager must leave the mutable GNHF agent choice unmanaged";
