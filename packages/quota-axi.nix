@@ -15,6 +15,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   src = quotaAxiSource;
 
+  patches = [ ./quota-axi-managed-update.patch ];
+
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     pnpm = pnpm_11;
@@ -38,10 +40,15 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   installPhase = ''
     runHook preInstall
 
-    pnpm install --offline --prod --frozen-lockfile --ignore-scripts
+    runtime_root="$(mktemp -d)"
+    cp package.json pnpm-lock.yaml "$runtime_root/"
+    (
+      cd "$runtime_root"
+      pnpm install --offline --prod --frozen-lockfile --ignore-scripts
+    )
 
     mkdir -p "$out/lib/quota-axi"
-    cp -R dist node_modules package.json "$out/lib/quota-axi/"
+    cp -R dist "$runtime_root/node_modules" package.json "$out/lib/quota-axi/"
 
     makeWrapper ${lib.getExe nodejs} "$out/bin/quota-axi" \
       --add-flags "$out/lib/quota-axi/dist/bin/quota-axi.js"

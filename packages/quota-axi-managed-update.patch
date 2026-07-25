@@ -1,0 +1,13 @@
+diff --git a/src/cli.ts b/src/cli.ts
+index d1c0ce9..a8d4b9e 100644
+--- a/src/cli.ts
++++ b/src/cli.ts
+@@ -33,6 +33,8 @@ export async function main(options: MainOptions = {}): Promise<void> {
+     commands: {
+       quota: quotaCommand,
+       auth: authCommand,
++      update: () =>
++        "quota-axi is managed by Nix. Run `nix flake update quotaAxi` from the dotfiles checkout, refresh the pinned dependency hash, and rebuild.",
+     },
+     // `quota` is the implicit default command, so the bare-invocation home view
+     // is never reached (see normalizeArgv); wiring it keeps the SDK contract.
