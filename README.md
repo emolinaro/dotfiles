@@ -12,7 +12,8 @@ desktop applications and system settings managed by nix-darwin and Homebrew.
 The managed AXI agent skills include chrome-devtools-axi, gh-axi, Lavish, and
 quota-axi. Their source revisions are locked in `flake.lock`. The quota-axi CLI
 and its dependencies are built from that locked source, while the other CLIs
-run on demand through npx.
+run on demand through npx. After rebuilding, restart Codex and invoke the skill
+with `$quota-axi`, or run `quota-axi` directly in the shell.
 
 The configuration provides a fast Zsh environment, a language-aware Neovim
 setup, cloud and container tooling, managed agent extensions, isolated
@@ -193,8 +194,7 @@ The bootstrap supports x86_64 and ARM64, uses the current username and home
 directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
 systemd, and adds the current user to the `docker` group. Start a new login
 session after it completes so the shell and Docker group changes take effect,
-then authenticate Codex manually. Restart Codex after a rebuild so it discovers
-newly installed agent skills:
+then authenticate Codex manually:
 
 ```sh
 codex login
