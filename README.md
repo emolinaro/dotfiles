@@ -255,8 +255,10 @@ targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `quotaAxi`,
 updated independently. Treehouse and No Mistakes are versioned separately in
 `packages/treehouse.nix` and `packages/no-mistakes.nix`.
 
-After updating `quotaAxi`, replace the `pnpmDeps` hash in
-`packages/quota-axi.nix` with the fixed-output hash reported by Nix.
+Running `quota-axi update` reports this Nix-managed workflow instead of
+modifying the installed package. After updating `quotaAxi`, replace the
+`pnpmDeps` hash in `packages/quota-axi.nix` with the fixed-output hash reported
+by Nix.
 
 Review and validate every lock update before applying it:
 
