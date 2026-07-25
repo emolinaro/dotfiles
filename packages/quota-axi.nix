@@ -47,8 +47,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       pnpm install --offline --prod --frozen-lockfile --ignore-scripts
     )
 
-    mkdir -p "$out/lib/quota-axi"
-    cp -R dist "$runtime_root/node_modules" package.json "$out/lib/quota-axi/"
+    mkdir -p "$out/lib/quota-axi/node_modules/.pnpm"
+    cp -R dist package.json "$out/lib/quota-axi/"
+    cp -R "$runtime_root/node_modules"/* "$out/lib/quota-axi/node_modules/"
+    cp -R "$runtime_root/node_modules/.pnpm"/*/ \
+      "$out/lib/quota-axi/node_modules/.pnpm/"
 
     makeWrapper ${lib.getExe nodejs} "$out/bin/quota-axi" \
       --add-flags "$out/lib/quota-axi/dist/bin/quota-axi.js"
