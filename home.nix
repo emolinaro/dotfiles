@@ -252,7 +252,7 @@ in
       scan_timeout = 20;
       command_timeout = 300;
 
-      format = "$username$hostname$directory$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$golang$cmd_duration$line_break$jobs$status$character";
+      format = "$username$hostname$directory$custom$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$golang$cmd_duration$line_break$jobs$status$character";
       right_format = "$time";
 
       character = {
@@ -281,10 +281,30 @@ in
         read_only = " 󰌾";
       };
 
+      custom.treehouse = {
+        when = ''
+          repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 1
+          case "$repo_root" in
+            "$HOME/.treehouse/"*) exit 0 ;;
+            *) exit 1 ;;
+          esac
+        '';
+        shell = [
+          "/bin/bash"
+          "--noprofile"
+          "--norc"
+        ];
+        command = ''
+          printf ""
+        '';
+        style = "bold green";
+        format = "[$output]($style) ";
+      };
+
       git_branch = {
         symbol = " ";
         style = "bold purple";
-        format = "on [$symbol$branch]($style) ";
+        format = "[$symbol$branch]($style) ";
       };
 
       git_status = {
