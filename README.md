@@ -9,6 +9,10 @@ Both platforms get a reproducible shell, editor, developer toolchain, agent
 workflow, and shared user configuration through Home Manager. macOS also gets
 desktop applications and system settings managed by nix-darwin and Homebrew.
 
+The managed AXI agent skills include chrome-devtools-axi, gh-axi, Lavish, and
+quota-axi. Their source revisions are locked in `flake.lock`, while their CLIs
+run on demand through npx.
+
 The configuration provides a fast Zsh environment, a language-aware Neovim
 setup, cloud and container tooling, managed agent extensions, isolated
 worktree workflows, and local validation before changes are completed. Push,
@@ -229,6 +233,7 @@ Update one or more named inputs without changing the others by listing them:
 nix flake update lavish
 nix flake update chromeDevtoolsAxi
 nix flake update ghAxi
+nix flake update quotaAxi
 nix flake update gstack
 nix flake update superpowers
 nix flake update nixpkgs nixpkgs-linux
@@ -244,9 +249,9 @@ rebuild.
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `gstack`,
-`superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be updated
-independently. Treehouse and No Mistakes are versioned separately in
+targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `quotaAxi`,
+`gstack`, `superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be
+updated independently. Treehouse and No Mistakes are versioned separately in
 `packages/treehouse.nix` and `packages/no-mistakes.nix`.
 
 Review and validate every lock update before applying it:

@@ -9,6 +9,7 @@
   lib,
   nonoPackage,
   pkgs,
+  quotaAxiSkill,
   superpowersRev,
   superpowersSkill,
   username,
@@ -138,6 +139,7 @@ in
     NO_MISTAKES_NO_UPDATE_CHECK = "1";
     NONO_NO_PACK_UPDATE_HINTS = "1";
     NONO_NO_UPDATE_CHECK = "1";
+    QUOTA_AXI_CODEX_BINARY = agentExecutables.codex;
   }
   // lib.optionalAttrs isLinux {
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
@@ -457,6 +459,7 @@ in
   home.file.".agents/skills/chrome-devtools-axi".source = chromeDevtoolsAxiSkill;
   home.file.".agents/skills/gh-axi".source = ghAxiSkill;
   home.file.".agents/skills/lavish".source = lavishSkill;
+  home.file.".agents/skills/quota-axi".source = quotaAxiSkill;
   home.file.".agents/skills/superpowers" = {
     force = true;
     source = superpowersSkill;

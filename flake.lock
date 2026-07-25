@@ -194,6 +194,22 @@
         "type": "github"
       }
     },
+    "quotaAxi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784968586,
+        "narHash": "sha256-Xe8Gd2zlCLhOtG4yBgx5DhZZoWrfDDi4Ld4FhRbBLOA=",
+        "owner": "kunchenguid",
+        "repo": "quota-axi",
+        "rev": "4760cfd820670ac42df487b1635b535eec236897",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "repo": "quota-axi",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "chromeDevtoolsAxi": "chromeDevtoolsAxi",
@@ -206,6 +222,7 @@
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "nixpkgs-linux": "nixpkgs-linux",
+        "quotaAxi": "quotaAxi",
         "superpowers": "superpowers"
       }
     },
