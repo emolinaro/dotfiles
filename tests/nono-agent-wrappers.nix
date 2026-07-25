@@ -431,6 +431,27 @@ pkgs.runCommand "nono-agent-wrappers-test"
     ${pkgs.gnugrep}/bin/grep -Fx -- "8080" "$WRAPPER_TEST_NONO_TRACE"
     unset DOTFILES_NONO_ALLOW_DOMAINS DOTFILES_NONO_OPEN_PORTS
 
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/opencode-serve.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/opencode-serve.nono.trace"
+    "$wrappers_dir/bin/opencode-nono" \
+      serve --hostname 127.0.0.1 --port 43127 --print-logs
+    ${pkgs.gnugrep}/bin/grep -Fx -- "--open-port" "$WRAPPER_TEST_NONO_TRACE"
+    ${pkgs.gnugrep}/bin/grep -Fx -- "43127" "$WRAPPER_TEST_NONO_TRACE"
+    printf '%s\n' \
+      serve --hostname 127.0.0.1 --port 43127 --print-logs \
+      > "$TMPDIR/opencode-serve.expected"
+    ${pkgs.diffutils}/bin/diff -u \
+      "$TMPDIR/opencode-serve.expected" \
+      "$WRAPPER_TEST_AGENT_TRACE"
+
+    export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/opencode-run.agent.trace"
+    export WRAPPER_TEST_NONO_TRACE="$TMPDIR/opencode-run.nono.trace"
+    "$wrappers_dir/bin/opencode-nono" run --port 43128
+    if ${pkgs.gnugrep}/bin/grep -Fxq -- "--open-port" "$WRAPPER_TEST_NONO_TRACE"; then
+      echo "non-serve OpenCode command received an open port" >&2
+      exit 1
+    fi
+
     ${pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
       export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/preload.agent.trace"
       export WRAPPER_TEST_NONO_TRACE="$TMPDIR/preload.nono.trace"

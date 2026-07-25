@@ -2436,16 +2436,62 @@ let
           nono_arguments+=(--allow-domain chatgpt.com)
         fi
 
+        dynamic_open_port=""
+        ${lib.optionalString (name == "opencode") ''
+          agent_arguments=("$@")
+          if [[ "''${agent_arguments[0]-}" == serve ]]; then
+            for ((index = 1; index < ''${#agent_arguments[@]}; index++)); do
+              port_option_seen=0
+              port_candidate=""
+              case "''${agent_arguments[$index]}" in
+                --)
+                  break
+                  ;;
+                --port)
+                  port_option_seen=1
+                  if (( index + 1 < ''${#agent_arguments[@]} )); then
+                    index=$((index + 1))
+                    port_candidate="''${agent_arguments[$index]}"
+                  fi
+                  ;;
+                --port=*)
+                  port_option_seen=1
+                  port_candidate="''${agent_arguments[$index]#--port=}"
+                  ;;
+              esac
+              if [[ "$port_option_seen" -eq 1 ]]; then
+                if [[ ! "$port_candidate" =~ ^[0-9]{1,5}$ ]] \
+                  || (( 10#$port_candidate < 1 || 10#$port_candidate > 65535 )); then
+                  echo "error: invalid OpenCode serve port: $port_candidate" >&2
+                  exit 78
+                fi
+                if [[ -n "$dynamic_open_port" ]]; then
+                  echo "error: multiple OpenCode serve ports are not supported" >&2
+                  exit 78
+                fi
+                dynamic_open_port="$((10#$port_candidate))"
+              fi
+            done
+          fi
+        ''}
+
         open_port_values="''${DOTFILES_NONO_OPEN_PORTS:-}"
         open_port_values="''${open_port_values//,/ }"
+        dynamic_open_port_added=0
         for open_port_value in $open_port_values; do
           if [[ "$open_port_value" =~ ^[0-9]+$ ]]; then
             nono_arguments+=(--open-port "$open_port_value")
+            if [[ "$open_port_value" == "$dynamic_open_port" ]]; then
+              dynamic_open_port_added=1
+            fi
           else
             echo "error: invalid DOTFILES_NONO_OPEN_PORTS entry: $open_port_value" >&2
             exit 78
           fi
         done
+        if [[ -n "$dynamic_open_port" && "$dynamic_open_port_added" -eq 0 ]]; then
+          nono_arguments+=(--open-port "$dynamic_open_port")
+        fi
 
         nono_arguments+=(
           --workdir "$current_directory"

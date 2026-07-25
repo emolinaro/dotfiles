@@ -1,0 +1,41 @@
+diff --git a/src/cli.ts b/src/cli.ts
+index ed19e56..b103f52 100644
+--- a/src/cli.ts
++++ b/src/cli.ts
+@@ -560,6 +560,10 @@ program
+     "--agent <agent>",
+     `Agent to use (${AGENT_NAMES.join(", ")}, or acp:<target-or-command>)`,
+   )
++  .option(
++    "--agent-path <path>",
++    "Override the selected native agent executable for this invocation",
++  )
+   .option(
+     "--max-iterations <n>",
+     "Abort after N total iterations",
+@@ -606,6 +610,7 @@ program
+       promptArg: string | undefined,
+       options: {
+         agent?: string;
++        agentPath?: string;
+         maxIterations?: number;
+         maxTokens?: number;
+         stopWhen?: string;
+@@ -675,0 +680,17 @@ program
++      if (options.agentPath !== undefined) {
++        const nativeAgent = getNativeAgentName(config.agent);
++        if (nativeAgent === undefined) {
++          console.error(
++            "--agent-path requires a native agent selected with --agent.",
++          );
++          process.exit(1);
++        }
++        if (options.agentPath.trim() === "") {
++          console.error("--agent-path requires a non-empty executable path.");
++          process.exit(1);
++        }
++        config.agentPathOverride = {
++          ...config.agentPathOverride,
++          [nativeAgent]: options.agentPath,
++        };
++      }

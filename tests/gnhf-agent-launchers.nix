@@ -14,11 +14,16 @@ let
     set -euo pipefail
 
     agent=""
+    agent_path=""
     args=()
     while (( $# > 0 )); do
       case "$1" in
         --agent)
           agent="$2"
+          shift 2
+          ;;
+        --agent-path)
+          agent_path="$2"
           shift 2
           ;;
         *)
@@ -29,7 +34,8 @@ let
     done
 
     test -n "$agent"
-    marker="$("$agent" --probe)"
+    test -n "$agent_path"
+    marker="$("$agent_path" --probe)"
     printf '%s|%s|%s|%s\n' \
       "$agent" \
       "$marker" \

@@ -18,14 +18,24 @@ let
     || !(lib.hasPrefix "/" (toString variant.executable))
   ) variants;
   duplicateNames = builtins.length names != builtins.length (lib.unique names);
-  mkLauncher = variant: ''
-    shim="$out/libexec/gnhf-agent-launchers/${variant.name}"
-    mkdir -p "$shim"
-    ln -s ${lib.escapeShellArg (toString variant.executable)} "$shim/${variant.agent}"
-    makeWrapper ${lib.escapeShellArg (toString gnhfExecutable)} "$out/bin/gnhf-${variant.name}" \
-      --prefix PATH : "$shim" \
-      --add-flags ${lib.escapeShellArg "--agent ${variant.agent}"}
-  '';
+  mkLauncher =
+    variant:
+    let
+      launcherFlags = lib.escapeShellArgs [
+        "--agent"
+        variant.agent
+        "--agent-path"
+        (toString variant.executable)
+      ];
+    in
+    ''
+      shim="$out/libexec/gnhf-agent-launchers/${variant.name}"
+      mkdir -p "$shim"
+      ln -s ${lib.escapeShellArg (toString variant.executable)} "$shim/${variant.agent}"
+      makeWrapper ${lib.escapeShellArg (toString gnhfExecutable)} "$out/bin/gnhf-${variant.name}" \
+        --prefix PATH : "$shim" \
+        --add-flags ${lib.escapeShellArg launcherFlags}
+    '';
 in
 assert lib.assertMsg (variants != [ ]) "GNHF requires at least one agent launcher variant";
 assert lib.assertMsg (!duplicateNames) "GNHF agent launcher names must be unique";

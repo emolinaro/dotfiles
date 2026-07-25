@@ -29,11 +29,11 @@ worker and sandbox choice explicit on every run:
 - `gnhf-codex-nono` runs Codex through its Nono sandbox wrapper.
 - `gnhf-opencode-nono` runs OpenCode through its Nono sandbox wrapper.
 
-Each launcher supplies GNHF's native `--agent` value and resolves that agent to
-the selected executable without editing the GNHF config. Do not add another
-`--agent` flag to a launcher command. A custom `agentPathOverride` for Codex or
-OpenCode in `~/.gnhf/config.yml` takes precedence over the launcher's executable
-selection and should be removed when using these commands.
+Each launcher supplies GNHF's native `--agent` and per-invocation
+`--agent-path` values, so the selected executable wins without editing the
+GNHF config. Do not add another `--agent` or `--agent-path` flag to a launcher
+command. Custom `agentPathOverride` entries in `~/.gnhf/config.yml` remain
+available to the plain `gnhf` command.
 
 For example:
 
@@ -110,6 +110,9 @@ environment variables:
   URL globs.
 - `DOTFILES_NONO_OPEN_PORTS` adds one or more localhost `--open-port` entries
   (for example `11434` for Ollama).
+
+The `opencode-nono` wrapper also grants the validated ephemeral port from an
+`opencode serve --port` invocation, including the port selected by GNHF.
 
 On macOS, the codex profile also pins `SSL_CERT_FILE` and
 `CODEX_CA_CERTIFICATE` to `/private/etc/ssl/cert.pem` so Codex can validate TLS
