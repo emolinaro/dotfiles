@@ -13,6 +13,10 @@ let
   fakeGnhf = pkgs.writeShellScript "gnhf-test-cli" ''
     set -euo pipefail
 
+    if [[ -n "''${GNHF_TEST_INVOCATION_TRACE:-}" ]]; then
+      printf '%s\n' invoked > "$GNHF_TEST_INVOCATION_TRACE"
+    fi
+
     agent=""
     agent_path=""
     args=()
@@ -25,6 +29,10 @@ let
         --agent-path)
           agent_path="$2"
           shift 2
+          ;;
+        --)
+          args+=("$@")
+          break
           ;;
         *)
           args+=("$1")
@@ -42,6 +50,7 @@ let
       "''${args[0]-}" \
       "''${args[1]-}"
   '';
+  overrideAgent = mkAgent "caller-override";
   launchers = (pkgs.callPackage launcherModule { }) {
     gnhfExecutable = fakeGnhf;
     variants = [
@@ -79,6 +88,43 @@ pkgs.runCommand "gnhf-agent-launchers-test" { nativeBuildInputs = [ launchers ];
     "codex|codex-nono|objective|--max-iterations"
   test "$(gnhf-opencode-nono objective --max-iterations)" = \
     "opencode|opencode-nono|objective|--max-iterations"
+  test "$(gnhf-codex -- --agent)" = \
+    "codex|codex-direct|--|--agent"
+
+  rejection_failures=0
+  assert_rejects_controlled_option() {
+    local launcher="$1"
+    shift
+    local trace="$TMPDIR/$launcher.invoked"
+    local stdout="$TMPDIR/$launcher.stdout"
+    local stderr="$TMPDIR/$launcher.stderr"
+
+    if GNHF_TEST_INVOCATION_TRACE="$trace" \
+      "$launcher" "$@" > "$stdout" 2> "$stderr"; then
+      echo "$launcher accepted a caller-controlled worker option" >&2
+      rejection_failures=$((rejection_failures + 1))
+      return
+    fi
+    if [[ -e "$trace" ]]; then
+      echo "$launcher invoked GNHF before rejecting a worker option" >&2
+      rejection_failures=$((rejection_failures + 1))
+    fi
+    if ! ${pkgs.gnugrep}/bin/grep -Fq \
+      "error: $launcher controls --agent and --agent-path" "$stderr"; then
+      echo "$launcher did not explain its controlled worker options" >&2
+      rejection_failures=$((rejection_failures + 1))
+    fi
+  }
+
+  assert_rejects_controlled_option \
+    gnhf-codex objective --agent opencode
+  assert_rejects_controlled_option \
+    gnhf-opencode objective --agent=codex
+  assert_rejects_controlled_option \
+    gnhf-codex-nono objective --agent-path ${overrideAgent}
+  assert_rejects_controlled_option \
+    gnhf-opencode-nono objective --agent-path=${overrideAgent}
+  test "$rejection_failures" -eq 0
 
   mkdir "$out"
 ''

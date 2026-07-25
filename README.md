@@ -31,9 +31,10 @@ worker and sandbox choice explicit on every run:
 
 Each launcher supplies GNHF's native `--agent` and per-invocation
 `--agent-path` values, so the selected executable wins without editing the
-GNHF config. Do not add another `--agent` or `--agent-path` flag to a launcher
-command. Custom `agentPathOverride` entries in `~/.gnhf/config.yml` remain
-available to the plain `gnhf` command.
+GNHF config. Launchers reject caller-supplied `--agent` and `--agent-path`
+options so the selected direct or Nono worker cannot be changed. Custom
+`agentPathOverride` entries in `~/.gnhf/config.yml` remain available to the
+plain `gnhf` command.
 
 For example:
 

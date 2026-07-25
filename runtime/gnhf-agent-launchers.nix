@@ -1,7 +1,7 @@
 {
   lib,
-  makeWrapper,
   runCommand,
+  writeShellScript,
 }:
 
 {
@@ -21,20 +21,32 @@ let
   mkLauncher =
     variant:
     let
-      launcherFlags = lib.escapeShellArgs [
-        "--agent"
-        variant.agent
-        "--agent-path"
-        (toString variant.executable)
-      ];
+      launcherName = "gnhf-${variant.name}";
+      launcher = writeShellScript launcherName ''
+        set -euo pipefail
+
+        for argument in "$@"; do
+          case "$argument" in
+            --)
+              break
+              ;;
+            --agent | --agent=* | --agent-path | --agent-path=*)
+              echo \
+                "error: ${launcherName} controls --agent and --agent-path; remove $argument" \
+                >&2
+              exit 64
+              ;;
+          esac
+        done
+
+        exec ${lib.escapeShellArg (toString gnhfExecutable)} \
+          --agent ${lib.escapeShellArg variant.agent} \
+          --agent-path ${lib.escapeShellArg (toString variant.executable)} \
+          "$@"
+      '';
     in
     ''
-      shim="$out/libexec/gnhf-agent-launchers/${variant.name}"
-      mkdir -p "$shim"
-      ln -s ${lib.escapeShellArg (toString variant.executable)} "$shim/${variant.agent}"
-      makeWrapper ${lib.escapeShellArg (toString gnhfExecutable)} "$out/bin/gnhf-${variant.name}" \
-        --prefix PATH : "$shim" \
-        --add-flags ${lib.escapeShellArg launcherFlags}
+      ln -s ${lib.escapeShellArg launcher} "$out/bin/${launcherName}"
     '';
 in
 assert lib.assertMsg (variants != [ ]) "GNHF requires at least one agent launcher variant";
@@ -42,9 +54,9 @@ assert lib.assertMsg (!duplicateNames) "GNHF agent launcher names must be unique
 assert lib.assertMsg (
   invalidVariants == [ ]
 ) "GNHF agent launchers require safe names and absolute executable paths";
-runCommand "gnhf-agent-launchers" { nativeBuildInputs = [ makeWrapper ]; } ''
+runCommand "gnhf-agent-launchers" { } ''
   set -euo pipefail
 
-  mkdir -p "$out/bin" "$out/libexec/gnhf-agent-launchers"
+  mkdir -p "$out/bin"
   ${lib.concatMapStringsSep "\n" mkLauncher variants}
 ''
