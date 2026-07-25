@@ -95,6 +95,7 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      gnhfPackageFor = system: (pkgsFor system).callPackage ./packages/gnhf.nix { };
       nonoRuntimeTestFor =
         system:
         (pkgsFor system).callPackage ./tests/nono-runtime.nix {
@@ -114,6 +115,7 @@
             herdrPackage = herdr.packages.${system}.default;
             nonoPackage = nonoPackageFor system;
             ghAxiSkill = "${ghAxi}/skills/gh-axi";
+            gnhfPackage = gnhfPackageFor system;
             lavishSkill = "${lavish}/skills/lavish";
             gstackRev = gstack.rev;
             superpowersSkill = "${superpowers}/skills";
@@ -145,6 +147,7 @@
               herdrPackage = null;
               nonoPackage = nonoPackageFor config.nixpkgs.hostPlatform.system;
               ghAxiSkill = "${ghAxi}/skills/gh-axi";
+              gnhfPackage = gnhfPackageFor config.nixpkgs.hostPlatform.system;
               lavishSkill = "${lavish}/skills/lavish";
               gstackRev = gstack.rev;
               superpowersSkill = "${superpowers}/skills";
@@ -159,6 +162,7 @@
         ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
       };
       packages = forAllSystems (system: {
+        gnhf = gnhfPackageFor system;
         nono = nonoPackageFor system;
         nono-runtime-test = nonoRuntimeTestFor system;
         default = nonoPackageFor system;
@@ -170,6 +174,22 @@
         };
       });
       checks = forAllSystems (system: {
+        gnhf-agent-launchers = (pkgsFor system).callPackage ./tests/gnhf-agent-launchers.nix {
+          launcherModule = ./runtime/gnhf-agent-launchers.nix;
+        };
+        gnhf-home =
+          if (pkgsFor system).stdenv.hostPlatform.isLinux then
+            (pkgsFor system).callPackage ./tests/gnhf-home.nix {
+              gnhfPackage = gnhfPackageFor system;
+              homeConfig = (mkUbuntuHome system).config;
+            }
+          else
+            (pkgsFor system).runCommand "gnhf-home-not-linux" { } ''
+              touch "$out"
+            '';
+        gnhf-package = (pkgsFor system).callPackage ./tests/gnhf-package.nix {
+          gnhfPackage = gnhfPackageFor system;
+        };
         gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
           migrationPackage = (pkgsFor system).callPackage ./runtime/gstack-checkout-migration.nix { };
         };

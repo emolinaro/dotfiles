@@ -14,6 +14,52 @@ setup, cloud and container tooling, managed agent extensions, isolated
 worktree workflows, and local validation before changes are completed. Push,
 pull request, merge, and deployment actions always require explicit approval.
 
+## Long-running agent orchestration
+
+[GNHF](https://github.com/kunchenguid/gnhf) is installed from a source- and
+dependency-hash-pinned Nix package on every supported system. Its bundled
+agent skill is exposed at `~/.agents/skills/gnhf`, and anonymous GNHF
+telemetry is disabled through `GNHF_TELEMETRY=0`.
+
+GNHF's mutable `~/.gnhf/config.yml` remains user-owned. Four launchers make the
+worker and sandbox choice explicit on every run:
+
+- `gnhf-codex` runs Codex directly.
+- `gnhf-opencode` runs OpenCode directly.
+- `gnhf-codex-nono` runs Codex through its Nono sandbox wrapper.
+- `gnhf-opencode-nono` runs OpenCode through its Nono sandbox wrapper.
+
+Each launcher supplies GNHF's native `--agent` value and resolves that agent to
+the selected executable without editing the GNHF config. Do not add another
+`--agent` flag to a launcher command. A custom `agentPathOverride` for Codex or
+OpenCode in `~/.gnhf/config.yml` takes precedence over the launcher's executable
+selection and should be removed when using these commands.
+
+For example:
+
+```sh
+gnhf-codex \
+  --worktree \
+  --max-iterations 10 \
+  --stop-when "the requested behavior works, relevant checks pass, and no unrelated files changed" \
+  "implement the requested change"
+
+gnhf-opencode-nono \
+  --worktree \
+  --max-iterations 10 \
+  --stop-when "the requested behavior works, relevant checks pass, and no unrelated files changed" \
+  "implement the requested change"
+```
+
+Both OpenCode launchers use the provider and model selected in OpenCode itself,
+including a configured local model. GNHF does not expose a model flag. The
+plain `gnhf` command remains available for other upstream-supported agents.
+
+Prefer `--worktree` for unattended work. GNHF requires a clean repository and
+can reset a failed iteration before retrying. Worktree mode keeps that activity
+outside the current checkout and preserves successful work for review. Do not
+use `--push` unless the remote update has been explicitly approved.
+
 ## Agent sandbox
 
 Terminal launches of `claude`, `codex`, `opencode`, and `pi` use the upstream
@@ -246,8 +292,10 @@ such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
 targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `gstack`,
 `superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be updated
-independently. Treehouse and No Mistakes are versioned separately in
-`packages/treehouse.nix` and `packages/no-mistakes.nix`.
+independently. GNHF, Treehouse, and No Mistakes are versioned separately in
+`packages/gnhf.nix`, `packages/treehouse.nix`, and `packages/no-mistakes.nix`.
+Updating GNHF requires changing its version, immutable upstream revision,
+source hash, and pnpm dependency hash together.
 
 Review and validate every lock update before applying it:
 

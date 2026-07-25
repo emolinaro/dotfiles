@@ -2,6 +2,7 @@
   chromeDevtoolsAxiSkill,
   config,
   ghAxiSkill,
+  gnhfPackage,
   gstackRev,
   herdrPackage,
   homeDirectory,
@@ -47,6 +48,31 @@ let
       ;
     profiles = nonoProfiles;
   };
+  gnhfAgentLaunchers = (pkgs.callPackage ./runtime/gnhf-agent-launchers.nix { }) {
+    gnhfExecutable = lib.getExe gnhfPackage;
+    variants = [
+      {
+        agent = "codex";
+        executable = agentExecutables.codex;
+        name = "codex";
+      }
+      {
+        agent = "opencode";
+        executable = agentExecutables.opencode;
+        name = "opencode";
+      }
+      {
+        agent = "codex";
+        executable = "${agentWrappers}/bin/codex-nono";
+        name = "codex-nono";
+      }
+      {
+        agent = "opencode";
+        executable = "${agentWrappers}/bin/opencode-nono";
+        name = "opencode-nono";
+      }
+    ];
+  };
   nonoProfileNames = map (name: agentRegistry.${name}.profile) agentNames;
 in
 
@@ -79,6 +105,8 @@ in
       go
       golangci-lint
       gopls
+      gnhfAgentLaunchers
+      gnhfPackage
       gotools
       grpcurl
       hadolint
@@ -132,6 +160,7 @@ in
   home.sessionVariables = {
     EDITOR = "nvim";
     DOTFILES = "${config.home.homeDirectory}/.dotfiles";
+    GNHF_TELEMETRY = "0";
     CDPATH = "${config.home.homeDirectory}/Documents/GITHUB";
     # GNU ls colors: directories blue, symlinks cyan, executables green.
     LS_COLORS = "di=1;34:ln=1;36:ex=1;32:fi=0";
@@ -456,6 +485,7 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".agents/skills/chrome-devtools-axi".source = chromeDevtoolsAxiSkill;
   home.file.".agents/skills/gh-axi".source = ghAxiSkill;
+  home.file.".agents/skills/gnhf".source = gnhfPackage.passthru.skillPath;
   home.file.".agents/skills/lavish".source = lavishSkill;
   home.file.".agents/skills/superpowers" = {
     force = true;
