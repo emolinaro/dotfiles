@@ -16,7 +16,7 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use upstream clients for direct runs; use `*-nono` wrappers for isolated runs.
+Use direct clients for normal use; use `*-nono` wrappers for isolated sessions.
 
 ```sh
 claude-nono
@@ -30,15 +30,15 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-- Defaults: `gnhf`/`gnhf-codex*` -> codex, `gnhf-opencode*` -> opencode.
-- `*-nono`: per-session writable worktree+home, preloaded config/plugins, only auth JSON synced back.
-- Git state is isolated: `reflog`/`index` never shared; session refs sync only when host worktree is clean.
-- Blocked launches: `MERGE`/`REBASE`/`CHERRY-PICK`/`REVERT`/`BISECT`/`SPARSE`/`SPLIT INDEX`/submodule/alternate-object states, or when not linked to a worktree.
-- Network hardening defaults remove sensitive vars, force proxy-only egress, and limit keychain/cert/browser/container access.
-- Runtime overrides: `DOTFILES_NONO_ALLOW_DOMAINS` (default `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
-- macOS TLS uses system paths via `SSL_CERT_FILE`/`CODEX_CA_CERTIFICATE` (codex) and `OPENSSL_CONF` (pi).
-- Recovery sessions restore from `~/.cache/nono/recovery/` (30-day retention).
-- If credentials are not in keychain, sign into the direct client once so nono can sync auth state.
+- `gnhf` defaults to codex; `gnhf-codex*` stays codex; `gnhf-opencode*` stays opencode.
+- `*-nono`: writable worktree/home per run, preloaded setup/plugins, only auth JSON synced back.
+- Git state is isolated (`reflog` and `index` not shared); refs sync only when host is clean.
+- Blocks merge/rebase/cherry-pick/revert/bisect/sparse/split-index/submodule/alternate-object states and unlinked worktrees.
+- Defaults harden env/network by removing sensitive vars, forcing proxy-only egress, and limiting keychain/cert/browser/container access.
+- Override with `DOTFILES_NONO_ALLOW_DOMAINS` (default `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
+- macOS TLS uses system cert paths: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi).
+- Recovery uses `~/.cache/nono/recovery/` (30-day retention).
+- Without keychain credentials, sign into the direct client once so nono can sync auth.
 - Nono hashes live in `packages/nono.nix`; verify updates with:
 
 ```sh
