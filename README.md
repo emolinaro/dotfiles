@@ -120,7 +120,7 @@ Homebrew on macOS is managed by nix-darwin activation, not `flake.lock`.
 
 Before first `bootstrap.sh`, update this repo for your environment:
 
-- **macOS user** is auto-detected (`SUDO_USER` first, otherwise `USER`) so any sudo-capable account can apply configuration.
+- **macOS user** uses `SUDO_USER` if available, otherwise `USER`, so any sudo-capable account can apply this configuration.
 - **Git identity**, in `programs.git.settings.user` in `home.nix`
   (`emolinaro` / `emil.molinaro@gmail.com`).
 - **Host label** `"mac"` in `flake.nix`, `scripts/macos/rebuild.sh`, and `scripts/macos/bootstrap.sh`; all three must match.
