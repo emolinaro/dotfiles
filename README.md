@@ -66,7 +66,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-On Ubuntu, Apt owns system packages, Home Manager owns user config, bootstrap auto-selects `x86_64`/`arm64`, enables Docker and `/usr/bin/zsh`, then prompts for `codex login` after restart.
+Apt manages system packages, Home Manager owns user config, and bootstrap auto-selects `x86_64`/`arm64`, enables Docker and `/usr/bin/zsh`, then prompts for `codex login` after restart.
 
 ```sh
 codex login
