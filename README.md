@@ -16,7 +16,8 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use direct clients for normal use; use `*-nono` wrappers for isolated sessions.
+Use direct clients for normal work; use `*-nono` wrappers for isolated
+sessions.
 
 ```sh
 claude-nono
@@ -30,14 +31,14 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-- `gnhf` defaults to codex; `gnhf-codex*` stays codex; `gnhf-opencode*` stays opencode.
-- `*-nono`: writable worktree/home each run with setup/plugins preloaded; only auth JSON syncs back.
-- Git is isolated (`reflog` and `index` stay local); refs sync only when the host is clean.
-- Blocks dangerous states: merge/rebase/cherry-pick/revert/bisect, sparse/split-index/submodule/alternate-object states, and unlinked worktrees.
-- Runtime hardening strips sensitive env vars, enforces proxy-only egress, and limits keychain/cert/browser/container access.
-- Override with `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com` default) and `DOTFILES_NONO_OPEN_PORTS`.
-- TLS paths: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi).
-- Recovery: `~/.cache/nono/recovery/` (30-day retention); without keychain creds, sign into the direct client once to sync auth.
+`gnhf` defaults to codex; `gnhf-codex*` stays codex; `gnhf-opencode*` stays opencode.
+
+- `*-nono`: writable worktree and home per run (setup/plugins preloaded); only auth JSON is synced back.
+- Git isolation: local `reflog`/`index`, remote ref sync only when host state is clean.
+- Safety blocks: merge/rebase/cherry-pick/revert/bisect, sparse/split-index/submodule/alternate-object states, and unlinked worktrees.
+- Runtime hardening: strips sensitive env vars, proxy-only egress, and reduced keychain/cert/browser/container access.
+- Overrides: `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com` default), `DOTFILES_NONO_OPEN_PORTS`; TLS: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi).
+- Recovery: `~/.cache/nono/recovery/` (30-day retention). If keychain creds are missing, sign in once in the direct client to sync auth.
 - Nono hashes live in `packages/nono.nix`; verify updates with:
 
 ```sh
