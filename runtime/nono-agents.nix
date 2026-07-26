@@ -55,7 +55,12 @@ in
     ];
   };
   codex = {
-    clientArguments = [ "--agent" "codex" ];
+    clientArguments = [
+      "--sandbox"
+      "danger-full-access"
+      "--ask-for-approval"
+      "on-request"
+    ];
     filteredJsonPaths = [ ];
     persistentFiles = [
       ".codex/auth.json"
@@ -93,7 +98,7 @@ in
     writableFiles = [ ];
   };
   opencode = {
-    clientArguments = [ "--agent" "opencode" ];
+    clientArguments = [ ];
     filteredJsonPaths = [ ];
     persistentFiles = [
       ".local/share/opencode/auth.json"
