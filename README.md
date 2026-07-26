@@ -8,7 +8,7 @@ Shared Home Manager base; macOS adds nix-darwin/Homebrew, tooling, managed agent
 
 ## Agent sandbox
 
-Direct clients are default; `*-nono` wrappers (`gnhf*`, `gnhf`→`codex`) use isolated worktree+HOME, sync only `auth.json`, and enforce history plus env/network hardening.
+Direct clients run by default; `*-nono` wrappers (`gnhf*`, `gnhf`→`codex`) use isolated worktree+HOME, sync only `auth.json`, and harden history, env, and network.
 
 ```sh
 nix run ".#nono-runtime-test"
