@@ -145,38 +145,21 @@ shell. The rebuild restores it with sudo if it has been changed.
 
 ## Update packages and agent workflows
 
-Nix records the exact revisions of package collections and external agent
-workflows in `flake.lock`. Update every input from the repository root with:
+Nix stores package and agent source pins in `flake.lock`.
 
 ```sh
+# Update all inputs
 nix flake update
-```
 
-Update one or more named inputs without changing the others by listing them:
-
-```sh
-nix flake update lavish
-nix flake update chromeDevtoolsAxi
-nix flake update ghAxi
-nix flake update gstack
-nix flake update superpowers
+# Update one or a few inputs only
 nix flake update nixpkgs nixpkgs-linux
+nix flake update gstack
 ```
 
-The first rebuild after this layout change moves only the managed gstack
-checkout from `~/.gstack/repos/gstack` to
-`~/.local/share/gstack/repos/gstack`. Other repositories under
-`~/.gstack/repos` remain in place. Home Manager dry runs print the planned
-move, and recovery is a direct move back to the original path before the next
-rebuild.
-
-Most Nix packages come from a shared Nixpkgs input, so an individual package
-such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
-the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `gstack`,
-`superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be updated
-independently. Treehouse and No Mistakes are versioned separately in
-`packages/treehouse.nix` and `packages/no-mistakes.nix`.
+`nixpkgs` and `nixpkgs-linux` are shared package inputs; everything else (for
+example `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `superpowers`, `herdr`) is
+updated independently. External tool bundles like Treehouse and No Mistakes are
+pinned in `packages/treehouse.nix` and `packages/no-mistakes.nix`.
 
 Review and validate every lock update before applying it:
 
