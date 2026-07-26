@@ -170,6 +170,9 @@
         };
       });
       checks = forAllSystems (system: {
+        gnhf-wrapper = (pkgsFor system).callPackage ./tests/gnhf-wrapper.nix {
+          packageModule = ./packages/gnhf.nix;
+        };
         gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
           migrationPackage = (pkgsFor system).callPackage ./runtime/gstack-checkout-migration.nix { };
         };
