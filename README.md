@@ -33,7 +33,7 @@ Before bootstrap, update Make it yours, review Homebrew cleanup, then run `./boo
 ./bootstrap.sh
 ```
 
-`./bootstrap.sh` installs Nix, links `~/.dotfiles`, runs the first `darwin-rebuild switch` with nix-darwin 26.05, and keeps `darwin-rebuild` for regular use.
+`./bootstrap.sh` installs Nix, links `~/.dotfiles`, runs `darwin-rebuild switch`, and keeps `darwin-rebuild` for regular use.
 
 ### Validate without applying
 
