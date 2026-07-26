@@ -89,7 +89,7 @@ Ubuntu rebuild scripts enforce `/usr/bin/zsh` login and restore via `sudo` when 
 
 ## Update packages and agent workflows
 
-Nix stores package and agent source pins in `flake.lock`.
+Package and agent pins live in `flake.lock`.
 
 ```sh
 # Update all inputs
