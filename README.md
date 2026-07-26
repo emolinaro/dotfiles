@@ -32,12 +32,10 @@ gnhf-opencode-nono
 
 `gnhf` defaults to `codex`; add suffixes for a specific tool.
 
-`*-nono` runs in an isolated worktree+HOME and only syncs back `auth.json`.
-Git operations that rewrite history are blocked, and sessions are hardened with
-env/network hardening and key-recovery safety.
+`*-nono` runs in an isolated worktree+HOME, syncs only `auth.json`, blocks
+history-rewriting Git operations, and adds env/network hardening.
 
 ```sh
-nix flake check --all-systems --impure --no-build
 nix run ".#nono-runtime-test"
 ```
 
