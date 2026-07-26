@@ -33,7 +33,7 @@ Before bootstrap, update Make it yours, review Homebrew cleanup, then run `./boo
 ./bootstrap.sh
 ```
 
-`./bootstrap.sh` installs Nix, links `~/.dotfiles`, runs `darwin-rebuild switch`, and keeps `darwin-rebuild` for regular use.
+`./bootstrap.sh` installs Nix, links `~/.dotfiles`, and runs `darwin-rebuild switch`.
 
 ### Validate without applying
 
@@ -64,7 +64,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-`./bootstrap.sh` uses Apt for system and Home Manager for user, auto-detects architecture, enables Docker and `/usr/bin/zsh`, and prompts for `codex login` after restart.
+`./bootstrap.sh` uses Apt for system and Home Manager for user, auto-detects architecture, enables Docker and `/usr/bin/zsh`, then prompts for `codex login` after restart.
 
 ```sh
 codex login
