@@ -39,7 +39,8 @@ exec codex-nono "$@"
 SH
 chmod +x "$wrapper_dir/codex"
 
-PATH="$wrapper_dir:$PATH" exec ${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent codex "$@"
+PATH="$wrapper_dir:$PATH"
+${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent codex "$@"
 EOF
 
     cat > "$out/bin/gnhf-opencode" <<'EOF'
@@ -61,7 +62,8 @@ exec opencode-nono "$@"
 SH
 chmod +x "$wrapper_dir/opencode"
 
-PATH="$wrapper_dir:$PATH" exec ${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent opencode "$@"
+PATH="$wrapper_dir:$PATH"
+${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent opencode "$@"
 EOF
 
     cat > "$out/bin/gnhf" <<'EOF'
