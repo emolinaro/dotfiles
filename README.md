@@ -20,7 +20,7 @@ Supported: Apple Silicon macOS (Intel via `nixpkgs.hostPlatform = "x86_64-darwin
 
 ## Fresh macOS setup
 
-On a fresh Mac, from a clone of this repo:
+On a fresh Mac, clone this repo:
 
 ```sh
 git clone https://github.com/emolinaro/dotfiles.git
@@ -58,7 +58,7 @@ No separate build-and-copy step.
 
 ## Fresh Ubuntu 24.04 setup
 
-Clone the repo as the config owner, then run:
+Clone as the config owner, then run:
 
 ```sh
 git clone https://github.com/emolinaro/dotfiles.git
