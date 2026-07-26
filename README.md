@@ -145,8 +145,7 @@ updates those through the declared Homebrew activation settings.
 
 ## Make it yours
 
-This repo is mine.
-Before running `bootstrap.sh` on your clone, change these:
+Before first `bootstrap.sh`, update this repo for your environment:
 
 - **macOS user** is auto-detected (`SUDO_USER` first, otherwise `USER`) so any sudo-capable account can apply configuration.
 - **Git identity**, in `programs.git.settings.user` in `home.nix`
