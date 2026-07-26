@@ -98,10 +98,9 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-Ubuntu is headless: Apt provides OS prerequisites, Home Manager owns shared user
-environment configuration, and package inputs are pinned per architecture in
-Nix. The bootstrap supports x86_64 and ARM64, sets `/usr/bin/zsh` as your
-login shell, enables Docker, adds you to `docker`, then asks you to reopen
+Ubuntu is headless: Apt handles OS packages, Home Manager owns user config, and
+Nix pins inputs per architecture (`x86_64`/`ARM64`). It then sets `/usr/bin/zsh`
+as login shell, enables Docker, adds you to `docker`, and prompts you to reopen
 your shell and run:
 
 ```sh
