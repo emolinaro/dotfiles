@@ -16,7 +16,7 @@ nix run ".#nono-runtime-test"
 
 ## Supported systems
 
-Supported: Apple Silicon macOS (Intel via `nixpkgs.hostPlatform = "x86_64-darwin"`) and Ubuntu 24.04 x86_64/ARM64 with non-root sudo.
+Supported: Apple Silicon macOS (Intel via `nixpkgs.hostPlatform = "x86_64-darwin"`) and Ubuntu 24.04 x86_64/ARM64, with non-root sudo.
 
 ## Fresh macOS setup
 
