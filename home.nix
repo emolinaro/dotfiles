@@ -29,30 +29,14 @@ let
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
-  gnhfPackage = pkgs.callPackage ./packages/gnhf.nix { };
-  gnhfGatewayEntrypoints = pkgs.symlinkJoin {
-    name = "nono-gateway-entrypoints";
-    paths = [
-      (pkgs.writeShellScriptBin "codex" ''
-        exec "${lib.getExe gnhfPackage}" --agent codex "$@"
-      '')
-      (pkgs.writeShellScriptBin "opencode" ''
-        exec "${lib.getExe gnhfPackage}" --agent opencode "$@"
-      '')
-    ];
-  };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
+    codex = pkgs.codex;
+    opencode = pkgs.opencode;
     pi = pkgs.pi-coding-agent;
   };
   agentExecutables = lib.genAttrs agentNames (
-    name:
-      if builtins.elem name [ "codex" "opencode" ] then
-        lib.getExe gnhfPackage
-      else if isLinux then
-        lib.getExe linuxAgentPackages.${name}
-      else
-        "${homebrewPrefix}/bin/${name}"
+    name: if isLinux then lib.getExe linuxAgentPackages.${name} else "${homebrewPrefix}/bin/${name}"
   );
   agentWrappers = pkgs.callPackage ./runtime/nono-agent-wrappers.nix {
     inherit
@@ -113,8 +97,7 @@ in
       nodejs
       nonoPackage
       noMistakesPackage
-      gnhfPackage
-      gnhfGatewayEntrypoints
+      (pkgs.callPackage ./packages/gnhf.nix { })
       pre-commit
       python3
       ripgrep # fast search
