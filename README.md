@@ -20,7 +20,7 @@ Supported: Apple Silicon macOS (Intel via `nixpkgs.hostPlatform = "x86_64-darwin
 
 ## Fresh macOS setup
 
-On a brand new Mac, from a bare clone of this repo:
+On a fresh Mac, from a clone of this repo:
 
 ```sh
 git clone https://github.com/emolinaro/dotfiles.git
