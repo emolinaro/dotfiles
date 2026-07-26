@@ -1,6 +1,7 @@
 { lib, nodejs, stdenvNoCC }:
 
 let
+  gnhfVersion = "0.1.41";
   codexScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
     "set -euo pipefail"
@@ -8,7 +9,7 @@ let
     "  echo \"gnhf: expected a single prompt argument\" >&2"
     "  exit 2"
     "fi"
-    "exec ${nodejs}/bin/npx -y gnhf --agent codex \"$*\""
+    "exec ${nodejs}/bin/npx -y gnhf@${gnhfVersion} --agent codex \"$*\""
   ];
   opencodeScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
@@ -17,7 +18,7 @@ let
     "  echo \"gnhf-opencode: expected a single prompt argument\" >&2"
     "  exit 2"
     "fi"
-    "exec ${nodejs}/bin/npx -y gnhf --agent opencode \"$*\""
+    "exec ${nodejs}/bin/npx -y gnhf@${gnhfVersion} --agent opencode \"$*\""
   ];
   codexNonoWrapperScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
@@ -33,7 +34,7 @@ let
     "chmod +x \"$wrapper_dir/codex\""
     ""
     "PATH=\"$wrapper_dir:$PATH\""
-    "${nodejs}/bin/npx -y gnhf --agent codex \"$*\""
+    "${nodejs}/bin/npx -y gnhf@${gnhfVersion} --agent codex \"$*\""
   ];
   opencodeNonoWrapperScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
@@ -49,7 +50,7 @@ let
     "chmod +x \"$wrapper_dir/opencode\""
     ""
     "PATH=\"$wrapper_dir:$PATH\""
-    "${nodejs}/bin/npx -y gnhf --agent opencode \"$*\""
+    "${nodejs}/bin/npx -y gnhf@${gnhfVersion} --agent opencode \"$*\""
   ];
   gnhfDefaultScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
@@ -58,7 +59,7 @@ let
     "  echo \"gnhf: expected a single prompt argument\" >&2"
     "  exit 2"
     "fi"
-    "exec \"${nodejs}/bin/npx\" -y gnhf --agent codex \"$*\""
+    "exec \"${nodejs}/bin/npx\" -y gnhf@${gnhfVersion} --agent codex \"$*\""
   ];
 in
 stdenvNoCC.mkDerivation {

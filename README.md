@@ -99,13 +99,11 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-The Ubuntu setup is headless: Apt handles only system prerequisites, Home
-Manager owns the shared user environment, and package sources are chosen
-declaratively per architecture with checksums pinned in Nix.
-
-The bootstrap supports x86_64 and ARM64, uses the current user and home, sets
-the login shell to `/usr/bin/zsh`, enables Docker, and adds you to the
-`docker` group. Reopen your shell after it finishes, then run:
+Ubuntu is headless: Apt provides OS prerequisites, Home Manager owns shared user
+environment configuration, and package inputs are pinned per architecture in
+Nix. The bootstrap supports x86_64 and ARM64, sets `/usr/bin/zsh` as your
+login shell, enables Docker, adds you to `docker`, then asks you to reopen
+your shell and run:
 
 ```sh
 codex login
