@@ -78,7 +78,7 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-`./rebuild.sh` auto-detects the platform; use direct scripts only when needed:
+`./rebuild.sh` auto-detects platform; use direct scripts only if needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
