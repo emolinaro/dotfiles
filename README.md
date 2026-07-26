@@ -16,14 +16,13 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use upstream clients for direct runs, and nono wrappers for isolated sandbox runs:
+Use upstream clients for direct runs; use `*-nono` wrappers for isolated runs.
 
 ```sh
 claude-nono
 codex-nono
 opencode-nono
 pi-nono
-
 gnhf
 gnhf-codex
 gnhf-codex-nono
@@ -31,27 +30,16 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-- `gnhf` and `gnhf-codex*` default to codex; `gnhf-opencode*` default to
-  opencode.
-- `*-nono` uses writable per-session worktrees and home dirs; shared
-  configuration/plugins are preloaded and only auth JSON is synced back.
-- Session refs/index remain isolated and are reconciled only when host state is
-  clean.
-- Launches are blocked when worktrees are in `MERGE`, `REBASE`, `CHERRY-PICK`,
-  `REVERT`, `BISECT`, `SPARSE`, `SPLIT INDEX`, submodule, or alternate-object
-  states, or when not inside a linked worktree.
-- Network hardening is enabled by default: sensitive vars are removed, proxy-only
-  outbound TCP, and keychain/certificate/browser/container access is limited.
-- Runtime overrides:
-  - `DOTFILES_NONO_ALLOW_DOMAINS` (default `chatgpt.com`) for extra `--allow-domain`
-    entries.
-  - `DOTFILES_NONO_OPEN_PORTS` for local `--open-port` entries.
-- macOS TLS: codex sets `SSL_CERT_FILE`/`CODEX_CA_CERTIFICATE`,
-  pi sets `OPENSSL_CONF`, both pointing at system cert paths.
-- Interrupted sessions restore under `~/.cache/nono/recovery/` (retained 30 days).
-- If credentials are outside the keychain, sign in to the direct client once so
-  nono can sync auth state.
-- Nono release hashes are maintained in `packages/nono.nix`. Validate updates with:
+- Defaults: `gnhf`/`gnhf-codex*` -> codex, `gnhf-opencode*` -> opencode.
+- `*-nono`: per-session writable worktree+home, preloaded config/plugins, only auth JSON synced back.
+- Git state is isolated: `reflog`/`index` never shared; session refs sync only when host worktree is clean.
+- Blocked launches: `MERGE`/`REBASE`/`CHERRY-PICK`/`REVERT`/`BISECT`/`SPARSE`/`SPLIT INDEX`/submodule/alternate-object states, or when not linked to a worktree.
+- Network hardening defaults remove sensitive vars, force proxy-only egress, and limit keychain/cert/browser/container access.
+- Runtime overrides: `DOTFILES_NONO_ALLOW_DOMAINS` (default `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
+- macOS TLS uses system paths via `SSL_CERT_FILE`/`CODEX_CA_CERTIFICATE` (codex) and `OPENSSL_CONF` (pi).
+- Recovery sessions restore from `~/.cache/nono/recovery/` (30-day retention).
+- If credentials are not in keychain, sign into the direct client once so nono can sync auth state.
+- Nono hashes live in `packages/nono.nix`; verify updates with:
 
 ```sh
 nix flake check --all-systems --impure --no-build
