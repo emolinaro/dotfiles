@@ -135,11 +135,11 @@ nix flake update gstack
 ```
 
 `nixpkgs` and `nixpkgs-linux` are shared package inputs; everything else (for
-example `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `superpowers`, `herdr`) is
-updated independently. External tool bundles like Treehouse and No Mistakes are
-pinned in `packages/treehouse.nix` and `packages/no-mistakes.nix`.
+example `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `superpowers`, `herdr`) updates
+independently. Treehouse and No Mistakes stay pinned in `packages/treehouse.nix`
+and `packages/no-mistakes.nix`.
 
-Review and validate every lock update before applying it:
+Review lock changes before rebuilding:
 
 ```sh
 git diff -- flake.lock
