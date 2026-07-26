@@ -149,8 +149,7 @@ Before first `bootstrap.sh`, update this repo for your environment:
   (`emolinaro` / `emil.molinaro@gmail.com`).
 - **Host label** `"mac"` in `flake.nix`, `scripts/macos/rebuild.sh`, and `scripts/macos/bootstrap.sh`; all three must match.
 
-**Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
-Each switch removes unlisted Homebrew items, so review `brews` and `casks` before your first bootstrap/rebuild and keep anything needed.
+**Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`; each switch removes unlisted Homebrew items, so review `brews`/`casks` before first bootstrap/rebuild and keep required packages.
 
 ## License
 
