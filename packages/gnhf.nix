@@ -1,16 +1,23 @@
 { lib, nodejs, stdenvNoCC }:
 
 let
-  gnhfVersion = "0.1.42";
   codexScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
     "set -euo pipefail"
-    "exec ${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent codex \"$@\""
+    "if [ \"$#\" -eq 0 ]; then"
+    "  echo \"gnhf: expected a single prompt argument\" >&2"
+    "  exit 2"
+    "fi"
+    "exec ${nodejs}/bin/npx -y gnhf --agent codex \"$*\""
   ];
   opencodeScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
     "set -euo pipefail"
-    "exec ${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent opencode \"$@\""
+    "if [ \"$#\" -eq 0 ]; then"
+    "  echo \"gnhf-opencode: expected a single prompt argument\" >&2"
+    "  exit 2"
+    "fi"
+    "exec ${nodejs}/bin/npx -y gnhf --agent opencode \"$*\""
   ];
   codexNonoWrapperScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
@@ -26,7 +33,7 @@ let
     "chmod +x \"$wrapper_dir/codex\""
     ""
     "PATH=\"$wrapper_dir:$PATH\""
-    "${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent codex \"$@\""
+    "${nodejs}/bin/npx -y gnhf --agent codex \"$*\""
   ];
   opencodeNonoWrapperScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
@@ -42,18 +49,21 @@ let
     "chmod +x \"$wrapper_dir/opencode\""
     ""
     "PATH=\"$wrapper_dir:$PATH\""
-    "${nodejs}/bin/npx -y gnhf@${toString gnhfVersion} --agent opencode \"$@\""
+    "${nodejs}/bin/npx -y gnhf --agent opencode \"$*\""
   ];
   gnhfDefaultScript = lib.concatStringsSep "\n" [
     "#!/usr/bin/env bash"
     "set -euo pipefail"
-    "exec \"${nodejs}/bin/npx\" -y gnhf@${toString gnhfVersion} --agent codex \"$@\""
+    "if [ \"$#\" -eq 0 ]; then"
+    "  echo \"gnhf: expected a single prompt argument\" >&2"
+    "  exit 2"
+    "fi"
+    "exec \"${nodejs}/bin/npx\" -y gnhf --agent codex \"$*\""
   ];
 in
 stdenvNoCC.mkDerivation {
-  inherit gnhfVersion;
   pname = "gnhf-wrapper";
-  version = gnhfVersion;
+  version = "0.1.0";
 
   dontBuild = true;
   dontUnpack = true;
