@@ -63,7 +63,7 @@ Before you run it: open the config files and change the values listed in "Make i
 ./bootstrap.sh
 ```
 
-`bootstrap.sh` performs three steps: installs Determinate Nix if missing, symlinks this repo to `~/.dotfiles` (required so `home.nix` can read config files), then runs the first `darwin-rebuild switch` with the nix-darwin 26.05 tool and this repo’s locked flake.
+`bootstrap.sh` installs Nix if missing, links `~/.dotfiles`, then runs the first `darwin-rebuild switch` with nix-darwin 26.05.
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
