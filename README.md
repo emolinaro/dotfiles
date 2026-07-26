@@ -5,7 +5,7 @@ One repo, one command, and a fresh machine ends up configured the same way every
 
 ## What you get
 
-Shared Home Manager config standardizes shell, editor, dev tooling, and agent workflows across macOS/Ubuntu; macOS adds nix-darwin/Homebrew system and desktop settings, Zsh/Neovim, cloud + container tooling, managed agents, isolated worktrees, and approval gates for push/PR/merge/deploy.
+Shared Home Manager config standardizes shell, editor, tooling, and agent workflows on macOS and Ubuntu. macOS adds nix-darwin/Homebrew system settings, plus cloud/container tooling, managed agents, isolated worktrees, and approval gates for push, PR, merge, and deploy.
 
 ## Agent sandbox
 
