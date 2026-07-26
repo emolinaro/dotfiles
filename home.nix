@@ -573,12 +573,12 @@ in
       mkdir -p "$HOME/.gnhf"
       cat <<'EOF' > "$config_file"
 # Default settings for gnhf.
-# Change `agent` to codex or opencode as needed.
+# Leave `agent` unset to use upstream default agent selection.
+# Set `agent` to `codex` or `opencode` as needed.
 # Optional: run through nono sandbox wrappers by setting one of these:
 # agentPathOverride:
 #   codex: codex-nono
 #   opencode: opencode-nono
-agent: codex
 maxConsecutiveFailures: 3
 meteorFrequency: 1
 preventSleep: true
