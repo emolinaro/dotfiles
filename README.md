@@ -17,7 +17,7 @@ pull request, merge, and deployment actions always require explicit approval.
 ## Agent sandbox
 
 Terminal launches of `claude`, `codex`, `opencode`, and `pi` use the upstream
-clients directly. To run an agent inside the version-pinned Nono sandbox, use:
+clients directly. Use `*-nono` wrappers for the version-pinned sandbox mode:
 
 ```sh
 claude-nono
@@ -26,7 +26,7 @@ opencode-nono
 pi-nono
 ```
 
-Additional `gnhf` integration wrappers are also available:
+Use `gnhf` wrappers for orchestrated runs:
 
 ```sh
 gnhf
@@ -36,38 +36,24 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` and `gnhf-codex*` default to the `codex` agent. `gnhf-opencode*`
-runs against `opencode`.
+`gnhf` and `gnhf-codex*` default to `codex`; `gnhf-opencode*` runs
+against `opencode`.
 
-The Nono wrappers make the current Git worktree and an ephemeral per-session
-client home writable. Trusted agent instructions, skills, plugins, and
-configuration are staged into that home while their host originals remain
-read-only. Of each client's durable state, only its dedicated authentication
-JSON file is copied into a separate persistent store and synchronized with its
-legacy client path using generation checks. Git metadata is isolated per
-session, then refs and the index are reconciled only if the host repository has
-not changed concurrently.
-Parallel linked-worktree sessions use separate lifecycle locks and serialize
-only snapshots and reconciliation against their shared Git directory. On
-macOS, the real `.git` path remains denied for the full sandbox lifetime while
-Git uses the session-local metadata directory.
-Launch from a linked worktree when a repository has registered linked
-worktrees. Main-checkout launches fail closed so the shared Git directory never
-moves out from under another worktree. Active merge, rebase, cherry-pick,
-revert, bisect, shallow, sparse-checkout, split-index, and submodule states are
-also rejected before isolation begins, as are repositories that use external
-Git object alternates.
-Launches outside a Git worktree fail closed. SSH keys, cloud configuration,
-browser data, unrelated repositories, the general macOS keychain, and
-container sockets are not granted.
+Nono sessions operate on writable per-session copies of the Git worktree and
+client home. Shared configuration, skills, and plugins are staged into the
+session, while only authentication JSON is persisted and synchronized back with
+the host profile using generation checks. Git metadata stays local per session;
+refs and index are reconciled only when the host repo is unchanged.
 
-The first rollout restricts filesystem access, ambient environment variables,
-and Unix sockets. Outbound TCP is mediated by Nono's developer proxy so host
-control sockets remain unreachable without limiting normal provider, plugin,
-documentation, and package-registry traffic. API-key, cloud, Git-hosting,
-Docker, Kubernetes, and SSH-agent variables are stripped from the sandboxed
-process. Linux grants only the exact multi-user Nix daemon socket needed for
-normal Nix builds.
+To avoid races, active worktrees with `MERGE`, `REBASE`, `CHERRY-PICK`,
+`REVERT`, `BISECT`, `SPARSE`, `SPLIT INDEX`, or submodule/alternate-object
+state are blocked; launches outside linked worktrees also fail closed. Multiple
+linked sessions coordinate via per-session locks and snapshots.
+
+The first launch enforces filesystem and environment restrictions, strips
+sensitive variables, blocks unrelated macOS keychain/certificate/browser and
+container access, and routes outbound TCP through Nono’s proxy. Use
+`DOTFILES_NONO_ALLOW_DOMAINS` to widen egress:
 
 Each `*-nono` wrapper accepts dynamic network allowlist overrides via
 environment variables:
@@ -78,32 +64,18 @@ environment variables:
 - `DOTFILES_NONO_OPEN_PORTS` adds one or more localhost `--open-port` entries
   (for example `11434` for Ollama).
 
-On macOS, the codex profile also pins `SSL_CERT_FILE` and
-`CODEX_CA_CERTIFICATE` to `/private/etc/ssl/cert.pem` so Codex can validate TLS
-certificates inside the sandbox without requiring keychain access.
+On macOS, codex pins `SSL_CERT_FILE` and `CODEX_CA_CERTIFICATE` to
+`/private/etc/ssl/cert.pem`, and pi pins `OPENSSL_CONF` to
+`/private/etc/ssl/openssl.cnf`, so both can validate TLS without keychain
+access.
 
-On macOS, the pi profile pins `OPENSSL_CONF` to
-`/private/etc/ssl/openssl.cnf` so Homebrew Node does not try to read
-`/opt/homebrew/etc/openssl@3/openssl.cnf`, which is outside the sandbox policy.
+Interrupted sessions are restored under a per-worktree lock and moved to
+`~/.cache/nono/recovery/` for inspection; recovery refs expire after 30 days.
+If credentials are managed outside the keychain, sign in with the direct client
+first so Nono can sync auth state.
 
-Interrupted Git sessions are restored under a per-worktree lock and their
-session state is quarantined under `~/.cache/nono/recovery/` for manual
-inspection. Reflog-only recovery refs expire after 30 days.
-
-Sign in with the ordinary client before its first Nono session. The Nono
-wrapper imports that client's authentication JSON and synchronizes later
-changes. If only the host credential file disappears, the next Nono session
-restores it from the persistent store. To clear both copies, perform the
-client's logout flow from inside its `*-nono` session.
-
-On macOS, a subscription-authenticated client that stores or refreshes
-credentials in the login keychain must use the ordinary direct client for the
-complete session. The Nono wrapper intentionally cannot reach the general
-keychain. Desktop applications and editor-launched processes do not pass
-through the terminal wrappers.
-
-Nono uses the official release tarballs with a separate SHA-256 hash for each
-supported target. To update it, change the version and target hashes in
+Nono uses official release tarballs with one SHA-256 per supported target. To
+update, edit `packages/nono.nix` and run:
 `packages/nono.nix`. First evaluate every target from any supported host:
 
 ```sh
