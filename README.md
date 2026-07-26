@@ -8,7 +8,7 @@ Shared Home Manager keeps shell, editor, tooling, and agent workflows consistent
 
 ## Agent sandbox
 
-Use direct clients normally; for isolation use `*-nono` wrappers (`gnhf*`, where `gnhf` maps to `codex`) to get an isolated worktree+HOME with `auth.json`-only sync, history-rewrite protection, and hardened env/network.
+Use direct clients normally; for isolation use `*-nono` wrappers (`gnhf*`, with `gnhf` as `codex`) that enforce isolated worktree+HOME, `auth.json`-only sync, history-rewrite protection, and hardened env/network.
 
 ```sh
 nix run ".#nono-runtime-test"
