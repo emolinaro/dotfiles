@@ -86,7 +86,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-On Ubuntu, Apt handles system packages, Home Manager user config, and `bootstrap.sh` handles arch pinning (`x86_64`/`ARM64`), Docker setup, `/usr/bin/zsh`, and the `codex login` prompt after restart.
+On Ubuntu, Apt owns system packages, Home Manager owns user config, and bootstrap sets arch pins (`x86_64`/`arm64`), Docker, `/usr/bin/zsh`, and a `codex login` prompt after restart.
 
 ```sh
 codex login
@@ -100,8 +100,7 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-The root scripts pick the right platform automatically; use direct platform
-scripts only when needed:
+`./rebuild.sh` auto-detects the platform; use direct scripts only if needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
