@@ -31,14 +31,14 @@ pkgs.runCommand "gnhf-wrapper-test"
         "${wrappers}/bin/$command_name" --max-iterations 1 "Make README file less verbose"
 
       cat > "$TMPDIR/$command_name.expected" <<EOF
-    -y
-    gnhf
-    --agent
-    $expected_agent
-    --max-iterations
-    1
-    Make README file less verbose
-    EOF
+-y
+gnhf
+--agent
+$expected_agent
+--max-iterations
+1
+Make README file less verbose
+EOF
       diff -u "$TMPDIR/$command_name.expected" "$trace"
     }
 
