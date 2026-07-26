@@ -96,10 +96,10 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-Ubuntu is headless: Apt handles OS packages, Home Manager owns user config, and
-Nix pins inputs per architecture (`x86_64`/`ARM64`). It then sets `/usr/bin/zsh`
-as login shell, enables Docker, adds you to `docker`, and prompts you to reopen
-your shell and run:
+On Ubuntu, Apt handles OS packages, Home Manager owns user config, and Nix pins
+inputs by architecture (`x86_64`/`ARM64`). `bootstrap.sh` then enables Docker,
+adds you to `docker`, switches to `/usr/bin/zsh`, and asks you to reopen your
+shell to run:
 
 ```sh
 codex login
@@ -113,16 +113,16 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-The root scripts choose the right platform rebuild automatically; run platform
-scripts directly only when needed:
+The root scripts pick the right platform automatically; use direct platform
+scripts only when needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
 ./scripts/ubuntu/rebuild.sh
 ```
 
-Ubuntu entry points check that `/usr/bin/zsh` is the login shell and restore it
-with `sudo` if needed.
+Ubuntu entry points enforce `/usr/bin/zsh` as the login shell and restore it with
+`sudo` if needed.
 
 ## Update packages and agent workflows
 
