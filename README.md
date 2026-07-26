@@ -8,7 +8,7 @@ Home Manager keeps a consistent base across macOS and Ubuntu; macOS adds nix-dar
 
 ## Agent sandbox
 
-Use direct clients normally; for isolation use `*-nono` wrappers (`gnhf*`, with `gnhf` defaulting to `codex`) for isolated worktree+HOME, `auth.json`-only sync, history-rewrite protection, and hardened env/network.
+Use direct clients normally; for isolation use `*-nono` wrappers (`gnhf*`, `gnhf`→`codex`) with isolated worktree+HOME, `auth.json`-only sync, history protection, and hardened env/network.
 
 ```sh
 nix run ".#nono-runtime-test"
