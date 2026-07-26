@@ -30,13 +30,13 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` defaults to codex; suffix variants stay fixed.
+`gnhf` defaults to codex; suffixes keep fixed tool targets.
 
-- `*-nono`: isolated writable worktree + home; only `auth.json` syncs back.
+- `*-nono`: isolated worktree + home; only `auth.json` syncs back.
 - Git/session: local `reflog`/`index`; remote refs sync only on clean host state.
-- Runtime blocks: merge/rebase/cherry-pick/revert/bisect, sparse/split-index/submodule/alternate-object states, unlinked worktrees.
+- Runtime blocks: merge/rebase/cherry-pick/revert/bisect; avoids sparse/split-index/submodule/alternate-object states and unlinked worktrees.
 - Hardening: strips sensitive env, proxy-only egress, reduced keychain/cert/browser/container access; allowlist via `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
-- TLS/recovery: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi); recovery at `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds vanish.
+- TLS/recovery: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi); recovery under `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds disappear.
 - Nono checks live in `packages/nono.nix`; verify with:
 
 ```sh
