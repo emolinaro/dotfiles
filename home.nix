@@ -1,18 +1,17 @@
-{
-  chromeDevtoolsAxiSkill,
-  config,
-  ghAxiSkill,
-  gstackRev,
-  herdrPackage,
-  homeDirectory,
-  lavishSkill,
-  lib,
-  nonoPackage,
-  pkgs,
-  superpowersRev,
-  superpowersSkill,
-  username,
-  ...
+{ chromeDevtoolsAxiSkill
+, config
+, ghAxiSkill
+, gstackRev
+, herdrPackage
+, homeDirectory
+, lavishSkill
+, lib
+, nonoPackage
+, pkgs
+, superpowersRev
+, superpowersSkill
+, username
+, ...
 }:
 
 let
@@ -567,25 +566,25 @@ in
   '';
 
   home.activation.gnhfConfig = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    set -euo pipefail
-    if [[ -z "''${DRY_RUN:-}" ]]; then
-      config_file="$HOME/.gnhf/config.yml"
-      if [ ! -e "$config_file" ]; then
-        mkdir -p "$HOME/.gnhf"
-        cat <<'EOF' > "$config_file"
-# Default settings for gnhf.
-# Change `agent` to codex or opencode as needed.
-# Optional: run through nono sandbox wrappers by setting one of these:
-# agentPathOverride:
-#   codex: codex-nono
-#   opencode: opencode-nono
-agent: codex
-maxConsecutiveFailures: 3
-meteorFrequency: 1
-preventSleep: true
-EOF
-      fi
-    fi
+        set -euo pipefail
+        if [[ -z "''${DRY_RUN:-}" ]]; then
+          config_file="$HOME/.gnhf/config.yml"
+          if [ ! -e "$config_file" ]; then
+            mkdir -p "$HOME/.gnhf"
+            cat <<'EOF' > "$config_file"
+    # Default settings for gnhf.
+    # Change `agent` to codex or opencode as needed.
+    # Optional: run through nono sandbox wrappers by setting one of these:
+    # agentPathOverride:
+    #   codex: codex-nono
+    #   opencode: opencode-nono
+    agent: codex
+    maxConsecutiveFailures: 3
+    meteorFrequency: 1
+    preventSleep: true
+    EOF
+          fi
+        fi
   '';
 
   home.activation.gstackCheckoutMigration = lib.hm.dag.entryBefore [ "linkGeneration" ] ''

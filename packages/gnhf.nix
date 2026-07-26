@@ -1,10 +1,10 @@
-{
-  buildNpmPackage,
-  coreutils,
-  fetchurl,
-  lib,
-  symlinkJoin,
-  writeShellScriptBin,
+{ buildNpmPackage
+, coreutils
+, fetchurl
+, lib
+, symlinkJoin
+, writeShellScriptBin
+,
 }:
 
 let
