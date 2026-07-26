@@ -123,9 +123,9 @@ nix flake update nixpkgs nixpkgs-linux
 nix flake update gstack
 ```
 
-`nixpkgs` and `nixpkgs-linux` are the shared package inputs; all others
+`nixpkgs` and `nixpkgs-linux` are shared package inputs; other tool inputs
 (including `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `superpowers`, `herdr`)
-update independently. Treehouse and No Mistakes stay pinned in
+update independently, while Treehouse and No Mistakes remain pinned in
 `packages/treehouse.nix` and `packages/no-mistakes.nix`.
 
 Review lock changes before rebuilding:
