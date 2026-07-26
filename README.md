@@ -81,15 +81,15 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-`./rebuild.sh` auto-detects the platform; use direct scripts only if needed:
+`./rebuild.sh` auto-detects the platform; use direct scripts only when needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
 ./scripts/ubuntu/rebuild.sh
 ```
 
-Ubuntu entry points enforce `/usr/bin/zsh` as the login shell and restore it with
-`sudo` if needed.
+Ubuntu scripts enforce `/usr/bin/zsh` as the login shell and restore it with
+`sudo` if required.
 
 ## Update packages and agent workflows
 
