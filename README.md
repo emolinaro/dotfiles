@@ -37,14 +37,14 @@ Before bootstrap, update "Make it yours", read the Homebrew cleanup warning, the
 
 ### Validate without applying
 
-After Nix is installed, validate local changes without applying them:
+Validate local changes without applying:
 
 ```sh
 nix flake check --no-build
 nix build .#darwinConfigurations.mac.system --dry-run
 ```
 
-If you renamed the host label in "Make it yours", replace `mac` in these commands with your label.
+If you renamed the host label, replace `mac` with your label in these commands.
 
 ### Rebuild macOS
 
