@@ -26,6 +26,19 @@ opencode-nono
 pi-nono
 ```
 
+Additional `gnhf` integration wrappers are also available:
+
+```sh
+gnhf
+gnhf-codex
+gnhf-codex-nono
+gnhf-opencode
+gnhf-opencode-nono
+```
+
+`gnhf` and `gnhf-codex*` default to the `codex` agent. `gnhf-opencode*`
+runs against `opencode`.
+
 The Nono wrappers make the current Git worktree and an ephemeral per-session
 client home writable. Trusted agent instructions, skills, plugins, and
 configuration are staged into that home while their host originals remain
