@@ -1,4 +1,10 @@
-{ coreutils, lib, nodejs, symlinkJoin, writeShellScriptBin }:
+{
+  coreutils,
+  lib,
+  nodejs,
+  symlinkJoin,
+  writeShellScriptBin,
+}:
 
 let
   version = "0.1.41";
