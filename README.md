@@ -16,8 +16,23 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Terminal launches of `claude`, `codex`, `opencode`, and `pi` use the upstream
-clients directly. To run an agent inside the version-pinned Nono sandbox, use:
+Terminal launches of `claude`, `codex`, `opencode`, `pi`, and `gnhf` use the
+upstream clients directly. `gnhf` also has helper entrypoints:
+
+- `gnhf-codex` and `gnhf-opencode` to pin the agent directly.
+- `gnhf-codex-nono` and `gnhf-opencode-nono` to run those flows through the
+  version-pinned Nono sandbox.
+
+The first activation seeds `~/.gnhf/config.yml` with defaults:
+
+```yml
+maxConsecutiveFailures: 3
+meteorFrequency: 1
+preventSleep: true
+```
+
+Set `agent` or `agentPathOverride` in that file to override `gnhf` defaults.
+To run an agent inside the version-pinned Nono sandbox, use:
 
 ```sh
 claude-nono

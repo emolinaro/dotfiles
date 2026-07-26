@@ -1,18 +1,17 @@
-{
-  chromeDevtoolsAxiSkill,
-  config,
-  ghAxiSkill,
-  gstackRev,
-  herdrPackage,
-  homeDirectory,
-  lavishSkill,
-  lib,
-  nonoPackage,
-  pkgs,
-  superpowersRev,
-  superpowersSkill,
-  username,
-  ...
+{ chromeDevtoolsAxiSkill
+, config
+, ghAxiSkill
+, gstackRev
+, herdrPackage
+, homeDirectory
+, lavishSkill
+, lib
+, nonoPackage
+, pkgs
+, superpowersRev
+, superpowersSkill
+, username
+, ...
 }:
 
 let
@@ -572,17 +571,17 @@ in
     if [ ! -e "$config_file" ]; then
       mkdir -p "$HOME/.gnhf"
       cat <<'EOF' > "$config_file"
-# Default settings for gnhf.
-# Leave `agent` unset to use upstream default agent selection.
-# Set `agent` to `codex` or `opencode` as needed.
-# Optional: run through nono sandbox wrappers by setting one of these:
-# agentPathOverride:
-#   codex: codex-nono
-#   opencode: opencode-nono
-maxConsecutiveFailures: 3
-meteorFrequency: 1
-preventSleep: true
-EOF
+    # Default settings for gnhf.
+    # Leave `agent` unset to use upstream default agent selection.
+    # Set `agent` to `codex` or `opencode` as needed.
+    # Optional: run through nono sandbox wrappers by setting one of these:
+    # agentPathOverride:
+    #   codex: codex-nono
+    #   opencode: opencode-nono
+    maxConsecutiveFailures: 3
+    meteorFrequency: 1
+    preventSleep: true
+    EOF
     fi
   '';
 
