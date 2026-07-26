@@ -86,7 +86,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-On Ubuntu, Apt manages system packages, Home Manager manages user config, and `bootstrap.sh` auto-selects the architecture pin (`x86_64`/`ARM64`), enables Docker and the `docker` group, switches to `/usr/bin/zsh`, then prompts `codex login` after restart.
+On Ubuntu, Apt handles system packages, Home Manager user config, and `bootstrap.sh` handles arch pinning (`x86_64`/`ARM64`), Docker setup, `/usr/bin/zsh`, and the `codex login` prompt after restart.
 
 ```sh
 codex login
