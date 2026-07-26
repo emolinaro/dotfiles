@@ -53,16 +53,13 @@ git clone https://github.com/emolinaro/dotfiles.git
 cd dotfiles
 ```
 
-Before you run it: open the config files and change the values listed in "Make it yours" below (git identity and host label), and read the Homebrew cleanup warning.
-`bootstrap.sh` applies the config to your machine, so do this first.
+Before running bootstrap, update the values in "Make it yours" (git identity and host label), read the Homebrew cleanup warning, then run `./bootstrap.sh`.
 
 ```sh
 ./bootstrap.sh
 ```
 
-`bootstrap.sh` installs Nix if missing, links `~/.dotfiles`, then runs the first `darwin-rebuild switch` with nix-darwin 26.05.
-
-After that, `darwin-rebuild` exists and you're on the normal workflow below.
+`./bootstrap.sh` installs Nix if missing, links `~/.dotfiles`, runs the first `darwin-rebuild switch` with nix-darwin 26.05, then leaves `darwin-rebuild` available for the normal workflow.
 
 ### Validate without applying
 
