@@ -44,7 +44,7 @@ nix flake check --no-build
 nix build .#darwinConfigurations.mac.system --dry-run
 ```
 
-If renamed, replace `mac` with your label in both commands.
+If renamed, replace `mac` in both commands.
 
 ### Rebuild macOS
 
