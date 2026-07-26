@@ -44,7 +44,7 @@ nix flake check --no-build
 nix build .#darwinConfigurations.mac.system --dry-run
 ```
 
-If you renamed the host label, replace `mac` with your label in these commands.
+If renamed, replace `mac` with your label in both commands.
 
 ### Rebuild macOS
 
