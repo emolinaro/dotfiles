@@ -105,18 +105,13 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-The Ubuntu setup is headless. Apt installs only system-level prerequisites;
-Home Manager installs the shared user environment. Platform-specific package
-sources are selected declaratively, and checksum-pinned binary packages choose
-the correct archive for each supported architecture. Update checks remain
-under Nix control.
+The Ubuntu setup is headless: Apt handles only system prerequisites, Home
+Manager owns the shared user environment, and package sources are chosen
+declaratively per architecture with checksums pinned in Nix.
 
-The bootstrap supports x86_64 and ARM64, uses the current username and home
-directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
-systemd, and adds the current user to the `docker` group. Start a new login
-session after it completes so the shell and Docker group changes take effect,
-then authenticate Codex manually. Restart Codex after a rebuild so it discovers
-newly installed agent skills:
+The bootstrap supports x86_64 and ARM64, uses the current user and home, sets
+the login shell to `/usr/bin/zsh`, enables Docker, and adds you to the
+`docker` group. Reopen your shell after it finishes, then run:
 
 ```sh
 codex login
