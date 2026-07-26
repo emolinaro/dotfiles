@@ -153,9 +153,9 @@ updates those through the declared Homebrew activation settings.
 ## Make it yours
 
 This repo is mine.
-If you clone it, change these before you run `bootstrap.sh`:
+Before running `bootstrap.sh` on your clone, change these:
 
-- **macOS user** is detected automatically (`SUDO_USER` when using `sudo`, otherwise `USER`) so any sudo-capable account can apply configuration.
+- **macOS user** is auto-detected (`SUDO_USER` first, otherwise `USER`) so any sudo-capable account can apply configuration.
 - **Git identity**, in `programs.git.settings.user` in `home.nix`
   (`emolinaro` / `emil.molinaro@gmail.com`).
 - **Host label** `"mac"` in `flake.nix`, `scripts/macos/rebuild.sh`, and `scripts/macos/bootstrap.sh`; all three must match.
