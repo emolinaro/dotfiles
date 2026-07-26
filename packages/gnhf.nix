@@ -1,7 +1,7 @@
 { lib, nodejs, stdenvNoCC }:
 
 let
-  version = "0.1.42";
+  version = "0.1.41";
   packageSpecifier = "gnhf@${version}";
 in
 stdenvNoCC.mkDerivation {
