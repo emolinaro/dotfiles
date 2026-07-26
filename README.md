@@ -86,7 +86,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-On Ubuntu, Apt handles system packages, Home Manager owns user config, and Nix selects architecture pins (`x86_64`/`ARM64`). `bootstrap.sh` enables Docker, adds you to `docker`, switches to `/usr/bin/zsh`, and asks for `codex login` after shell restart.
+On Ubuntu, Apt manages system packages, Home Manager manages user config, and `bootstrap.sh` auto-selects the architecture pin (`x86_64`/`ARM64`), enables Docker and the `docker` group, switches to `/usr/bin/zsh`, then prompts `codex login` after restart.
 
 ```sh
 codex login
