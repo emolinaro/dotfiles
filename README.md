@@ -104,9 +104,7 @@ nix flake update nixpkgs nixpkgs-linux
 nix flake update gstack
 ```
 
-`nixpkgs` and `nixpkgs-linux` are shared package inputs; all other inputs
-update independently unless explicitly pinned, with Treehouse and No Mistakes in
-`packages/treehouse.nix` and `packages/no-mistakes.nix`.
+Only `nixpkgs` and `nixpkgs-linux` are shared; other inputs update independently unless pinned, with Treehouse and No Mistakes pinned in `packages/treehouse.nix` and `packages/no-mistakes.nix`.
 
 Review lock changes before rebuilding:
 
