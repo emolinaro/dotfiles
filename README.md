@@ -16,19 +16,14 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Terminal launches of `claude`, `codex`, `opencode`, and `pi` use the upstream
-clients directly. Use `*-nono` wrappers for the version-pinned sandbox mode:
+Use upstream clients for direct runs, and nono wrappers for isolated sandbox runs:
 
 ```sh
 claude-nono
 codex-nono
 opencode-nono
 pi-nono
-```
 
-Use `gnhf` wrappers for orchestrated runs:
-
-```sh
 gnhf
 gnhf-codex
 gnhf-codex-nono
@@ -36,57 +31,31 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` and `gnhf-codex*` default to `codex`; `gnhf-opencode*` runs
-against `opencode`.
-
-Nono sessions operate on writable per-session copies of the Git worktree and
-client home. Shared configuration, skills, and plugins are staged into the
-session, while only authentication JSON is persisted and synchronized back with
-the host profile using generation checks. Git metadata stays local per session;
-refs and index are reconciled only when the host repo is unchanged.
-
-To avoid races, active worktrees with `MERGE`, `REBASE`, `CHERRY-PICK`,
-`REVERT`, `BISECT`, `SPARSE`, `SPLIT INDEX`, or submodule/alternate-object
-state are blocked; launches outside linked worktrees also fail closed. Multiple
-linked sessions coordinate via per-session locks and snapshots.
-
-The first launch enforces filesystem and environment restrictions, strips
-sensitive variables, blocks unrelated macOS keychain/certificate/browser and
-container access, and routes outbound TCP through Nono’s proxy. Use
-`DOTFILES_NONO_ALLOW_DOMAINS` to widen egress:
-
-Each `*-nono` wrapper accepts dynamic network allowlist overrides via
-environment variables:
-
-- `DOTFILES_NONO_ALLOW_DOMAINS` (default: `chatgpt.com`) adds one or more
-  `--allow-domain` entries. Use a comma or space separated list of hostnames or
-  URL globs.
-- `DOTFILES_NONO_OPEN_PORTS` adds one or more localhost `--open-port` entries
-  (for example `11434` for Ollama).
-
-On macOS, codex pins `SSL_CERT_FILE` and `CODEX_CA_CERTIFICATE` to
-`/private/etc/ssl/cert.pem`, and pi pins `OPENSSL_CONF` to
-`/private/etc/ssl/openssl.cnf`, so both can validate TLS without keychain
-access.
-
-Interrupted sessions are restored under a per-worktree lock and moved to
-`~/.cache/nono/recovery/` for inspection; recovery refs expire after 30 days.
-If credentials are managed outside the keychain, sign in with the direct client
-first so Nono can sync auth state.
-
-Nono uses official release tarballs with one SHA-256 per supported target. To
-update, edit `packages/nono.nix` and run:
-`packages/nono.nix`. First evaluate every target from any supported host:
+- `gnhf` and `gnhf-codex*` default to codex; `gnhf-opencode*` default to
+  opencode.
+- `*-nono` uses writable per-session worktrees and home dirs; shared
+  configuration/plugins are preloaded and only auth JSON is synced back.
+- Session refs/index remain isolated and are reconciled only when host state is
+  clean.
+- Launches are blocked when worktrees are in `MERGE`, `REBASE`, `CHERRY-PICK`,
+  `REVERT`, `BISECT`, `SPARSE`, `SPLIT INDEX`, submodule, or alternate-object
+  states, or when not inside a linked worktree.
+- Network hardening is enabled by default: sensitive vars are removed, proxy-only
+  outbound TCP, and keychain/certificate/browser/container access is limited.
+- Runtime overrides:
+  - `DOTFILES_NONO_ALLOW_DOMAINS` (default `chatgpt.com`) for extra `--allow-domain`
+    entries.
+  - `DOTFILES_NONO_OPEN_PORTS` for local `--open-port` entries.
+- macOS TLS: codex sets `SSL_CERT_FILE`/`CODEX_CA_CERTIFICATE`,
+  pi sets `OPENSSL_CONF`, both pointing at system cert paths.
+- Interrupted sessions restore under `~/.cache/nono/recovery/` (retained 30 days).
+- If credentials are outside the keychain, sign in to the direct client once so
+  nono can sync auth state.
+- Nono release hashes are maintained in `packages/nono.nix`. Validate updates with:
 
 ```sh
 nix flake check --all-systems --impure --no-build
-```
 
-Then run the following native builds on Apple Silicon macOS, Intel macOS,
-x86_64 Ubuntu, and aarch64 Ubuntu so every release archive, executable, and
-Linux ELF patch is exercised on its target platform:
-
-```sh
 system="$(nix eval --impure --raw --expr builtins.currentSystem)"
 nix build \
   ".#checks.$system.nono-package" \
