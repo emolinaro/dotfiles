@@ -120,7 +120,7 @@ Before first `bootstrap.sh`, update this repo for your environment:
 - **Git identity**: `programs.git.settings.user` in `home.nix` (`emolinaro` / `emil.molinaro@gmail.com`).
 - **Host label** set `"mac"` consistently in `flake.nix`, `scripts/macos/rebuild.sh`, and `scripts/macos/bootstrap.sh`.
 
-**Homebrew cleanup warning:** `homebrew.onActivation.cleanup = "zap"` removes unlisted Homebrew items on each switch; review `brews`/`casks` before bootstrap/rebuild.
+**Homebrew cleanup:** `homebrew.onActivation.cleanup = "zap"` removes unlisted Homebrew items each switch; check `brews`/`casks` first.
 
 ## License
 
