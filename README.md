@@ -38,11 +38,9 @@ nix run ".#nono-runtime-test"
 
 ## Supported systems
 
-- macOS on Apple Silicon, by default.
-- Intel Mac: set `nixpkgs.hostPlatform = "x86_64-darwin";` in
-  `configuration.nix`.
-- Headless Ubuntu 24.04 on x86_64 or ARM64. The Ubuntu bootstrap requires a
-  non-root user with sudo access and selects the correct architecture automatically.
+Supported systems are default Apple Silicon macOS (Intel override:
+`nixpkgs.hostPlatform = "x86_64-darwin";` in `configuration.nix`) and
+headless Ubuntu 24.04 on x86_64 or ARM64 with a non-root sudo user and automatic architecture detection.
 
 ## Fresh macOS setup
 
