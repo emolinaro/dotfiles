@@ -31,14 +31,13 @@ gnhf-opencode-nono
 ```
 
 - `gnhf` defaults to codex; `gnhf-codex*` stays codex; `gnhf-opencode*` stays opencode.
-- `*-nono`: writable worktree/home per run, preloaded setup/plugins, only auth JSON synced back.
-- Git state is isolated (`reflog` and `index` not shared); refs sync only when host is clean.
-- Blocks merge/rebase/cherry-pick/revert/bisect/sparse/split-index/submodule/alternate-object states and unlinked worktrees.
-- Defaults harden env/network by removing sensitive vars, forcing proxy-only egress, and limiting keychain/cert/browser/container access.
-- Override with `DOTFILES_NONO_ALLOW_DOMAINS` (default `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
-- macOS TLS uses system cert paths: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi).
-- Recovery uses `~/.cache/nono/recovery/` (30-day retention).
-- Without keychain credentials, sign into the direct client once so nono can sync auth.
+- `*-nono`: writable worktree/home each run with setup/plugins preloaded; only auth JSON syncs back.
+- Git is isolated (`reflog` and `index` stay local); refs sync only when the host is clean.
+- Blocks dangerous states: merge/rebase/cherry-pick/revert/bisect, sparse/split-index/submodule/alternate-object states, and unlinked worktrees.
+- Runtime hardening strips sensitive env vars, enforces proxy-only egress, and limits keychain/cert/browser/container access.
+- Override with `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com` default) and `DOTFILES_NONO_OPEN_PORTS`.
+- TLS paths: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi).
+- Recovery: `~/.cache/nono/recovery/` (30-day retention); without keychain creds, sign into the direct client once to sync auth.
 - Nono hashes live in `packages/nono.nix`; verify updates with:
 
 ```sh
