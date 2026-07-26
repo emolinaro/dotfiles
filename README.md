@@ -89,7 +89,7 @@ Ubuntu rebuild scripts enforce `/usr/bin/zsh` login and restore via `sudo` when 
 
 ## Update packages and agent workflows
 
-Package and agent pins live in `flake.lock`; Homebrew is managed by nix-darwin activation.
+Pins live in `flake.lock`; nix-darwin manages Homebrew.
 
 ```sh
 # Update all inputs
