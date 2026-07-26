@@ -29,6 +29,7 @@ let
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
+  gnhfPackage = pkgs.callPackage ./packages/gnhf.nix { };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
     codex = pkgs.codex;
@@ -107,6 +108,7 @@ in
       tmux
       tree
       treehousePackage
+      gnhfPackage
       tree-sitter
       uv
       watchexec
@@ -561,6 +563,26 @@ in
         ${lib.getExe nonoPackage} profile validate --strict \
           "${nonoProfiles}/$profile.json"
       done
+    fi
+  '';
+
+  home.activation.gnhfConfig = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    set -euo pipefail
+    config_file="$HOME/.gnhf/config.yml"
+    if [ ! -e "$config_file" ]; then
+      mkdir -p "$HOME/.gnhf"
+      cat <<'EOF' > "$config_file"
+# Default settings for gnhf.
+# Change `agent` to codex or opencode as needed.
+# Optional: run through nono sandbox wrappers by setting one of these:
+# agentPathOverride:
+#   codex: codex-nono
+#   opencode: opencode-nono
+agent: codex
+maxConsecutiveFailures: 3
+meteorFrequency: 1
+preventSleep: true
+EOF
     fi
   '';
 
