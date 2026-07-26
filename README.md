@@ -8,7 +8,7 @@ Shared macOS/Ubuntu base from Home Manager; macOS adds nix-darwin/Homebrew, clou
 
 ## Agent sandbox
 
-Use direct clients normally; for isolation use `*-nono` wrappers (`gnhf*`, `gnhf`→`codex`) with isolated worktree+HOME, `auth.json`-only sync, history protection, and hardened env/network.
+Use direct clients by default; `*-nono` wrappers (`gnhf*`, `gnhf`→`codex`) run in isolated worktree+HOME with `auth.json`-only sync, history protection, and hardened env/network.
 
 ```sh
 nix run ".#nono-runtime-test"
