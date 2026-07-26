@@ -27,7 +27,7 @@ git clone https://github.com/emolinaro/dotfiles.git
 cd dotfiles
 ```
 
-Before bootstrap, update "Make it yours", read the Homebrew cleanup warning, then run `./bootstrap.sh`.
+Before bootstrap, update Make it yours, review Homebrew cleanup, then run `./bootstrap.sh`.
 
 ```sh
 ./bootstrap.sh
