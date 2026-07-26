@@ -58,7 +58,7 @@ No separate build-and-copy step.
 
 ## Fresh Ubuntu 24.04 setup
 
-Clone the repo as the user who will own the configuration, then run:
+Clone the repo as the config owner, then run:
 
 ```sh
 git clone https://github.com/emolinaro/dotfiles.git
