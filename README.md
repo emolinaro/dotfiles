@@ -32,23 +32,12 @@ gnhf-opencode-nono
 
 `gnhf` defaults to `codex`; add suffixes for a specific tool.
 
-- `*-nono`: isolated worktree+HOME; only `auth.json` syncs back.
-- Git/reconcile: local `reflog`+`index`; remote refs sync only from a clean host.
-- Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unusable in sparse/split-index/submodule/alternate-object/unlinked states.
-- Hardening: strips sensitive env; proxy-only egress via allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) + `DOTFILES_NONO_OPEN_PORTS`; disables keychain/cert/browser/container access.
-- TLS/recovery: codex sets `SSL_CERT_FILE`+`CODEX_CA_CERTIFICATE`, pi sets `OPENSSL_CONF`; recovery in `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds disappear.
-- Validation:
+`*-nono` runs in an isolated worktree+HOME and only syncs back `auth.json`.
+Git operations that rewrite history are blocked, and sessions are hardened with
+env/network hardening and key-recovery safety.
 
 ```sh
 nix flake check --all-systems --impure --no-build
-
-system="$(nix eval --impure --raw --expr builtins.currentSystem)"
-nix build \
-  ".#checks.$system.nono-package" \
-  ".#checks.$system.nono-agent-wrappers" \
-  ".#checks.$system.nono-home-command-surface" \
-  ".#checks.$system.nono-profiles" \
-  ".#checks.$system.nono-runtime-driver"
 nix run ".#nono-runtime-test"
 ```
 
