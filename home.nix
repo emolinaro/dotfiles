@@ -29,6 +29,7 @@ let
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
+  gnhfPackage = pkgs.callPackage ./packages/gnhf.nix { };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
     codex = pkgs.codex;
@@ -36,7 +37,13 @@ let
     pi = pkgs.pi-coding-agent;
   };
   agentExecutables = lib.genAttrs agentNames (
-    name: if isLinux then lib.getExe linuxAgentPackages.${name} else "${homebrewPrefix}/bin/${name}"
+    name:
+      if builtins.elem name ["codex" "codex-nono" "opencode" "opencode-nono"] then
+        lib.getExe gnhfPackage
+      else if isLinux then
+        lib.getExe linuxAgentPackages.${name}
+      else
+        "${homebrewPrefix}/bin/${name}"
   );
   agentWrappers = pkgs.callPackage ./runtime/nono-agent-wrappers.nix {
     inherit
@@ -97,6 +104,7 @@ in
       nodejs
       nonoPackage
       noMistakesPackage
+      gnhfPackage
       pre-commit
       python3
       ripgrep # fast search

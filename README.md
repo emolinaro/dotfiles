@@ -89,6 +89,28 @@ complete session. The Nono wrapper intentionally cannot reach the general
 keychain. Desktop applications and editor-launched processes do not pass
 through the terminal wrappers.
 
+## Using gnhf
+
+`gnhf` is the local command gateway used by this repo to select the backend
+agent through one CLI entrypoint. If you do not pass `--agent`, it defaults to
+`codex`.
+
+```sh
+gnhf --agent codex
+gnhf --agent opencode
+```
+
+Use the wrapped Nono variants when you want the same workflow as other `*-nono`
+commands in this repo:
+
+```sh
+codex-nono
+opencode-nono
+```
+
+Those wrapper commands are configured to pass `--agent codex` and
+`--agent opencode` respectively.
+
 Nono uses the official release tarballs with a separate SHA-256 hash for each
 supported target. To update it, change the version and target hashes in
 `packages/nono.nix`. First evaluate every target from any supported host:
