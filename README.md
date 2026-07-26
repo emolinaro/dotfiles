@@ -13,10 +13,7 @@ also included.
 
 ## Agent sandbox
 
-Use direct clients normally; for isolated or wrapped runs use `claude-nono`, `codex-nono`, `opencode-nono`, `pi-nono`, and `gnhf*` (`gnhf` defaults to `codex`).
-
-`*-nono` runs in an isolated worktree+HOME, syncs only `auth.json`, blocks
-history-rewrite, and applies env/network hardening.
+Use direct clients normally; for isolated/wrapped runs use `claude-nono`, `codex-nono`, `opencode-nono`, `pi-nono`, or `gnhf*` (`gnhf` defaults to `codex`), which uses an isolated worktree+HOME, syncs only `auth.json`, blocks history-rewrite, and applies env/network hardening.
 
 ```sh
 nix run ".#nono-runtime-test"
