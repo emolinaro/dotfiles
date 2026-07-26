@@ -13,7 +13,7 @@ also included.
 
 ## Agent sandbox
 
-Use direct clients normally; use `*-nono` for isolated runs and `gnhf*` for agent wrappers.
+Use direct clients normally; use `*-nono` for isolated runs and `gnhf*` for wrappers (`gnhf` defaults to `codex`).
 
 ```sh
 claude-nono
@@ -27,10 +27,8 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` defaults to `codex`; add suffixes for a specific tool.
-
 `*-nono` runs in an isolated worktree+HOME, syncs only `auth.json`, blocks
-history-rewriting Git operations, and adds env/network hardening.
+history-rewrite, and applies env/network hardening.
 
 ```sh
 nix run ".#nono-runtime-test"
