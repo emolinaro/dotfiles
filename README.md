@@ -1,6 +1,6 @@
 # dotfiles
 
-My personal macOS and Ubuntu setup is managed with Nix and Home Manager, so one repo and one command configure a fresh machine the same way every time.
+Nix and Home Manager configure this macOS and Ubuntu setup from one repo with one command, consistently.
 
 ## What you get
 
