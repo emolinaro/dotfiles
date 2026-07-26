@@ -117,16 +117,16 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-The root scripts detect macOS or Ubuntu 24.04 and dispatch to the matching
-implementation. Platform scripts can also be run directly when needed:
+The root scripts choose the right platform rebuild automatically; run platform
+scripts directly only when needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
 ./scripts/ubuntu/rebuild.sh
 ```
 
-Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
-shell. The rebuild restores it with sudo if it has been changed.
+Ubuntu entry points check that `/usr/bin/zsh` is the login shell and restore it
+with `sudo` if needed.
 
 ## Update packages and agent workflows
 
