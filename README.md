@@ -87,8 +87,7 @@ Apply later changes with:
 ./scripts/ubuntu/rebuild.sh
 ```
 
-Ubuntu scripts enforce `/usr/bin/zsh` as the login shell and restore it with
-`sudo` if required.
+Ubuntu rebuild scripts enforce `/usr/bin/zsh` as the login shell and restore it via `sudo` when needed.
 
 ## Update packages and agent workflows
 
