@@ -16,8 +16,9 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Terminal launches of `claude`, `codex`, `opencode`, and `pi` use the upstream
-clients directly. To run an agent inside the version-pinned Nono sandbox, use:
+Terminal launches of `claude` and `pi` use the upstream clients directly.
+`codex` and `opencode` run through `gnhf` and can be routed to explicit backends
+with `--agent`. To run an agent inside the version-pinned Nono sandbox, use:
 
 ```sh
 claude-nono
@@ -104,6 +105,8 @@ Use the wrapped Nono variants when you want the same workflow as other `*-nono`
 commands in this repo:
 
 ```sh
+codex
+opencode
 codex-nono
 opencode-nono
 ```

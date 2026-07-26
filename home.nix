@@ -30,15 +30,24 @@ let
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
   gnhfPackage = pkgs.callPackage ./packages/gnhf.nix { };
+  gnhfGatewayEntrypoints = pkgs.symlinkJoin {
+    name = "nono-gateway-entrypoints";
+    paths = [
+      (pkgs.writeShellScriptBin "codex" ''
+        exec "${lib.getExe gnhfPackage}" --agent codex "$@"
+      '')
+      (pkgs.writeShellScriptBin "opencode" ''
+        exec "${lib.getExe gnhfPackage}" --agent opencode "$@"
+      '')
+    ];
+  };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
-    codex = pkgs.codex;
-    opencode = pkgs.opencode;
     pi = pkgs.pi-coding-agent;
   };
   agentExecutables = lib.genAttrs agentNames (
     name:
-      if builtins.elem name ["codex" "codex-nono" "opencode" "opencode-nono"] then
+      if builtins.elem name [ "codex" "opencode" ] then
         lib.getExe gnhfPackage
       else if isLinux then
         lib.getExe linuxAgentPackages.${name}
@@ -105,6 +114,7 @@ in
       nonoPackage
       noMistakesPackage
       gnhfPackage
+      gnhfGatewayEntrypoints
       pre-commit
       python3
       ripgrep # fast search

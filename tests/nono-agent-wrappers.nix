@@ -321,11 +321,8 @@ pkgs.runCommand "nono-agent-wrappers-test"
       "$HOME/.config/opencode/opencode.json" \
       "$HOME/.pi/agent/AGENTS.md" \
       "$HOME/.pi/agent/settings.json"
-    cat > "$HOME/.config/git/config" <<'EOF'
-    [user]
-      name = Wrapper Test
-      email = wrapper@example.com
-    EOF
+    printf '%s\n' '[user]' '  name = Wrapper Test' '  email = wrapper@example.com' \
+      > "$HOME/.config/git/config"
 
     ${pkgs.lib.concatMapStringsSep "\n" (
       name:
@@ -363,6 +360,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       local agent="$1"
       local real_executable="$2"
       local auth_relative="$3"
+      local -a client_arguments=("''${@:4}")
       local original_path="$PATH"
 
       export WRAPPER_TEST_AGENT_TRACE="$TMPDIR/$agent.agent.trace"
@@ -382,14 +380,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
       unset WRAPPER_TEST_AUTH_EXPECT WRAPPER_TEST_AUTH_REPLACEMENT
 
       expected=("$real_executable")
-      if [[ "$agent" == codex ]]; then
-        expected+=(
-          --sandbox
-          danger-full-access
-          --ask-for-approval
-          on-request
-        )
-      fi
+      expected+=("''${client_arguments[@]}")
       expected+=("argument with spaces" -- literal)
       printf '%s\n' "''${expected[@]:1}" > "$TMPDIR/$agent.expected"
       ${pkgs.diffutils}/bin/diff -u "$TMPDIR/$agent.expected" "$WRAPPER_TEST_AGENT_TRACE"
@@ -409,6 +400,8 @@ pkgs.runCommand "nono-agent-wrappers-test"
       name:
       "assert_nono_wrapper ${name} ${agentExecutables.${name}} "
       + pkgs.lib.escapeShellArg (builtins.head agentRegistry.${name}.persistentFiles)
+      + " "
+      + pkgs.lib.escapeShellArgs agentRegistry.${name}.clientArguments
     ) agentNames}
     unset GIT_DIR NONO_ALLOW NONO_PROFILE
 
