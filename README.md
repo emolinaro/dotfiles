@@ -98,7 +98,7 @@ nix flake update nixpkgs nixpkgs-linux
 nix flake update gstack
 ```
 
-Only `nixpkgs` and `nixpkgs-linux` are shared; pin others in `packages/treehouse.nix` or `packages/no-mistakes.nix`.
+Only `nixpkgs` and `nixpkgs-linux` are shared; all other external inputs are pinned in `flake.lock` and updated with `nix flake update <input>`, while `packages/treehouse.nix` and `packages/no-mistakes.nix` pin the release tarball binaries.
 
 Review lock changes before rebuilding:
 
