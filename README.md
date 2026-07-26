@@ -1,6 +1,6 @@
 # dotfiles
 
-Nix and Home Manager set up macOS and Ubuntu from one repo with one command.
+Nix and Home Manager configure macOS and Ubuntu from one repo.
 
 ## What you get
 
