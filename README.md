@@ -5,14 +5,13 @@ One repo, one command, and a fresh machine ends up configured the same way every
 
 ## What you get
 
-Both platforms get a reproducible shell, editor, developer toolchain, agent
-workflow, and shared user configuration through Home Manager. macOS also gets
-desktop applications and system settings managed by nix-darwin and Homebrew.
+Both platforms use Home Manager for a shared reproducible shell, editor,
+developer tooling, and agent workflow; macOS also gets nix-darwin/Homebrew-
+managed desktop apps and system settings.
 
-The configuration provides a fast Zsh environment, a language-aware Neovim
-setup, cloud and container tooling, managed agent extensions, isolated
-worktree workflows, and local validation before changes are completed. Push,
-pull request, merge, and deployment actions always require explicit approval.
+The setup includes Zsh and language-aware Neovim, cloud/container tooling,
+managed agent extensions, isolated worktrees, and local validation with explicit
+approval for push, pull-request, merge, and deploy actions.
 
 ## Agent sandbox
 
@@ -168,7 +167,7 @@ If you clone it, change these before you run `bootstrap.sh`:
 - **Host label** `"mac"` in `flake.nix`, `scripts/macos/rebuild.sh`, and `scripts/macos/bootstrap.sh`; all three must match.
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
-That means each switch removes Homebrew items not listed in the `brews` and `casks` arrays, so review those lists before first `bootstrap.sh`/`rebuild.sh` and add anything you want to keep.
+Each switch removes unlisted Homebrew items, so review `brews` and `casks` before your first bootstrap/rebuild and keep anything needed.
 
 ## License
 
