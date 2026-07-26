@@ -36,9 +36,7 @@ nix run ".#nono-runtime-test"
 
 ## Supported systems
 
-Supported systems are default Apple Silicon macOS (Intel override:
-`nixpkgs.hostPlatform = "x86_64-darwin";` in `configuration.nix`) and
-headless Ubuntu 24.04 on x86_64 or ARM64 with a non-root sudo user and automatic architecture detection.
+Supported systems are default Apple Silicon macOS (Intel via `nixpkgs.hostPlatform = "x86_64-darwin"` in `configuration.nix`) and headless Ubuntu 24.04 on x86_64/ARM64 with a non-root sudo user and automatic architecture detection.
 
 ## Fresh macOS setup
 
