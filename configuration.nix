@@ -47,6 +47,8 @@
     onActivation.extraFlags = [ "--force" ];
     brews = [
       "herdr"
+      "codex"
+      "opencode"
       "pi-coding-agent"
       "midnight-commander"
     ];
