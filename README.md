@@ -54,8 +54,6 @@ Edit the config files in place and apply:
 ./rebuild.sh
 ```
 
-No separate build-and-copy step.
-
 ## Fresh Ubuntu 24.04 setup
 
 Clone as the config owner, then run:
