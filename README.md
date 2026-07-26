@@ -64,7 +64,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-`./bootstrap.sh` uses Apt for system and Home Manager for user, auto-detects architecture, enables Docker and `/usr/bin/zsh`, then prompts for `codex login` after restart.
+`./bootstrap.sh` uses Apt for system and Home Manager for user, auto-detects arch, enables Docker and `/usr/bin/zsh`, then prompts for `codex login` after restart.
 
 ```sh
 codex login
