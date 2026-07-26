@@ -1,15 +1,15 @@
-{
-  pkgs,
-  quotaAxiPackage,
+{ pkgs
+, quotaAxiPackage
+,
 }:
 
 pkgs.runCommand "quota-axi-package-test"
-  {
-    nativeBuildInputs = [
-      pkgs.gnugrep
-      quotaAxiPackage
-    ];
-  }
+{
+  nativeBuildInputs = [
+    pkgs.gnugrep
+    quotaAxiPackage
+  ];
+}
   ''
     set -euo pipefail
 

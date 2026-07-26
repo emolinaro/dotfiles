@@ -1,12 +1,12 @@
-{
-  fetchPnpmDeps,
-  lib,
-  makeWrapper,
-  nodejs,
-  pnpmConfigHook,
-  pnpm_11,
-  quotaAxiSource,
-  stdenvNoCC,
+{ fetchPnpmDeps
+, lib
+, makeWrapper
+, nodejs
+, pnpmConfigHook
+, pnpm_11
+, quotaAxiSource
+, stdenvNoCC
+,
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {

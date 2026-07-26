@@ -1,19 +1,18 @@
-{
-  chromeDevtoolsAxiSkill,
-  config,
-  ghAxiSkill,
-  gstackRev,
-  herdrPackage,
-  homeDirectory,
-  lavishSkill,
-  lib,
-  nonoPackage,
-  pkgs,
-  quotaAxiPackage,
-  superpowersRev,
-  superpowersSkill,
-  username,
-  ...
+{ chromeDevtoolsAxiSkill
+, config
+, ghAxiSkill
+, gstackRev
+, herdrPackage
+, homeDirectory
+, lavishSkill
+, lib
+, nonoPackage
+, pkgs
+, quotaAxiPackage
+, superpowersRev
+, superpowersSkill
+, username
+, ...
 }:
 
 let

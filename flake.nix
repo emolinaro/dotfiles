@@ -53,20 +53,20 @@
   };
 
   outputs =
-    inputs@{
-      self,
-      nix-darwin,
-      nix-homebrew,
-      home-manager,
-      nixpkgs,
-      nixpkgs-linux,
-      herdr,
-      lavish,
-      chromeDevtoolsAxi,
-      ghAxi,
-      quotaAxi,
-      gstack,
-      superpowers,
+    inputs@{ self
+    , nix-darwin
+    , nix-homebrew
+    , home-manager
+    , nixpkgs
+    , nixpkgs-linux
+    , herdr
+    , lavish
+    , chromeDevtoolsAxi
+    , ghAxi
+    , quotaAxi
+    , gstack
+    , superpowers
+    ,
     }:
     let
       agentRegistry = import ./runtime/nono-agents.nix;
@@ -201,10 +201,11 @@
         };
         nono-home-command-surface =
           if (pkgsFor system).stdenv.hostPlatform.isLinux then
-            (pkgsFor system).callPackage ./tests/nono-home-command-surface.nix {
-              inherit agentRegistry;
-              homePath = (mkUbuntuHome system).config.home.path;
-            }
+            (pkgsFor system).callPackage ./tests/nono-home-command-surface.nix
+              {
+                inherit agentRegistry;
+                homePath = (mkUbuntuHome system).config.home.path;
+              }
           else
             (pkgsFor system).runCommand "nono-home-command-surface-not-linux" { } ''
               touch "$out"
