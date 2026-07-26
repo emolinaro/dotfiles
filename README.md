@@ -120,8 +120,7 @@ nix flake check --all-systems --impure --no-build
 ./rebuild.sh
 ```
 
-Homebrew packages on macOS are not recorded in `flake.lock`; nix-darwin
-updates those through the declared Homebrew activation settings.
+Homebrew on macOS is managed by nix-darwin activation, not `flake.lock`.
 
 ## Make it yours
 
