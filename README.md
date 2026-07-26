@@ -184,9 +184,7 @@ If you clone it, change these before you run `bootstrap.sh`:
   All three have to match.
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
-That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
-If you already have Homebrew stuff installed that isn't in that list, the first switch will uninstall it.
-Read through `brews` and `casks` before you run `bootstrap.sh` or `rebuild.sh` for the first time, and add anything you want to keep.
+That means each switch removes Homebrew items not listed in the `brews` and `casks` arrays, so review those lists before first `bootstrap.sh`/`rebuild.sh` and add anything you want to keep.
 
 ## License
 
