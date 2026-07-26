@@ -30,13 +30,13 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` defaults to codex; add suffixes to pin tools.
+`gnhf` defaults to codex; add suffixes for specific tools.
 
 - `*-nono`: isolated worktree+home; only `auth.json` syncs back.
-- Git/session: local `reflog`/`index`; remote refs sync only from clean host state.
-- Runtime blocks: merge/rebase/cherry-pick/revert/bisect; skip sparse/split-index/submodule/alternate-object/unlinked states.
-- Hardening: strips sensitive env, proxy-only egress, reduced keychain/cert/browser/container access; allowlist with `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
-- TLS/recovery: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi); recovery under `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds disappear.
+- Git: local `reflog`+`index`; remote refs sync only from clean host state.
+- Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unavailable in sparse/split-index/submodule/alternate-object/unlinked states.
+- Hardening: strips sensitive env, proxy-only egress with allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`; reduced keychain/cert/browser/container access.
+- TLS/recovery: codex sets `SSL_CERT_FILE`+`CODEX_CA_CERTIFICATE`, pi sets `OPENSSL_CONF`; recovery in `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds disappear.
 - Validation:
 
 ```sh
