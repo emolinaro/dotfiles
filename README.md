@@ -96,10 +96,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-On Ubuntu, Apt handles OS packages, Home Manager owns user config, and Nix pins
-inputs by architecture (`x86_64`/`ARM64`). `bootstrap.sh` then enables Docker,
-adds you to `docker`, switches to `/usr/bin/zsh`, and asks you to reopen your
-shell to run:
+On Ubuntu, Apt installs system packages, Home Manager owns user config, and Nix pins inputs by architecture (`x86_64`/`ARM64`). `bootstrap.sh` enables Docker, adds you to `docker`, switches to `/usr/bin/zsh`, and prompts you to reopen your shell to run:
 
 ```sh
 codex login
