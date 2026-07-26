@@ -128,7 +128,5 @@ Before first `bootstrap.sh`, update this repo for your environment:
 
 ## License
 
-This repo is licensed under MIT No Attribution.
-It is based on [Kun Chen's dotfiles](https://github.com/kunchenguid/dotfiles),
-with additional development and platform support by Emiliano Molinaro.
+Licensed under MIT No Attribution, based on [Kun Chen's dotfiles](https://github.com/kunchenguid/dotfiles), with additional development and platform support by Emiliano Molinaro.
 See `LICENSE`.
