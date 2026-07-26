@@ -53,7 +53,7 @@ Before running bootstrap, update the values in "Make it yours" (git identity and
 ./bootstrap.sh
 ```
 
-`./bootstrap.sh` installs Nix if missing, links `~/.dotfiles`, runs the first `darwin-rebuild switch` with nix-darwin 26.05, then leaves `darwin-rebuild` available for the normal workflow.
+`./bootstrap.sh` installs Nix, links `~/.dotfiles`, runs the initial `darwin-rebuild switch` with nix-darwin 26.05, then keeps `darwin-rebuild` for normal use.
 
 ### Validate without applying
 
@@ -86,7 +86,7 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-On Ubuntu, Apt owns system packages, Home Manager owns user config, and bootstrap sets arch pins (`x86_64`/`arm64`), Docker, `/usr/bin/zsh`, and a `codex login` prompt after restart.
+On Ubuntu, Apt owns system packages, Home Manager user config, and bootstrap sets `x86_64`/`arm64` pins, Docker, `/usr/bin/zsh`, then prompts `codex login` after restart.
 
 ```sh
 codex login
