@@ -5,13 +5,11 @@ One repo, one command, and a fresh machine ends up configured the same way every
 
 ## What you get
 
-Both platforms use Home Manager for a shared reproducible shell, editor,
-developer tooling, and agent workflow; macOS also gets nix-darwin/Homebrew-
-managed desktop apps and system settings.
-
-The setup includes Zsh and language-aware Neovim, cloud/container tooling,
-managed agent extensions, isolated worktrees, and local validation with explicit
-approval for push, pull-request, merge, and deploy actions.
+Shared Home Manager config provides a reproducible shell, editor, dev tooling, and
+agent workflow on both platforms; macOS adds nix-darwin/Homebrew system and
+desktop settings. Zsh, language-aware Neovim, cloud/container tooling, managed
+agents, isolated worktrees, and explicit approval gates for push, PR, merge, and deploy are
+also included.
 
 ## Agent sandbox
 
