@@ -68,13 +68,12 @@ If you renamed the host label in "Make it yours", substitute your label for `mac
 
 ### Rebuild macOS
 
-Edit the config files in place, then apply:
+Edit the config files in place and apply:
 
 ```sh
 ./rebuild.sh
 ```
 
-That's it.
 No separate build-and-copy step.
 
 ## Fresh Ubuntu 24.04 setup
