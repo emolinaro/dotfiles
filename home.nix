@@ -505,6 +505,24 @@ in
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   };
+  # macOS GUI apps discover fonts through CoreText, not the Nix profile path.
+  # Keep the Hack Nerd Font family linked into ~/Library/Fonts so WezTerm sees it after reboot.
+  home.file."Library/Fonts/HackNerdFont-Regular.ttf" = lib.mkIf (!isLinux) {
+    force = true;
+    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Regular.ttf";
+  };
+  home.file."Library/Fonts/HackNerdFont-Bold.ttf" = lib.mkIf (!isLinux) {
+    force = true;
+    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Bold.ttf";
+  };
+  home.file."Library/Fonts/HackNerdFont-Italic.ttf" = lib.mkIf (!isLinux) {
+    force = true;
+    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Italic.ttf";
+  };
+  home.file."Library/Fonts/HackNerdFont-BoldItalic.ttf" = lib.mkIf (!isLinux) {
+    force = true;
+    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-BoldItalic.ttf";
+  };
   home.file.".config/tmux" = {
     force = true;
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/tmux";
