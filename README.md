@@ -175,11 +175,10 @@ updates those through the declared Homebrew activation settings.
 This repo is mine.
 If you clone it, change these before you run `bootstrap.sh`:
 
-- **macOS user** is detected automatically from the account running the setup. When the scripts invoke `sudo`, the flake uses `SUDO_USER`; otherwise it uses `USER`. Evaluation is intentionally impure so any sudo-capable account can apply the configuration without code changes.
+- **macOS user** is detected automatically (`SUDO_USER` when using `sudo`, otherwise `USER`) so any sudo-capable account can apply configuration.
 - **Git identity**, in `programs.git.settings.user` in `home.nix`
   (`emolinaro` / `emil.molinaro@gmail.com`).
-- **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `scripts/macos/rebuild.sh` (the `#mac` at the end of the flake reference), and `scripts/macos/bootstrap.sh`'s first-switch command (also `#mac`).
-  All three have to match.
+- **Host label** `"mac"` in `flake.nix`, `scripts/macos/rebuild.sh`, and `scripts/macos/bootstrap.sh`; all three must match.
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
 That means each switch removes Homebrew items not listed in the `brews` and `casks` arrays, so review those lists before first `bootstrap.sh`/`rebuild.sh` and add anything you want to keep.
