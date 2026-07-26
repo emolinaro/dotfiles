@@ -97,6 +97,7 @@ in
       nodejs
       nonoPackage
       noMistakesPackage
+      gnhfPackage
       pre-commit
       python3
       ripgrep # fast search
