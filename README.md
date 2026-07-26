@@ -16,7 +16,7 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use direct clients for normal work; use `*-nono`/`gnhf*` for isolation.
+Use direct clients for normal work; use `*-nono` and `gnhf*` for isolation.
 
 ```sh
 claude-nono
@@ -30,14 +30,14 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` defaults to codex; `gnhf-codex*`/`gnhf-opencode*` stay fixed.
+`gnhf` defaults to codex; suffix variants stay fixed.
 
-- `*-nono`: isolated, writable worktree + home per run; only auth JSON is synced back.
-- Git/session: local `reflog`/`index`; remote refs sync only when host state is clean.
+- `*-nono`: isolated writable worktree + home; only `auth.json` syncs back.
+- Git/session: local `reflog`/`index`; remote refs sync only on clean host state.
 - Runtime blocks: merge/rebase/cherry-pick/revert/bisect, sparse/split-index/submodule/alternate-object states, unlinked worktrees.
-- Hardening: strips sensitive env vars, proxy-only egress, reduced keychain/cert/browser/container access; allowlist with `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
-- TLS/recovery: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi); recovery at `~/.cache/nono/recovery/` (30 days), re-auth direct client if keychain creds vanish.
-- Nono hashes live in `packages/nono.nix`; verify updates with:
+- Hardening: strips sensitive env, proxy-only egress, reduced keychain/cert/browser/container access; allowlist via `DOTFILES_NONO_ALLOW_DOMAINS` (`chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`.
+- TLS/recovery: `SSL_CERT_FILE` + `CODEX_CA_CERTIFICATE` (codex), `OPENSSL_CONF` (pi); recovery at `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds vanish.
+- Nono checks live in `packages/nono.nix`; verify with:
 
 ```sh
 nix flake check --all-systems --impure --no-build
