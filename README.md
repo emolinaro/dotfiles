@@ -111,8 +111,7 @@ codex-nono
 opencode-nono
 ```
 
-Those wrapper commands are configured to pass `--agent codex` and
-`--agent opencode` respectively.
+These wrappers preserve the existing sandbox behavior for their respective agents.
 
 Nono uses the official release tarballs with a separate SHA-256 hash for each
 supported target. To update it, change the version and target hashes in
