@@ -15,17 +15,7 @@ also included.
 
 Use direct clients normally; use `*-nono` for isolated runs and `gnhf*` for wrappers (`gnhf` defaults to `codex`).
 
-```sh
-claude-nono
-codex-nono
-opencode-nono
-pi-nono
-gnhf
-gnhf-codex
-gnhf-codex-nono
-gnhf-opencode
-gnhf-opencode-nono
-```
+Common entrypoints are `claude-nono`, `codex-nono`, `opencode-nono`, `pi-nono`, and `gnhf*` (default: `gnhf` -> `codex`).
 
 `*-nono` runs in an isolated worktree+HOME, syncs only `auth.json`, blocks
 history-rewrite, and applies env/network hardening.
