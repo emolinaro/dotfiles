@@ -37,8 +37,6 @@ Before bootstrap, update Make it yours and review Homebrew cleanup.
 
 ### Validate without applying
 
-Validate local changes without applying:
-
 ```sh
 nix flake check --no-build
 nix build .#darwinConfigurations.mac.system --dry-run
