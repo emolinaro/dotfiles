@@ -16,7 +16,7 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use direct clients in normal work; use `*-nono` and `gnhf*` for isolation.
+Use direct clients normally; use `*-nono` and `gnhf*` for isolated sessions.
 
 ```sh
 claude-nono
@@ -30,12 +30,12 @@ gnhf-opencode
 gnhf-opencode-nono
 ```
 
-`gnhf` defaults to codex; add suffixes for specific tools.
+`gnhf` defaults to `codex`; add suffixes for specific tools.
 
 - `*-nono`: isolated worktree+home; only `auth.json` syncs back.
-- Git: local `reflog`+`index`; remote refs sync only from clean host state.
+- Git/reconcile: local `reflog`+`index`; remote refs sync only from clean host state.
 - Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unavailable in sparse/split-index/submodule/alternate-object/unlinked states.
-- Hardening: strips sensitive env, proxy-only egress with allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`; reduced keychain/cert/browser/container access.
+- Hardening: strips sensitive env, uses proxy-only egress via allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) and `DOTFILES_NONO_OPEN_PORTS`; trims keychain/cert/browser/container access.
 - TLS/recovery: codex sets `SSL_CERT_FILE`+`CODEX_CA_CERTIFICATE`, pi sets `OPENSSL_CONF`; recovery in `~/.cache/nono/recovery/` (30d), re-auth direct client if keychain creds disappear.
 - Validation:
 
