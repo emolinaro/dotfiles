@@ -13,7 +13,7 @@ The managed AXI agent skills include chrome-devtools-axi, gh-axi, Lavish, and
 quota-axi. Their source revisions are locked in `flake.lock`. The quota-axi CLI
 and its dependencies are built from that locked source, while the other CLIs
 run on demand through npx. After rebuilding, restart Codex and invoke the skill
-with `$quota-axi`, or run `quota-axi` directly in the shell.
+with `quota-axi`, or run `quota-axi` directly in the shell.
 
 The configuration provides a fast Zsh environment, a language-aware Neovim
 setup, cloud and container tooling, managed agent extensions, isolated
