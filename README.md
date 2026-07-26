@@ -4,7 +4,7 @@ Nix and Home Manager configure this macOS and Ubuntu setup from one repo with on
 
 ## What you get
 
-Home Manager keeps a consistent base across macOS and Ubuntu; macOS adds nix-darwin/Homebrew, cloud/container tooling, managed agents, isolated worktrees, and approval checks.
+Shared macOS/Ubuntu base from Home Manager; macOS adds nix-darwin/Homebrew, cloud/container tooling, managed agents, isolated worktrees, and approval checks.
 
 ## Agent sandbox
 
