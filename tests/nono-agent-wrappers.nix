@@ -92,13 +92,7 @@ let
       '';
     };
 
-  fakeNono = pkgs.writeShellApplication {
-    name = "nono";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.git
-    ];
-    text = ''
+  fakeNono = pkgs.writeShellScriptBin "nono" ''
       : "''${WRAPPER_TEST_NONO_TRACE:?WRAPPER_TEST_NONO_TRACE must name a trace file}"
       : "''${WRAPPER_TEST_CONFIGURED_HOME:?WRAPPER_TEST_CONFIGURED_HOME must name the test home}"
       if [[ -n "''${BASH_ENV:-}" || -n "''${LD_PRELOAD:-}" \
@@ -153,6 +147,7 @@ let
           ;;
         *dotfiles-codex.json)
           test -d "$DOTFILES_AGENT_HOME/.codex"
+          test -d "$DOTFILES_AGENT_HOME/.lavish-axi"
           ;;
         *dotfiles-opencode.json)
           test -d "$DOTFILES_AGENT_HOME/.opencode"
@@ -165,6 +160,7 @@ let
           ;;
         *dotfiles-pi.json)
           test -d "$DOTFILES_AGENT_HOME/.pi"
+          test "$(command -v fd)" = "${pkgs.fd}/bin/fd"
           ;;
         *)
           exit 1
@@ -175,7 +171,6 @@ let
       printf '%s\n' "$@" > "$WRAPPER_TEST_NONO_TRACE"
       "''${arguments[@]:$command_index}"
     '';
-  };
   fakeHomeGit = pkgs.writeShellApplication {
     name = "git";
     text = ''

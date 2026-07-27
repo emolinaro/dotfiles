@@ -3,6 +3,7 @@
   agentRegistry,
   bash,
   coreutils,
+  fd,
   findutils,
   git,
   homeDirectory,
@@ -44,6 +45,7 @@ let
     lib.makeBinPath [
       bash
       coreutils
+      fd
       git
       jq
       nonoPackage

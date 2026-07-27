@@ -95,6 +95,7 @@ in
     ];
     writableDirectories = commonWritableDirectories ++ [
       ".codex"
+      ".lavish-axi"
     ];
     writableFiles = [ ];
   };
