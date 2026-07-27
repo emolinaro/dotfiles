@@ -47,6 +47,7 @@
   };
 
   outputs = {
+    self,
     nix-darwin,
     nix-homebrew,
     home-manager,
