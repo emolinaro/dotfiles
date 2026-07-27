@@ -170,6 +170,8 @@ Update one or more named inputs without changing the others by listing them:
 nix flake update lavish
 nix flake update chromeDevtoolsAxi
 nix flake update ghAxi
+nix flake update quotaAxi
+nix flake update tasksAxi
 nix flake update gstack
 nix flake update superpowers
 nix flake update nixpkgs nixpkgs-linux
@@ -185,10 +187,13 @@ rebuild.
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `gstack`,
-`superpowers`, `herdr`, `home-manager`, and `nix-darwin` can be updated
-independently. Treehouse and No Mistakes are versioned separately in
-`packages/treehouse.nix` and `packages/no-mistakes.nix`.
+targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `quotaAxi`,
+`tasksAxi`, `gstack`, `superpowers`, `herdr`, `home-manager`, and `nix-darwin`
+can be updated independently. Treehouse and No Mistakes are versioned
+separately in `packages/treehouse.nix` and `packages/no-mistakes.nix`.
+
+Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
+`quota-axi`, and `tasks-axi` on `PATH` after a rebuild.
 
 Review and validate every lock update before applying it:
 
