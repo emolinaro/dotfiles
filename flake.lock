@@ -194,6 +194,22 @@
         "type": "github"
       }
     },
+    "quotaAxi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1785002645,
+        "narHash": "sha256-w7A4ncT3N0gGBrXMrTQSp3RSQXKGk/KoSTALX3TqPg8=",
+        "owner": "kunchenguid",
+        "repo": "quota-axi",
+        "rev": "a9ca3e16a41376d9e9952e85898dae1393025948",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "repo": "quota-axi",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "chromeDevtoolsAxi": "chromeDevtoolsAxi",
@@ -206,7 +222,9 @@
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "nixpkgs-linux": "nixpkgs-linux",
-        "superpowers": "superpowers"
+        "quotaAxi": "quotaAxi",
+        "superpowers": "superpowers",
+        "tasksAxi": "tasksAxi"
       }
     },
     "rust-overlay": {
@@ -243,6 +261,22 @@
       "original": {
         "owner": "obra",
         "repo": "superpowers",
+        "type": "github"
+      }
+    },
+    "tasksAxi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784790047,
+        "narHash": "sha256-tPf+H7tPaCzLWeMKtHNqScrF23WbCiupE1inE+9nGeM=",
+        "owner": "kunchenguid",
+        "repo": "tasks-axi",
+        "rev": "ce322417a186a90bfa6ff27e4e2243789166db09",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "repo": "tasks-axi",
         "type": "github"
       }
     }

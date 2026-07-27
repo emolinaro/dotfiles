@@ -8,7 +8,8 @@
   },
   "filesystem": {
     "allow": [
-      "$DOTFILES_AGENT_HOME/.pi"
+      "$DOTFILES_AGENT_HOME/.pi",
+      "$DOTFILES_AGENT_HOME/.cache/axi-tools"
     ],
     "write": [
       "$DOTFILES_HOST_HOME/.pi/agent"
@@ -17,6 +18,7 @@
       "$DOTFILES_HOST_HOME/.pi/agent/trust.json"
     ],
     "read": [
+      "$DOTFILES_HOST_HOME/.cache/axi-tools",
       "$DOTFILES_HOST_HOME/.pi/agent/AGENTS.md",
       "$DOTFILES_HOST_HOME/.pi/agent/settings.json"
     ]

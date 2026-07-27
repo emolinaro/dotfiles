@@ -11,9 +11,11 @@
       "$DOTFILES_AGENT_HOME/.claude",
       "$DOTFILES_AGENT_HOME/.cache/claude",
       "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs",
+      "$DOTFILES_AGENT_HOME/.cache/axi-tools",
       "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
     ],
     "read": [
+      "$DOTFILES_HOST_HOME/.cache/axi-tools",
       "$DOTFILES_AGENT_HOME/.local/share/claude",
       "$DOTFILES_HOST_HOME/.claude/CLAUDE.md",
       "$DOTFILES_HOST_HOME/.claude/settings.json",
