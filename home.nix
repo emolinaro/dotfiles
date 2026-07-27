@@ -127,9 +127,12 @@ in
       ]
     )
     ++ [
-      # the font everything renders in
+    # the font everything renders in
       nerd-fonts.hack
     ];
+  home.sessionPath = [
+    ".cache/axi-tools/bin"
+  ];
   fonts.fontconfig.enable = true;
   home.sessionVariables = {
     EDITOR = "nvim";
@@ -563,6 +566,33 @@ in
         ${lib.getExe nonoPackage} profile validate --strict \
           "${nonoProfiles}/$profile.json"
       done
+    fi
+  '';
+
+  home.activation.axiToolchain = lib.hm.dag.entryAfter [ "installPackages" ] ''
+    if [[ -z "''${DRY_RUN:-}" ]]; then
+      axi_tool_root="$HOME/.cache/axi-tools"
+      axi_tool_bin="$axi_tool_root/bin"
+      ${lib.getExe' coreutils "mkdir"} -p -- "$axi_tool_root" "$axi_tool_bin"
+      if [[ ! -x "$axi_tool_bin/gh-axi" ]] \
+        || [[ ! -x "$axi_tool_bin/chrome-devtools-axi" ]] \
+        || [[ ! -x "$axi_tool_bin/lavish-axi" ]] \
+        || [[ ! -x "$axi_tool_bin/tasks-axi" ]] \
+        || [[ ! -x "$axi_tool_bin/quota-axi" ]]; then
+        NPM_CONFIG_PREFIX="$axi_tool_root" \
+          ${lib.getExe' pkgs.nodejs "npm"} install -g \
+          gh-axi \
+          chrome-devtools-axi \
+          lavish-axi \
+          tasks-axi \
+          quota-axi
+      fi
+      if [[ ! -f "$axi_tool_root/.axi-hooks-installed" ]]; then
+        "$axi_tool_bin/gh-axi" setup hooks
+        "$axi_tool_bin/chrome-devtools-axi" setup hooks
+        "$axi_tool_bin/lavish-axi" setup hooks
+        ${lib.getExe' coreutils "touch"} "$axi_tool_root/.axi-hooks-installed"
+      fi
     fi
   '';
 

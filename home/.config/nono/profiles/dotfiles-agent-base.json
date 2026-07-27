@@ -36,7 +36,8 @@
   "filesystem": {
     "allow": [
       "$DOTFILES_AGENT_HOME/.gstack",
-      "$TMPDIR"
+      "$TMPDIR",
+      "$DOTFILES_HOST_HOME/.cache/axi-tools"
     ],
     "read": [
       "@git:config-files",

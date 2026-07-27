@@ -54,6 +54,7 @@ let
         (map builtins.dirOf (builtins.attrValues agentExecutables))
         ++ [
           "${homeDirectory}/.nix-profile/bin"
+          "${homeDirectory}/.cache/axi-tools/bin"
           "/etc/profiles/per-user/${builtins.baseNameOf homeDirectory}/bin"
           "/run/current-system/sw/bin"
           "/nix/var/nix/profiles/default/bin"
