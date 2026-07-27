@@ -17,6 +17,7 @@
       "$DOTFILES_HOST_HOME/.codex/hooks.json"
     ],
     "read": [
+      "$DOTFILES_HOST_HOME/.cache/axi-tools",
       "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
       "$DOTFILES_HOST_HOME/.codex/config.toml",
       "$DOTFILES_HOST_HOME/.codex/herdr-agent-state.sh",
