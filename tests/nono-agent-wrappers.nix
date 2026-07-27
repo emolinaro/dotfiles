@@ -170,6 +170,7 @@ let
           exit 1
           ;;
       esac
+      test -d "$DOTFILES_AGENT_HOME/.cache/axi-tools"
 
       printf '%s\n' "$@" > "$WRAPPER_TEST_NONO_TRACE"
       "''${arguments[@]:$command_index}"

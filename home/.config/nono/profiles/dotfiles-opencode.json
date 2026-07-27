@@ -11,12 +11,14 @@
       "$DOTFILES_AGENT_HOME/.opencode",
       "$DOTFILES_AGENT_HOME/.config/opencode",
       "$DOTFILES_AGENT_HOME/.cache/opencode",
+      "$DOTFILES_AGENT_HOME/.cache/axi-tools",
       "$DOTFILES_AGENT_HOME/.local/share/opencode",
       "$DOTFILES_AGENT_HOME/.local/share/opentui",
       "$DOTFILES_AGENT_HOME/.npm",
       "$DOTFILES_AGENT_HOME/.local/state/opencode"
     ],
     "read": [
+      "$DOTFILES_HOST_HOME/.cache/axi-tools",
       "$DOTFILES_HOST_HOME/.config/opencode/AGENTS.md",
       "$DOTFILES_HOST_HOME/.config/opencode/opencode.json",
       "$DOTFILES_HOST_HOME/.config/opencode/plugins",

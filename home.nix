@@ -1,4 +1,5 @@
 {
+  axiToolsPackage,
   chromeDevtoolsAxiSkill,
   config,
   ghAxiSkill,
@@ -9,8 +10,10 @@
   lib,
   nonoPackage,
   pkgs,
+  quotaAxiSkill,
   superpowersRev,
   superpowersSkill,
+  tasksAxiSkill,
   username,
   ...
 }:
@@ -67,6 +70,7 @@ in
       bash-language-server
       btop
       bun
+      axiToolsPackage
       coreutils # gstack uses gtimeout to bound nested Codex calls
       delta
       delve
@@ -459,10 +463,12 @@ in
   home.file.".agents/skills/chrome-devtools-axi".source = chromeDevtoolsAxiSkill;
   home.file.".agents/skills/gh-axi".source = ghAxiSkill;
   home.file.".agents/skills/lavish".source = lavishSkill;
+  home.file.".agents/skills/quota-axi".source = quotaAxiSkill;
   home.file.".agents/skills/superpowers" = {
     force = true;
     source = superpowersSkill;
   };
+  home.file.".agents/skills/tasks-axi".source = tasksAxiSkill;
   home.file.".no-mistakes/config.yaml".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.no-mistakes/config.yaml";
   home.file.".config/opencode/AGENTS.md".source =
