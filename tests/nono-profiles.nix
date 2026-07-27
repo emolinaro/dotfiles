@@ -196,6 +196,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_AGENT_HOME/.claude",
         "$DOTFILES_AGENT_HOME/.cache/claude",
         "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs",
+        "$DOTFILES_AGENT_HOME/.cache/axi-tools",
         "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
       ]))
       and (.filesystem.allow_file | contains([
@@ -215,6 +216,7 @@ pkgs.runCommand "nono-profiles-test"
     jq --exit-status '
       (.filesystem.allow | contains([
         "$DOTFILES_AGENT_HOME/.codex",
+        "$DOTFILES_AGENT_HOME/.cache/axi-tools",
         "$DOTFILES_HOST_HOME/.codex"
       ]))
       and (.filesystem.allow_file | contains([
@@ -240,6 +242,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_AGENT_HOME/.opencode",
         "$DOTFILES_AGENT_HOME/.config/opencode",
         "$DOTFILES_AGENT_HOME/.cache/opencode",
+        "$DOTFILES_AGENT_HOME/.cache/axi-tools",
         "$DOTFILES_AGENT_HOME/.local/share/opencode",
         "$DOTFILES_AGENT_HOME/.local/share/opentui",
         "$DOTFILES_AGENT_HOME/.npm",
@@ -255,7 +258,10 @@ pkgs.runCommand "nono-profiles-test"
     ' "$profile_dir/dotfiles-opencode.json" >/dev/null
 
     jq --exit-status '
-      (.filesystem.allow | contains(["$DOTFILES_AGENT_HOME/.pi"]))
+      (.filesystem.allow | contains([
+        "$DOTFILES_AGENT_HOME/.pi",
+        "$DOTFILES_AGENT_HOME/.cache/axi-tools"
+      ]))
       and (.filesystem.write | contains(["$DOTFILES_HOST_HOME/.pi/agent"]))
       and (.filesystem.allow_file | contains(["$DOTFILES_HOST_HOME/.pi/agent/trust.json"]))
       and (.filesystem.read | contains([

@@ -11,6 +11,7 @@
       "$DOTFILES_AGENT_HOME/.opencode",
       "$DOTFILES_AGENT_HOME/.config/opencode",
       "$DOTFILES_AGENT_HOME/.cache/opencode",
+      "$DOTFILES_AGENT_HOME/.cache/axi-tools",
       "$DOTFILES_AGENT_HOME/.local/share/opencode",
       "$DOTFILES_AGENT_HOME/.local/share/opentui",
       "$DOTFILES_AGENT_HOME/.npm",
