@@ -156,6 +156,7 @@ in
         text = ''
           # OrbStack CLI integration; Homebrew setup is handled by nix-darwin.
           source ~/.orbstack/shell/init.zsh 2>/dev/null || true
+          source /etc/profiles/per-user/${username}/etc/profile.d/hm-session-vars.sh 2>/dev/null || true
         '';
       };
       ".claude/settings.json".source =
