@@ -1,6 +1,7 @@
 let
   commonWritableDirectories = [
     ".gstack"
+    ".cache/axi-tools"
   ];
   commonStagedPaths = [
     {
