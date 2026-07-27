@@ -15,41 +15,30 @@
   symlinkJoin,
   writeShellApplication,
   writeTextFile,
-}: let
+}:
+let
   agentNames = builtins.attrNames agentRegistry;
   executableNames = builtins.attrNames agentExecutables;
   missingAgents = builtins.filter (name: !(builtins.hasAttr name agentExecutables)) agentNames;
   unexpectedAgents = builtins.filter (name: !(builtins.hasAttr name agentRegistry)) executableNames;
-  relativeExecutables =
-    builtins.filter (
-      name: !(lib.hasPrefix "/" agentExecutables.${name})
-    )
-    agentNames;
-  invalidPersistentAgents =
-    builtins.filter (
-      name: builtins.length agentRegistry.${name}.persistentFiles != 1
-    )
-    agentNames;
-  invalidPersistentPaths =
-    builtins.filter (
-      name: let
-        paths = agentRegistry.${name}.persistentFiles;
-        path =
-          if builtins.length paths == 1
-          then builtins.head paths
-          else "";
-        components = lib.splitString "/" path;
-      in
-        path
-        == ""
-        || lib.hasPrefix "/" path
-        || builtins.any (component: component == "" || component == "." || component == "..") components
-    )
-    agentNames;
-  launcherBashPath =
-    if stdenv.hostPlatform.isLinux
-    then lib.getExe pkgsStatic.bash
-    else "/bin/bash";
+  relativeExecutables = builtins.filter (
+    name: !(lib.hasPrefix "/" agentExecutables.${name})
+  ) agentNames;
+  invalidPersistentAgents = builtins.filter (
+    name: builtins.length agentRegistry.${name}.persistentFiles != 1
+  ) agentNames;
+  invalidPersistentPaths = builtins.filter (
+    name:
+    let
+      paths = agentRegistry.${name}.persistentFiles;
+      path = if builtins.length paths == 1 then builtins.head paths else "";
+      components = lib.splitString "/" path;
+    in
+    path == ""
+    || lib.hasPrefix "/" path
+    || builtins.any (component: component == "" || component == "." || component == "..") components
+  ) agentNames;
+  launcherBashPath = if stdenv.hostPlatform.isLinux then lib.getExe pkgsStatic.bash else "/bin/bash";
   trustedPath =
     lib.makeBinPath [
       bash
@@ -876,21 +865,20 @@
     '';
   };
 
-  mkNonoWrapper = name: let
-    definition = agentRegistry.${name};
-    inherit (definition) profile;
-    realExecutable = agentExecutables.${name};
-    persistentFile = builtins.head definition.persistentFiles;
-    createWritableDirectories =
-      lib.concatMapStrings (relativePath: ''
+  mkNonoWrapper =
+    name:
+    let
+      definition = agentRegistry.${name};
+      inherit (definition) profile;
+      realExecutable = agentExecutables.${name};
+      persistentFile = builtins.head definition.persistentFiles;
+      createWritableDirectories = lib.concatMapStrings (relativePath: ''
         ${lib.getExe' coreutils "mkdir"} -p -- \
           "$session_home"/${lib.escapeShellArg relativePath}
         ${lib.getExe' coreutils "chmod"} 0700 -- \
           "$session_home"/${lib.escapeShellArg relativePath}
-      '')
-      definition.writableDirectories;
-    createWritableFiles =
-      lib.concatMapStrings (relativePath: ''
+      '') definition.writableDirectories;
+      createWritableFiles = lib.concatMapStrings (relativePath: ''
         writable_file="$session_home"/${lib.escapeShellArg relativePath}
         ${lib.getExe' coreutils "mkdir"} -p -- \
           "$(${lib.getExe' coreutils "dirname"} "$writable_file")"
@@ -898,25 +886,26 @@
           "$(${lib.getExe' coreutils "dirname"} "$writable_file")"
         ${lib.getExe' coreutils "touch"} -- "$writable_file"
         ${lib.getExe' coreutils "chmod"} 0600 -- "$writable_file"
-      '')
-      definition.writableFiles;
-    stagePaths =
-      lib.concatMapStrings (
-        stagedPath: let
+      '') definition.writableFiles;
+      stagePaths = lib.concatMapStrings (
+        stagedPath:
+        let
           source = "${homeDirectory}/${stagedPath.source}";
           stageCommand =
-            if stagedPath.copy or false
-            then ''
-              ${lib.getExe' coreutils "cp"} -L -- "$staged_source" "$staged_target"
-              ${lib.getExe' coreutils "chmod"} 0400 -- "$staged_target"
-            ''
-            else ''
-              if [[ -f "$staged_target" || -L "$staged_target" ]]; then
-                ${lib.getExe' coreutils "rm"} -f -- "$staged_target"
-              fi
-              ${lib.getExe' coreutils "ln"} -s -- "$staged_source" "$staged_target"
-            '';
-        in ''
+            if stagedPath.copy or false then
+              ''
+                ${lib.getExe' coreutils "cp"} -L -- "$staged_source" "$staged_target"
+                ${lib.getExe' coreutils "chmod"} 0400 -- "$staged_target"
+              ''
+            else
+              ''
+                if [[ -f "$staged_target" || -L "$staged_target" ]]; then
+                  ${lib.getExe' coreutils "rm"} -f -- "$staged_target"
+                fi
+                ${lib.getExe' coreutils "ln"} -s -- "$staged_source" "$staged_target"
+              '';
+        in
+        ''
           staged_source=${lib.escapeShellArg source}
           staged_target="$session_home"/${lib.escapeShellArg stagedPath.target}
           if [[ -e "$staged_source" || -L "$staged_source" ]]; then
@@ -924,10 +913,8 @@
             ${stageCommand}
           fi
         ''
-      )
-      definition.stagedPaths;
-    stageFilteredJsonPaths =
-      lib.concatMapStrings (filteredPath: ''
+      ) definition.stagedPaths;
+      stageFilteredJsonPaths = lib.concatMapStrings (filteredPath: ''
         filtered_source="$configured_home"/${lib.escapeShellArg filteredPath.source}
         filtered_target="$session_home"/${lib.escapeShellArg filteredPath.target}
         if [[ -f "$filtered_source" && ! -L "$filtered_source" ]]; then
@@ -936,18 +923,17 @@
           ${lib.getExe jq} ${lib.escapeShellArg filteredPath.filter} \
             "$filtered_source" > "$filtered_target"
         fi
-      '')
-      definition.filteredJsonPaths;
-    sshSocketSetup = lib.optionalString stdenv.hostPlatform.isDarwin ''
-      if [[ -z "$inherited_ssh_auth_sock" ]]; then
-        inherited_ssh_auth_sock=/nonexistent/nono-ssh-agent.sock
-      elif [[ "$inherited_ssh_auth_sock" != /* ]]; then
-        echo "error: refusing relative SSH_AUTH_SOCK: $inherited_ssh_auth_sock" >&2
-        exit 78
-      fi
-      export SSH_AUTH_SOCK="$inherited_ssh_auth_sock"
-    '';
-  in
+      '') definition.filteredJsonPaths;
+      sshSocketSetup = lib.optionalString stdenv.hostPlatform.isDarwin ''
+        if [[ -z "$inherited_ssh_auth_sock" ]]; then
+          inherited_ssh_auth_sock=/nonexistent/nono-ssh-agent.sock
+        elif [[ "$inherited_ssh_auth_sock" != /* ]]; then
+          echo "error: refusing relative SSH_AUTH_SOCK: $inherited_ssh_auth_sock" >&2
+          exit 78
+        fi
+        export SSH_AUTH_SOCK="$inherited_ssh_auth_sock"
+      '';
+    in
     writeTextFile {
       name = "${name}-nono";
       destination = "/bin/${name}-nono";
@@ -2490,20 +2476,20 @@
       '';
     };
 in
-  assert lib.assertMsg (
-    missingAgents == []
-  ) "agentExecutables is missing: ${lib.concatStringsSep ", " missingAgents}";
-  assert lib.assertMsg (
-    unexpectedAgents == []
-  ) "agentExecutables has unexpected entries: ${lib.concatStringsSep ", " unexpectedAgents}";
-  assert lib.assertMsg (
-    relativeExecutables == []
-  ) "agent executable paths must be absolute: ${lib.concatStringsSep ", " relativeExecutables}";
-  assert lib.assertMsg (invalidPersistentAgents == [])
+assert lib.assertMsg (
+  missingAgents == [ ]
+) "agentExecutables is missing: ${lib.concatStringsSep ", " missingAgents}";
+assert lib.assertMsg (
+  unexpectedAgents == [ ]
+) "agentExecutables has unexpected entries: ${lib.concatStringsSep ", " unexpectedAgents}";
+assert lib.assertMsg (
+  relativeExecutables == [ ]
+) "agent executable paths must be absolute: ${lib.concatStringsSep ", " relativeExecutables}";
+assert lib.assertMsg (invalidPersistentAgents == [ ])
   "agents must declare exactly one persistent authentication file: ${lib.concatStringsSep ", " invalidPersistentAgents}";
-  assert lib.assertMsg (invalidPersistentPaths == [])
+assert lib.assertMsg (invalidPersistentPaths == [ ])
   "agents must declare safe relative authentication paths: ${lib.concatStringsSep ", " invalidPersistentPaths}";
-    symlinkJoin {
-      name = "nono-agent-wrappers";
-      paths = map mkNonoWrapper agentNames;
-    }
+symlinkJoin {
+  name = "nono-agent-wrappers";
+  paths = map mkNonoWrapper agentNames;
+}
