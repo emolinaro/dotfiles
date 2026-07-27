@@ -35,6 +35,18 @@
       flake = false;
     };
 
+    # Expose tasks-axi as a global agent skill; its CLI runs on demand through npx.
+    tasksAxi = {
+      url = "github:kunchenguid/tasks-axi";
+      flake = false;
+    };
+
+    # Expose quota-axi as a global agent skill; its CLI runs on demand through npx.
+    quotaAxi = {
+      url = "github:kunchenguid/quota-axi";
+      flake = false;
+    };
+
     # Lock agent workflows so rebuilds do not silently pull new behavior.
     gstack = {
       url = "github:garrytan/gstack";
@@ -58,6 +70,8 @@
       lavish,
       chromeDevtoolsAxi,
       ghAxi,
+      tasksAxi,
+      quotaAxi,
       gstack,
       superpowers,
     }:
@@ -115,9 +129,11 @@
             nonoPackage = nonoPackageFor system;
             ghAxiSkill = "${ghAxi}/skills/gh-axi";
             lavishSkill = "${lavish}/skills/lavish";
+            quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
             gstackRev = gstack.rev;
             superpowersSkill = "${superpowers}/skills";
             superpowersRev = superpowers.rev;
+            tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
           };
           modules = [
             ./home.nix
@@ -146,9 +162,11 @@
               nonoPackage = nonoPackageFor config.nixpkgs.hostPlatform.system;
               ghAxiSkill = "${ghAxi}/skills/gh-axi";
               lavishSkill = "${lavish}/skills/lavish";
+              quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
               gstackRev = gstack.rev;
               superpowersSkill = "${superpowers}/skills";
               superpowersRev = superpowers.rev;
+              tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
             };
             home-manager.users.${darwinUsername} = import ./home.nix;
           })
