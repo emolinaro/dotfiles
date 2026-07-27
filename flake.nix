@@ -17,31 +17,31 @@
     herdr.url = "github:ogulcancelik/herdr";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
 
-    # Expose the public Lavish skill; its CLI runs on demand through npx.
+    # Expose the public Lavish skill.
     lavish = {
       url = "github:kunchenguid/lavish-axi";
       flake = false;
     };
 
-    # Expose chrome-devtools-axi as a global agent skill; its CLI runs on demand through npx.
+    # Expose chrome-devtools-axi as a global agent skill.
     chromeDevtoolsAxi = {
       url = "github:kunchenguid/chrome-devtools-axi";
       flake = false;
     };
 
-    # Expose gh-axi as a global agent skill; its CLI runs on demand through npx.
+    # Expose gh-axi as a global agent skill.
     ghAxi = {
       url = "github:kunchenguid/gh-axi";
       flake = false;
     };
 
-    # Expose tasks-axi as a global agent skill; its CLI runs on demand through npx.
+    # Expose tasks-axi as a global agent skill.
     tasksAxi = {
       url = "github:kunchenguid/tasks-axi";
       flake = false;
     };
 
-    # Expose quota-axi as a global agent skill; its CLI runs on demand through npx.
+    # Expose quota-axi as a global agent skill.
     quotaAxi = {
       url = "github:kunchenguid/quota-axi";
       flake = false;
@@ -109,6 +109,42 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      axiToolsPackageFor =
+        system:
+        (pkgsFor system).callPackage ./packages/axi-tools.nix {
+          axiTools = [
+            {
+              pname = "chrome-devtools-axi";
+              src = chromeDevtoolsAxi;
+              entryPoint = "dist/bin/chrome-devtools-axi.js";
+              pnpmDepsHash = "sha256-UPNA+pa9vaq3S9bH6s7yVoqgtsPJ7iu7eRFfTkpS8UU=";
+            }
+            {
+              pname = "gh-axi";
+              src = ghAxi;
+              entryPoint = "dist/bin/gh-axi.js";
+              pnpmDepsHash = "sha256-snoKB2/sZmuvqFtmUAVPcyL6hcGX7+EGRN+49wwPX1o=";
+            }
+            {
+              pname = "lavish-axi";
+              src = lavish;
+              entryPoint = "dist/cli.mjs";
+              pnpmDepsHash = "sha256-DLCtgOtlPHe3GA1P0xfjJ1X1eJhFkH/hQcoEt+5b164=";
+            }
+            {
+              pname = "quota-axi";
+              src = quotaAxi;
+              entryPoint = "dist/bin/quota-axi.js";
+              pnpmDepsHash = "sha256-l3bTF7qXLSfS7JNbJfM8RiaYy7vkzrkJoIDRYdiG9R8=";
+            }
+            {
+              pname = "tasks-axi";
+              src = tasksAxi;
+              entryPoint = "dist/bin/tasks-axi.js";
+              pnpmDepsHash = "sha256-wxguqzq/KuXekU2KlGJUU9IPJMgUjLZyuscNtZysXfo=";
+            }
+          ];
+        };
       nonoRuntimeTestFor =
         system:
         (pkgsFor system).callPackage ./tests/nono-runtime.nix {
@@ -122,6 +158,7 @@
         home-manager.lib.homeManagerConfiguration {
           pkgs = pkgsFor system;
           extraSpecialArgs = {
+            axiToolsPackage = axiToolsPackageFor system;
             chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
             username = ubuntuUsername;
             homeDirectory = ubuntuHomeDirectory;
@@ -155,6 +192,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.extraSpecialArgs = {
+              axiToolsPackage = axiToolsPackageFor config.nixpkgs.hostPlatform.system;
               chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
               username = darwinUsername;
               homeDirectory = darwinHomeDirectory;
@@ -177,6 +215,7 @@
         ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
       };
       packages = forAllSystems (system: {
+        axi-tools = axiToolsPackageFor system;
         nono = nonoPackageFor system;
         nono-runtime-test = nonoRuntimeTestFor system;
         default = nonoPackageFor system;
@@ -188,6 +227,9 @@
         };
       });
       checks = forAllSystems (system: {
+        axi-tools = (pkgsFor system).callPackage ./tests/axi-tools.nix {
+          axiToolsPackage = axiToolsPackageFor system;
+        };
         gnhf-wrapper = (pkgsFor system).callPackage ./tests/gnhf-wrapper.nix {
           packageModule = ./packages/gnhf.nix;
         };

@@ -1,4 +1,5 @@
 {
+  axiToolsPackage,
   chromeDevtoolsAxiSkill,
   config,
   ghAxiSkill,
@@ -69,8 +70,7 @@ in
       bash-language-server
       btop
       bun
-      # Keep the AXI CLI entry points available on PATH; npx resolves the upstream package on demand.
-      (callPackage ./packages/axi-tools.nix { })
+      axiToolsPackage
       coreutils # gstack uses gtimeout to bound nested Codex calls
       delta
       delve
