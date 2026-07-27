@@ -17,19 +17,19 @@
     herdr.url = "github:ogulcancelik/herdr";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
 
-    # Expose the public Lavish skill; its CLI runs on demand through npx.
+    # Expose the public Lavish skill; its CLI is installed by home activation.
     lavish = {
       url = "github:kunchenguid/lavish-axi";
       flake = false;
     };
 
-    # Expose chrome-devtools-axi as a global agent skill; its CLI runs on demand through npx.
+    # Expose chrome-devtools-axi as a global agent skill; its CLI is installed by home activation.
     chromeDevtoolsAxi = {
       url = "github:kunchenguid/chrome-devtools-axi";
       flake = false;
     };
 
-    # Expose gh-axi as a global agent skill; its CLI runs on demand through npx.
+    # Expose gh-axi as a global agent skill; its CLI is installed by home activation.
     ghAxi = {
       url = "github:kunchenguid/gh-axi";
       flake = false;
@@ -47,8 +47,7 @@
   };
 
   outputs =
-    inputs@{
-      self,
+    {
       nix-darwin,
       nix-homebrew,
       home-manager,

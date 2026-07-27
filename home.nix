@@ -127,7 +127,7 @@ in
       ]
     )
     ++ [
-    # the font everything renders in
+      # the font everything renders in
       nerd-fonts.hack
     ];
   home.sessionPath = [
