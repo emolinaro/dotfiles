@@ -206,6 +206,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_HOST_HOME/.claude.json"
       ]))
       and (.filesystem.read | contains([
+        "$DOTFILES_HOST_HOME/.cache/axi-tools",
         "$DOTFILES_HOST_HOME/.claude/CLAUDE.md",
         "$DOTFILES_HOST_HOME/.claude/settings.json",
         "$DOTFILES_HOST_HOME/.claude/skills"
@@ -224,6 +225,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_HOST_HOME/.codex/hooks.json"
       ]))
       and (.filesystem.read | contains([
+        "$DOTFILES_HOST_HOME/.cache/axi-tools",
         "$DOTFILES_HOST_HOME/.codex/AGENTS.md",
         "$DOTFILES_HOST_HOME/.codex/config.toml",
         "$DOTFILES_HOST_HOME/.codex/herdr-agent-state.sh",
@@ -249,6 +251,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_AGENT_HOME/.local/state/opencode"
       ]))
       and (.filesystem.read | contains([
+        "$DOTFILES_HOST_HOME/.cache/axi-tools",
         "$DOTFILES_HOST_HOME/.config/opencode/AGENTS.md",
         "$DOTFILES_HOST_HOME/.config/opencode/opencode.json",
         "$DOTFILES_HOST_HOME/.config/opencode/plugins",
@@ -265,6 +268,7 @@ pkgs.runCommand "nono-profiles-test"
       and (.filesystem.write | contains(["$DOTFILES_HOST_HOME/.pi/agent"]))
       and (.filesystem.allow_file | contains(["$DOTFILES_HOST_HOME/.pi/agent/trust.json"]))
       and (.filesystem.read | contains([
+        "$DOTFILES_HOST_HOME/.cache/axi-tools",
         "$DOTFILES_HOST_HOME/.pi/agent/AGENTS.md",
         "$DOTFILES_HOST_HOME/.pi/agent/settings.json"
       ]))
