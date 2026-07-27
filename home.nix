@@ -280,6 +280,7 @@ in
           axi_tool_lock="$axi_tool_root/.axi-toolchain-versions"
           axi_tool_hook_state="$axi_tool_root/.axi-toolchain-hooks"
           npm="${lib.getExe' pkgs.nodejs "npm"}"
+          export PATH="${lib.makeBinPath [ pkgs.nodejs ]}:$PATH"
           lock_tmp="$axi_tool_root/.axi-toolchain-versions.$$"
           install_specs=()
           ${lib.getExe' pkgs.coreutils "mkdir"} -p -- "$axi_tool_root" "$axi_tool_bin"
