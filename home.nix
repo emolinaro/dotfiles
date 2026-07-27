@@ -304,14 +304,22 @@ in {
           trap 'rm -f "$lock_tmp"' EXIT
 
           need_install=0
+          have_lock=0
+
+          if [[ -r "$axi_tool_lock" ]]; then
+            have_lock=1
+          else
+            need_install=1
+          fi
+
           : > "$lock_tmp"
           for pkg in gh-axi chrome-devtools-axi lavish-axi tasks-axi quota-axi; do
             if [[ ! -x "$axi_tool_bin/$pkg" ]]; then
               need_install=1
             fi
 
-            pkg_version="$("$npm" view "$pkg" version 2>/dev/null || true)"
-            if [[ -z "$pkg_version" && -r "$axi_tool_lock" ]]; then
+            pkg_version=""
+            if [[ "$have_lock" -eq 1 ]]; then
               while read -r locked_pkg locked_version; do
                 if [[ "$locked_pkg" == "$pkg" ]]; then
                   pkg_version="$locked_version"
@@ -319,8 +327,26 @@ in {
                 fi
               done < "$axi_tool_lock"
             fi
+
+            if [[ "$have_lock" -eq 1 && "$pkg_version" == "*" ]]; then
+              echo "axiToolchain lock file '$axi_tool_lock' contains an unpinned entry for '$pkg'; refreshing versions."
+              have_lock=0
+              pkg_version=""
+            fi
+
+            if [[ "$have_lock" -eq 1 && -z "$pkg_version" ]]; then
+              echo "axiToolchain lock file '$axi_tool_lock' is missing entry for '$pkg'; refreshing versions."
+              have_lock=0
+            fi
+
             if [[ -z "$pkg_version" ]]; then
-              pkg_version="*"
+              pkg_version="$("$npm" view "$pkg" version 2>/dev/null || true)"
+              if [[ -z "$pkg_version" ]]; then
+                echo "axiToolchain bootstrap failed: unable to resolve version for '$pkg' and lockfile is unavailable." >&2
+                echo "Please re-run after npm registry access is restored or restore $axi_tool_lock." >&2
+                exit 1
+              fi
+              need_install=1
             fi
             printf '%s %s\n' "$pkg" "$pkg_version" >> "$lock_tmp"
           done
@@ -332,10 +358,10 @@ in {
           if [[ "$need_install" -eq 1 ]]; then
             while read -r pkg pkg_version; do
               if [[ "$pkg_version" == "*" ]]; then
-                install_specs+=("$pkg")
-              else
-                install_specs+=("${pkg}@${pkg_version}")
+                echo "axiToolchain lock file '$axi_tool_lock' contains unpinned '*' for '$pkg'." >&2
+                exit 1
               fi
+              install_specs+=("''${pkg}@''${pkg_version}")
             done < "$lock_tmp"
 
             NPM_CONFIG_PREFIX="$axi_tool_root" \
