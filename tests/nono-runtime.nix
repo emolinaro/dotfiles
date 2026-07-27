@@ -40,9 +40,7 @@ let
           test "$(git config user.name)" = "Runtime Test"
           test "$(git config user.email)" = "runtime@example.com"
           test "$(jq -r .token "$HOME/.codex/auth.json")" = legacy
-          if printf '%s\n' compromised > "$host_config"; then
-            exit 41
-          fi
+          printf '%s\n' hook-trust-updated > "$host_config"
           if touch "$shared_temp/escaped"; then
             exit 42
           fi
@@ -357,6 +355,7 @@ pkgs.writeShellApplication {
     test "$(git log -1 --format=%s)" = runtime
     test "$(git log -1 --format=%s sandbox-created)" = runtime
     test "$(git config user.name)" = "Runtime Test"
+    test "$(<"$HOME/.codex/config.toml")" = hook-trust-updated
     test "$(<"$repo/.git/hooks/pre-push")" = trusted
     test "$(<"$repo/.git/info/attributes")" = trusted
     test "$(<"$repo/.git/modules/example/hooks/pre-push")" = trusted

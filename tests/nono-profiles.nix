@@ -92,6 +92,7 @@ pkgs.runCommand "nono-profiles-test"
         "/home/linuxbrew/.linuxbrew/Cellar",
         "/home/linuxbrew/.linuxbrew/opt",
         "/opt/homebrew/Cellar",
+        "/opt/homebrew/etc",
         "/opt/homebrew/opt",
         "/nix"
       ]))
@@ -218,6 +219,7 @@ pkgs.runCommand "nono-profiles-test"
       (.filesystem.allow | contains([
         "$DOTFILES_AGENT_HOME/.codex",
         "$DOTFILES_AGENT_HOME/.cache/axi-tools",
+        "$DOTFILES_AGENT_HOME/.lavish-axi",
         "$DOTFILES_HOST_HOME/.codex"
       ]))
       and (.filesystem.allow_file | contains([
