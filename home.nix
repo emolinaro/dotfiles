@@ -131,7 +131,7 @@ in
       ];
 
     sessionPath = [
-      ".cache/axi-tools/bin"
+      "${config.home.homeDirectory}/.cache/axi-tools/bin"
     ];
 
     sessionVariables = {
