@@ -571,27 +571,65 @@ in
 
   home.activation.axiToolchain = lib.hm.dag.entryAfter [ "installPackages" ] ''
     if [[ -z "''${DRY_RUN:-}" ]]; then
+      set -euo pipefail
       axi_tool_root="$HOME/.cache/axi-tools"
       axi_tool_bin="$axi_tool_root/bin"
-      ${lib.getExe' coreutils "mkdir"} -p -- "$axi_tool_root" "$axi_tool_bin"
-      if [[ ! -x "$axi_tool_bin/gh-axi" ]] \
-        || [[ ! -x "$axi_tool_bin/chrome-devtools-axi" ]] \
-        || [[ ! -x "$axi_tool_bin/lavish-axi" ]] \
-        || [[ ! -x "$axi_tool_bin/tasks-axi" ]] \
-        || [[ ! -x "$axi_tool_bin/quota-axi" ]]; then
-        NPM_CONFIG_PREFIX="$axi_tool_root" \
-          ${lib.getExe' pkgs.nodejs "npm"} install -g \
-          gh-axi \
-          chrome-devtools-axi \
-          lavish-axi \
-          tasks-axi \
-          quota-axi
+      axi_tool_lock="$axi_tool_root/.axi-toolchain-versions"
+      axi_tool_hook_state="$axi_tool_root/.axi-toolchain-hooks"
+      npm="${lib.getExe' pkgs.nodejs "npm"}"
+      lock_tmp="$axi_tool_root/.axi-toolchain-versions.$$"
+      install_specs=()
+      ${lib.getExe' pkgs.coreutils "mkdir"} -p -- "$axi_tool_root" "$axi_tool_bin"
+      trap 'rm -f "$lock_tmp"' EXIT
+
+      need_install=0
+      : > "$lock_tmp"
+      for pkg in gh-axi chrome-devtools-axi lavish-axi tasks-axi quota-axi; do
+        if [[ ! -x "$axi_tool_bin/$pkg" ]]; then
+          need_install=1
+        fi
+
+        pkg_version="$("$npm" view "$pkg" version 2>/dev/null || true)"
+        if [[ -z "$pkg_version" && -r "$axi_tool_lock" ]]; then
+          while read -r locked_pkg locked_version; do
+            if [[ "$locked_pkg" == "$pkg" ]]; then
+              pkg_version="$locked_version"
+              break
+            fi
+          done < "$axi_tool_lock"
+        fi
+        if [[ -z "$pkg_version" ]]; then
+          pkg_version="*"
+        fi
+        printf '%s %s\n' "$pkg" "$pkg_version" >> "$lock_tmp"
+      done
+
+      if ! ${lib.getExe' pkgs.coreutils "cmp"} -s "$axi_tool_lock" "$lock_tmp" 2>/dev/null; then
+        need_install=1
       fi
-      if [[ ! -f "$axi_tool_root/.axi-hooks-installed" ]]; then
+
+      if [[ "$need_install" -eq 1 ]]; then
+        while read -r pkg pkg_version; do
+          if [[ "$pkg_version" == "*" ]]; then
+            install_specs+=("$pkg")
+          else
+            install_specs+=("''${pkg}@''${pkg_version}")
+          fi
+        done < "$lock_tmp"
+
+        NPM_CONFIG_PREFIX="$axi_tool_root" \
+          "$npm" install -g "''${install_specs[@]}"
+        ${lib.getExe' pkgs.coreutils "mv"} "$lock_tmp" "$axi_tool_lock"
+      else
+        ${lib.getExe' pkgs.coreutils "rm"} -f "$lock_tmp"
+      fi
+
+      if [[ ! -f "$axi_tool_hook_state" ]] \
+        || ! ${lib.getExe' pkgs.coreutils "cmp"} -s "$axi_tool_lock" "$axi_tool_hook_state" 2>/dev/null; then
         "$axi_tool_bin/gh-axi" setup hooks
         "$axi_tool_bin/chrome-devtools-axi" setup hooks
         "$axi_tool_bin/lavish-axi" setup hooks
-        ${lib.getExe' coreutils "touch"} "$axi_tool_root/.axi-hooks-installed"
+        ${lib.getExe' pkgs.coreutils "cp"} "$axi_tool_lock" "$axi_tool_hook_state"
       fi
     fi
   '';
