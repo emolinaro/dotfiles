@@ -73,11 +73,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1785108339,
-        "narHash": "sha256-nImtXaYzNbHdjbDOfHFB2nRcnEZckuAsBh1aJMhQPyM=",
+        "lastModified": 1785201215,
+        "narHash": "sha256-CpRc6hE+Sy/dISJo0CR5/LXBjCTUC/MceS9dfCkur5Y=",
         "owner": "ogulcancelik",
         "repo": "herdr",
-        "rev": "dc2506ea8cb58fc8cde7ceb357cad03b1aba0da1",
+        "rev": "1491b7dd9c992ef0ad2b763f3e450befaf25c47f",
         "type": "github"
       },
       "original": {
@@ -180,11 +180,11 @@
     },
     "nixpkgs-linux": {
       "locked": {
-        "lastModified": 1785002762,
-        "narHash": "sha256-Y0BbgB3BLLHEUK88g4oSp3DerIx7rCX0iwICKJcY7/c=",
+        "lastModified": 1785104993,
+        "narHash": "sha256-eKbrvPoAOFutbYMdbB3r5EQVmFxKv24iKqHPPUXA0gM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "f7a2e428f5d71c47a5a938a3c5ad7138bb291093",
+        "rev": "8623c4c20aa4ca2f5fb81510d2944066c3fb0d96",
         "type": "github"
       },
       "original": {
@@ -197,11 +197,11 @@
     "quotaAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1785002645,
-        "narHash": "sha256-w7A4ncT3N0gGBrXMrTQSp3RSQXKGk/KoSTALX3TqPg8=",
+        "lastModified": 1785221320,
+        "narHash": "sha256-OFcWERoGrgu3+B6Lurp8ZQ6hGY3R2VW0bL+njnTlucE=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "a9ca3e16a41376d9e9952e85898dae1393025948",
+        "rev": "a57d34da39d0af8c008866ad0e2d7f6ce616c67e",
         "type": "github"
       },
       "original": {
