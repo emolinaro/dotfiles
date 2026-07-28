@@ -249,7 +249,8 @@ Do not modify any files.
         fi
 
         # Open the generated message and staged diff in the Git editor.
-        git commit --verbose --edit --file="$message_file" >/dev/null
+        # Do not redirect stdout here — git skips the editor when stdout is not a TTY.
+        git commit --verbose --edit --file="$message_file"
         local status=$?
 
         rm -f "$message_file"
