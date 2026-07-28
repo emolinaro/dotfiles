@@ -52,10 +52,11 @@
       "midnight-commander"
     ];
     casks = [
-      "wezterm"
-      "orbstack"
       "claude-code"
       "codex"
+      "opensuperwhisper"
+      "orbstack"
+      "wezterm"
     ];
   };
 }
