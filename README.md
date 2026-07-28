@@ -16,21 +16,17 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use direct clients normally; use `*-nono` for isolated runs and `gnhf*` for agent wrappers.
+Use direct clients normally; use `*-nono` for isolated runs and `gnhf --agent`
+to pick a backend.
 
 ```sh
 claude-nono
 codex-nono
 opencode-nono
 pi-nono
-gnhf
-gnhf-codex
-gnhf-codex-nono
-gnhf-opencode
-gnhf-opencode-nono
+gnhf --agent codex
+gnhf --agent opencode
 ```
-
-`gnhf` defaults to `codex`; add suffixes for a specific tool.
 
 - `*-nono`: isolated worktree+HOME; only `auth.json` syncs back.
 - Git/reconcile: local `reflog`+`index`; remote refs sync only from a clean host.
@@ -46,7 +42,6 @@ system="$(nix eval --impure --raw --expr builtins.currentSystem)"
 nix build \
   ".#checks.$system.nono-package" \
   ".#checks.$system.nono-agent-wrappers" \
-  ".#checks.$system.gnhf-wrapper" \
   ".#checks.$system.gnhf-package" \
   ".#checks.$system.nono-home-command-surface" \
   ".#checks.$system.nono-profiles" \
@@ -173,6 +168,7 @@ nix flake update chromeDevtoolsAxi
 nix flake update ghAxi
 nix flake update quotaAxi
 nix flake update tasksAxi
+nix flake update gnhf
 nix flake update gstack
 nix flake update superpowers
 nix flake update nixpkgs nixpkgs-linux
@@ -188,11 +184,12 @@ rebuild.
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `quotaAxi`,
-`tasksAxi`, `gstack`, `superpowers`, `herdr`, `home-manager`, and `nix-darwin`
-can be updated independently. Precompiled release packages are versioned in
-`packages/`; source-built Axi Tools and GNHF are pinned directly in
-`flake.nix`.
+targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `gnhf`, `lavish`,
+`quotaAxi`, `tasksAxi`, `gstack`, `superpowers`, `herdr`, `home-manager`, and
+`nix-darwin` can be updated independently. Precompiled release packages are
+versioned in `packages/`; source-built Axi Tools and GNHF also pin
+`pnpmDepsHash` in `flake.nix`, which may need refreshing after an input
+update if dependencies changed.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
 `quota-axi`, and `tasks-axi` on `PATH` after a rebuild.

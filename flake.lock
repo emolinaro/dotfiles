@@ -49,6 +49,22 @@
         "type": "github"
       }
     },
+    "gnhf": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784790061,
+        "narHash": "sha256-0YuinRyyOhcfeSUwXEouThDm1UeNV4dWBkA6KMrKmmo=",
+        "owner": "kunchenguid",
+        "repo": "gnhf",
+        "rev": "1d0673920f3ee6427bc75805faccd02a6d614e84",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "repo": "gnhf",
+        "type": "github"
+      }
+    },
     "gstack": {
       "flake": false,
       "locked": {
@@ -214,6 +230,7 @@
       "inputs": {
         "chromeDevtoolsAxi": "chromeDevtoolsAxi",
         "ghAxi": "ghAxi",
+        "gnhf": "gnhf",
         "gstack": "gstack",
         "herdr": "herdr",
         "home-manager": "home-manager",
