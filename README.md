@@ -16,16 +16,17 @@ pull request, merge, and deployment actions always require explicit approval.
 
 ## Agent sandbox
 
-Use direct clients normally; use `*-nono` for isolated runs and `gnhf --agent`
-to pick a backend.
+Use direct clients normally; use `*-nono` for isolated runs. For unattended
+GNHF loops, pass `--agent <name>` to select the backend. The selected backend
+becomes GNHF's default; a new GNHF configuration starts with Claude.
 
 ```sh
 claude-nono
 codex-nono
 opencode-nono
 pi-nono
-gnhf --agent codex
-gnhf --agent opencode
+gnhf --agent codex "your objective"
+gnhf --agent opencode "your objective"
 ```
 
 - `*-nono`: isolated worktree+HOME; only `auth.json` syncs back.
