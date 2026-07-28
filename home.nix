@@ -190,7 +190,7 @@ in
       [[ -n "$terminfo[kpp]"    ]] && bindkey "$terminfo[kpp]"    history-beginning-search-backward
       [[ -n "$terminfo[knp]"    ]] && bindkey "$terminfo[knp]"    history-beginning-search-forward
 
-      gac() {
+      aic() {
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
           print -u2 "Error: not inside a Git repository"
           return 1
@@ -236,7 +236,7 @@ Use this format:
 Group related changes conceptually instead of merely listing filenames.
 Do not invent motivations or claim that tests passed.
 Do not modify any files.
-' || {
+' >/dev/null 2>&1 || {
           local status=$?
           rm -f "$message_file"
           return "$status"
@@ -249,7 +249,7 @@ Do not modify any files.
         fi
 
         # Open the generated message and staged diff in the Git editor.
-        git commit --verbose --edit --file="$message_file"
+        git commit --verbose --edit --file="$message_file" >/dev/null
         local status=$?
 
         rm -f "$message_file"
