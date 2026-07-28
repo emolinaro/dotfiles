@@ -47,6 +47,7 @@ nix build \
   ".#checks.$system.nono-package" \
   ".#checks.$system.nono-agent-wrappers" \
   ".#checks.$system.gnhf-wrapper" \
+  ".#checks.$system.gnhf-package" \
   ".#checks.$system.nono-home-command-surface" \
   ".#checks.$system.nono-profiles" \
   ".#checks.$system.nono-runtime-driver"
@@ -189,8 +190,9 @@ such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
 the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
 targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `lavish`, `quotaAxi`,
 `tasksAxi`, `gstack`, `superpowers`, `herdr`, `home-manager`, and `nix-darwin`
-can be updated independently. Treehouse and No Mistakes are versioned
-separately in `packages/treehouse.nix` and `packages/no-mistakes.nix`.
+can be updated independently. Precompiled release packages are versioned in
+`packages/`; source-built Axi Tools and GNHF are pinned directly in
+`flake.nix`.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
 `quota-axi`, and `tasks-axi` on `PATH` after a rebuild.
