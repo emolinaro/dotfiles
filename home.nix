@@ -191,6 +191,20 @@ in
       [[ -n "$terminfo[knp]"    ]] && bindkey "$terminfo[knp]"    history-beginning-search-forward
 
       aic() {
+        local -a excludes
+
+        if [[ "$1" == --exclude ]]; then
+          shift
+          excludes=("$@")
+          if (( ''${#excludes} == 0 )); then
+            print -u2 "Usage: aic [--exclude path ...]"
+            return 1
+          fi
+        elif (( $# > 0 )); then
+          print -u2 "Usage: aic [--exclude path ...]"
+          return 1
+        fi
+
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
           print -u2 "Error: not inside a Git repository"
           return 1
@@ -198,6 +212,10 @@ in
 
         # Stage new, modified and deleted files.
         git add -A || return 1
+
+        if (( ''${#excludes} > 0 )); then
+          git restore --staged -- "''${excludes[@]}" || return 1
+        fi
 
         if git diff --cached --quiet; then
           print "Nothing to commit"
