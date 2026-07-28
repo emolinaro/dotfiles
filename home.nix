@@ -189,6 +189,72 @@ in
       [[ -n "$terminfo[kdch1]"  ]] && bindkey "$terminfo[kdch1]"  delete-char
       [[ -n "$terminfo[kpp]"    ]] && bindkey "$terminfo[kpp]"    history-beginning-search-backward
       [[ -n "$terminfo[knp]"    ]] && bindkey "$terminfo[knp]"    history-beginning-search-forward
+
+      gac() {
+        git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
+          print -u2 "Error: not inside a Git repository"
+          return 1
+        }
+
+        # Stage new, modified and deleted files.
+        git add -A || return 1
+
+        if git diff --cached --quiet; then
+          print "Nothing to commit"
+          return 0
+        fi
+
+        local message_file
+        message_file="$(mktemp "''${TMPDIR:-/tmp}/codex-commit.XXXXXX")" || {
+          print -u2 "Could not create temporary commit-message file"
+          return 1
+        }
+
+        codex exec \
+          --ephemeral \
+          --sandbox read-only \
+          --output-last-message "$message_file" \
+          '
+Inspect the staged Git changes by running:
+
+    git diff --cached --stat
+    git diff --cached
+
+Produce only a Git commit message. Do not include commentary,
+Markdown fences, headings such as "Commit message", or analysis.
+
+Use this format:
+
+1. An imperative subject line of at most 72 characters.
+2. A blank line.
+3. Two to six concise bullet points explaining in plain English:
+   - what changed;
+   - how behaviour or workflow is affected;
+   - important implementation or configuration details;
+   - why the change matters, but only when evident from the diff.
+
+Group related changes conceptually instead of merely listing filenames.
+Do not invent motivations or claim that tests passed.
+Do not modify any files.
+' || {
+          local status=$?
+          rm -f "$message_file"
+          return "$status"
+        }
+
+        if [[ ! -s "$message_file" ]]; then
+          print -u2 "Codex generated an empty commit message"
+          rm -f "$message_file"
+          return 1
+        fi
+
+        # Open the generated message and staged diff in the Git editor.
+        git commit --verbose --edit --file="$message_file"
+        local status=$?
+
+        rm -f "$message_file"
+        return "$status"
+      }
     '';
     shellAliases = {
       ".." = "cd ..";
@@ -241,7 +307,9 @@ in
     rerere.autoUpdate = true;
     merge.conflictStyle = "zdiff3";
     worktree.guessRemote = true;
+    core.editor = "nvim";
     core.pager = "delta";
+    commit.verbose = true;
     interactive.diffFilter = "delta --color-only";
     delta = {
       navigate = true;
