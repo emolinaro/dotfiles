@@ -2,6 +2,7 @@
   axiToolsPackage,
   chromeDevtoolsAxiSkill,
   config,
+  gnhfPackage,
   ghAxiSkill,
   gstackRev,
   herdrPackage,
@@ -27,7 +28,6 @@ let
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
-  gnhfPackage = pkgs.callPackage ./packages/gnhf.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
