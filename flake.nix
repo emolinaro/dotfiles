@@ -47,6 +47,12 @@
       flake = false;
     };
 
+    # Lock gnhf so rebuilds do not silently pull new behavior.
+    gnhf = {
+      url = "github:kunchenguid/gnhf";
+      flake = false;
+    };
+
     # Lock agent workflows so rebuilds do not silently pull new behavior.
     gstack = {
       url = "github:garrytan/gstack";
@@ -72,6 +78,7 @@
       ghAxi,
       tasksAxi,
       quotaAxi,
+      gnhf,
       gstack,
       superpowers,
     }:
@@ -189,22 +196,16 @@
           name = "axi-tools";
           paths = map mkAxiTool axiTools;
         };
-      gnhfVersion = "0.1.42";
-      gnhfCliFor =
+      gnhfPackageFor =
         system:
         let
           pkgs = pkgsFor system;
-          src = pkgs.fetchFromGitHub {
-            owner = "kunchenguid";
-            repo = "gnhf";
-            rev = "gnhf-v${gnhfVersion}";
-            hash = "sha256-8dTfXCULAoXMJwb38bEMCazT7jzT130rzpLivVkx3Wc=";
-          };
+          src = gnhf;
+          version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
         in
         pkgs.stdenvNoCC.mkDerivation {
-          pname = "gnhf-cli";
-          version = gnhfVersion;
-          inherit src;
+          pname = "gnhf";
+          inherit src version;
 
           pnpmDeps = pkgs.fetchPnpmDeps {
             pname = "gnhf";
@@ -235,107 +236,18 @@
             makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/gnhf" --add-flags "$out/lib/node_modules/gnhf/dist/cli.mjs"
             runHook postInstall
           '';
-        };
-      gnhfPackageFor =
-        system:
-        let
-          pkgs = pkgsFor system;
-          gnhfCli = gnhfCliFor system;
-          gnhfCommand = "${gnhfCli}/bin/gnhf";
-          codexScript = pkgs.lib.concatStringsSep "\n" [
-            "#!/usr/bin/env bash"
-            "set -euo pipefail"
-            "if [ \"$#\" -eq 0 ]; then"
-            "  echo \"gnhf: expected arguments\" >&2"
-            "  exit 2"
-            "fi"
-            "exec ${gnhfCommand} --agent codex \"$@\""
-          ];
-          opencodeScript = pkgs.lib.concatStringsSep "\n" [
-            "#!/usr/bin/env bash"
-            "set -euo pipefail"
-            "if [ \"$#\" -eq 0 ]; then"
-            "  echo \"gnhf-opencode: expected arguments\" >&2"
-            "  exit 2"
-            "fi"
-            "exec ${gnhfCommand} --agent opencode \"$@\""
-          ];
-          codexNonoWrapperScript = pkgs.lib.concatStringsSep "\n" [
-            "#!/usr/bin/env bash"
-            "set -euo pipefail"
-            ""
-            "wrapper_dir=\"$(mktemp -d)\""
-            "trap 'rm -rf -- \"$wrapper_dir\"' EXIT"
-            ""
-            "cat > \"$wrapper_dir/codex\" <<'SH'"
-            "#!/usr/bin/env bash"
-            "exec codex-nono \"$@\""
-            "SH"
-            "chmod +x \"$wrapper_dir/codex\""
-            ""
-            "PATH=\"$wrapper_dir:$PATH\""
-            "${gnhfCommand} --agent codex \"$@\""
-          ];
-          opencodeNonoWrapperScript = pkgs.lib.concatStringsSep "\n" [
-            "#!/usr/bin/env bash"
-            "set -euo pipefail"
-            ""
-            "wrapper_dir=\"$(mktemp -d)\""
-            "trap 'rm -rf -- \"$wrapper_dir\"' EXIT"
-            ""
-            "cat > \"$wrapper_dir/opencode\" <<'SH'"
-            "#!/usr/bin/env bash"
-            "exec opencode-nono \"$@\""
-            "SH"
-            "chmod +x \"$wrapper_dir/opencode\""
-            ""
-            "PATH=\"$wrapper_dir:$PATH\""
-            "${gnhfCommand} --agent opencode \"$@\""
-          ];
-        in
-        pkgs.stdenvNoCC.mkDerivation {
-          pname = "gnhf";
-          version = gnhfVersion;
-
-          dontBuild = true;
-          dontUnpack = true;
-
-          installPhase = pkgs.lib.concatStringsSep "\n" [
-            "runHook preInstall"
-            ""
-            "mkdir -p \"$out/bin\""
-            ""
-            "cat > \"$out/bin/gnhf\" <<'EOF'"
-            codexScript
-            "EOF"
-            "cat > \"$out/bin/gnhf-codex\" <<'EOF'"
-            codexScript
-            "EOF"
-            "cat > \"$out/bin/gnhf-codex-nono\" <<'EOF'"
-            codexNonoWrapperScript
-            "EOF"
-            "cat > \"$out/bin/gnhf-opencode\" <<'EOF'"
-            opencodeScript
-            "EOF"
-            "cat > \"$out/bin/gnhf-opencode-nono\" <<'EOF'"
-            opencodeNonoWrapperScript
-            "EOF"
-            ""
-            "chmod +x \"$out/bin/gnhf\""
-            "chmod +x \"$out/bin/gnhf-codex\""
-            "chmod +x \"$out/bin/gnhf-codex-nono\""
-            "chmod +x \"$out/bin/gnhf-opencode\""
-            "chmod +x \"$out/bin/gnhf-opencode-nono\""
-            ""
-            "runHook postInstall"
-          ];
 
           meta = {
-            description = "Pinned GNHF agent helper wrappers for codex, opencode, and Nono variants";
+            description = "Pinned GNHF CLI; pick the backend with --agent";
             homepage = "https://github.com/kunchenguid/gnhf";
             license = pkgs.lib.licenses.mit;
             mainProgram = "gnhf";
-            platforms = [ "aarch64-darwin" "x86_64-darwin" "aarch64-linux" "x86_64-linux" ];
+            platforms = [
+              "aarch64-darwin"
+              "x86_64-darwin"
+              "aarch64-linux"
+              "x86_64-linux"
+            ];
           };
         };
       nonoRuntimeTestFor =
@@ -426,11 +338,7 @@
         axi-tools = (pkgsFor system).callPackage ./tests/axi-tools.nix {
           axiToolsPackage = axiToolsPackageFor system;
         };
-        gnhf-wrapper = (pkgsFor system).callPackage ./tests/gnhf-wrapper.nix {
-          gnhfPackage = gnhfPackageFor system;
-        };
         gnhf-package = (pkgsFor system).callPackage ./tests/gnhf-package.nix {
-          gnhfCli = gnhfCliFor system;
           gnhfPackage = gnhfPackageFor system;
         };
         gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
