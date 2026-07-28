@@ -193,6 +193,21 @@ in
       aic() {
         local -a excludes
 
+        if [[ "$1" == -h || "$1" == --help ]]; then
+          cat <<'EOF'
+Usage: aic [--exclude path ...]
+       aic -h | --help
+
+Stage all changes, generate a commit message with Codex, then open
+the Git editor to review and commit.
+
+Options:
+  --exclude path ...  Stage everything, then unstage these paths
+  -h, --help          Show this help
+EOF
+          return 0
+        fi
+
         if [[ "$1" == --exclude ]]; then
           shift
           excludes=("$@")
