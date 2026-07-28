@@ -192,33 +192,58 @@ in
 
       aic() {
         local -a excludes
+        local model="''${AIC_MODEL:-}"
 
-        if [[ "$1" == -h || "$1" == --help ]]; then
-          cat <<'EOF'
-Usage: aic [--exclude path ...]
+        while (( $# > 0 )); do
+          case "$1" in
+            -h|--help)
+              cat <<'EOF'
+Usage: aic [options]
        aic -h | --help
 
 Stage all changes, generate a commit message with Codex, then open
 the Git editor to review and commit.
 
 Options:
+  -m, --model NAME    Codex model for this run (overrides AIC_MODEL)
   --exclude path ...  Stage everything, then unstage these paths
   -h, --help          Show this help
-EOF
-          return 0
-        fi
 
-        if [[ "$1" == --exclude ]]; then
-          shift
-          excludes=("$@")
-          if (( ''${#excludes} == 0 )); then
-            print -u2 "Usage: aic [--exclude path ...]"
-            return 1
-          fi
-        elif (( $# > 0 )); then
-          print -u2 "Usage: aic [--exclude path ...]"
-          return 1
-        fi
+Environment:
+  AIC_MODEL           Default Codex model when -m/--model is omitted
+
+Examples:
+  aic
+  aic --exclude README.md
+  aic -m gpt-5.6-luna
+  AIC_MODEL=gpt-5.6-luna aic --exclude secrets.env
+EOF
+              return 0
+              ;;
+            -m|--model)
+              if [[ -z "''${2:-}" ]]; then
+                print -u2 "aic: $1 requires a model name"
+                return 1
+              fi
+              model="$2"
+              shift 2
+              ;;
+            --exclude)
+              shift
+              if (( $# == 0 )); then
+                print -u2 "aic: --exclude requires at least one path"
+                return 1
+              fi
+              excludes=("$@")
+              break
+              ;;
+            *)
+              print -u2 "aic: unknown argument: $1"
+              print -u2 "Try 'aic --help' for usage."
+              return 1
+              ;;
+          esac
+        done
 
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
           print -u2 "Error: not inside a Git repository"
@@ -243,10 +268,17 @@ EOF
           return 1
         }
 
-        codex exec \
-          --ephemeral \
-          --sandbox read-only \
-          --output-last-message "$message_file" \
+        local -a codex_args=(
+          exec
+          --ephemeral
+          --sandbox read-only
+          --output-last-message "$message_file"
+        )
+        if [[ -n "$model" ]]; then
+          codex_args+=(-m "$model")
+        fi
+
+        codex "''${codex_args[@]}" \
           '
 Inspect the staged Git changes by running:
 
