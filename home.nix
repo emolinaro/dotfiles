@@ -738,11 +738,23 @@ Do not modify any files.
         gstack_dir=${lib.escapeShellArg gstackCheckout}
         if [[ ! -d "$gstack_dir/.git" ]]; then
           $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
+          # Clone without a working tree, then materialize the flake-pinned revision.
+          # A plain clone would leave default-branch files that are not the pin.
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
             https://github.com/garrytan/gstack.git "$gstack_dir"
+          if [[ -z "''${DRY_RUN:-}" ]]; then
+            ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+            ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+          fi
         fi
 
         if [[ -z "''${DRY_RUN:-}" ]]; then
+          # Recover clones left empty by an interrupted earlier bootstrap/activate.
+          if [[ ! -e "$gstack_dir/setup" ]]; then
+            ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+            ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+          fi
+
           setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
           expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
           current_setup_state=""
