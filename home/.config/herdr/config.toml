@@ -1,5 +1,14 @@
 onboarding = false
 
+[theme]
+# Rosé Pine is the closest built-in to the Rosé Pine Moon terminal theme.
+name = "rose-pine"
+
+[theme.custom]
+# Active tab: same color code as the WezTerm active tab (gold bg on moon base fg).
+accent = "#f6c177"
+panel_bg = "#232136"
+
 [keys]
 # Same prefix as default tmux
 prefix = "ctrl+b"
