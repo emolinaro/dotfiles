@@ -7,24 +7,24 @@
 }:
 
 let
-  version = "0.69.0";
+  version = "0.70.0";
   release =
     {
       aarch64-darwin = {
         target = "aarch64-apple-darwin";
-        hash = "sha256-gf9O/2Wpds2hAu+B7pb/n4Zo95iA++tr/g+QNd+QPwU=";
+        hash = "sha256-lhD2K3TkFbjTZeAB9V9kiPSbG1hypg+6MlB1n2X0TlM=";
       };
       x86_64-darwin = {
         target = "x86_64-apple-darwin";
-        hash = "sha256-4fBOlvQdr0vwFJTgGy+c2EpDsnmfwJCt9iuZ+8hHyiQ=";
+        hash = "sha256-8J1i7n1dimb2EcM8XDtwt2yYhw9sUh0F5WRqO/jZ1XQ=";
       };
       aarch64-linux = {
         target = "aarch64-unknown-linux-gnu";
-        hash = "sha256-rcBz9c2gFBHEZnNF9PBN1AAv2rSswcNEvYba4d4hkWA=";
+        hash = "sha256-+qQeaiCxm1kx6GuBWcTAAxk2EJz3IY7JK21jamXu1EU=";
       };
       x86_64-linux = {
         target = "x86_64-unknown-linux-gnu";
-        hash = "sha256-PHn7DcKpFxt9RBAmllZm9WUsQvZ7xXEKJ9jp+Sgi9hk=";
+        hash = "sha256-3ofJkRlNiWAN5A3nycdxKjNIQWLgpKu+bxTppHUuFWc=";
       };
     }
     .${stdenvNoCC.hostPlatform.system}
