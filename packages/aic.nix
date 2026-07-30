@@ -12,250 +12,278 @@ writeShellApplication {
     jq
   ];
   text = ''
-    excludes=()
-    agent="''${AIC_AGENT:-codex}"
-    model="''${AIC_MODEL:-}"
+        excludes=()
+        agent="''${AIC_AGENT:-codex}"
+        model="''${AIC_MODEL:-}"
 
-        while (( $# > 0 )); do
-          case "$1" in
-        -h | --help)
-          cat <<'EOF'
-Usage: aic [options]
-       aic -h | --help
+            while (( $# > 0 )); do
+              case "$1" in
+            -h | --help)
+              cat <<'EOF'
+    Usage: aic [options]
+           aic -h | --help
 
-Stage all changes, generate a commit message with an AI agent, then
-open the Git editor to review and commit.
+    Stage all changes, generate a commit message with an AI agent, then
+    open the Git editor to review and commit.
 
-Options:
-  -a, --agent NAME    Agent that writes the message: codex (default)
-                      or opencode (overrides AIC_AGENT)
-  -m, --model NAME    Model for this run (overrides AIC_MODEL)
-                      OpenCode default: opencode/nemotron-3-ultra-free
-  --exclude path ...  Stage everything, then unstage these paths
-  -h, --help          Show this help
+    Options:
+      -a, --agent NAME    Agent that writes the message: codex (default)
+                          or opencode (overrides AIC_AGENT)
+      -m, --model NAME    Model for this run (overrides AIC_MODEL)
+                          OpenCode default: opencode/nemotron-3-ultra-free
+      --exclude path ...  Stage everything, then unstage these paths
+      -h, --help          Show this help
 
-Environment:
-  AIC_AGENT           Default agent when -a/--agent is omitted
-  AIC_MODEL           Default model when -m/--model is omitted
+    Environment:
+      AIC_AGENT           Default agent when -a/--agent is omitted
+      AIC_MODEL           Default model when -m/--model is omitted
 
-Examples:
-  aic
-  aic --agent opencode
-  aic --agent opencode --model opencode/nemotron-3-ultra-free
-  aic --exclude README.md
-  aic -m gpt-5.6-luna
-  AIC_AGENT=opencode aic --exclude secrets.env
-EOF
-    exit 0
-          ;;
-        -a | --agent)
-          if [[ -z "''${2:-}" ]]; then
-            printf '%s\n' "aic: $1 requires an agent name" >&2
-            exit 1
-          fi
-          agent="$2"
-          shift 2
-          ;;
-            -m | --model)
+    Examples:
+      aic
+      aic --agent opencode
+      aic --agent opencode --model opencode/nemotron-3-ultra-free
+      aic --exclude README.md
+      aic -m gpt-5.6-luna
+      AIC_AGENT=opencode aic --exclude secrets.env
+    EOF
+        exit 0
+              ;;
+            -a | --agent)
               if [[ -z "''${2:-}" ]]; then
-                printf '%s\n' "aic: $1 requires a model name" >&2
+                printf '%s\n' "aic: $1 requires an agent name" >&2
                 exit 1
               fi
-              model="$2"
+              agent="$2"
               shift 2
               ;;
-            --exclude)
-              shift
-              if (( $# == 0 )); then
-                printf '%s\n' "aic: --exclude requires at least one path" >&2
-                exit 1
-              fi
-              excludes=("$@")
-              break
-              ;;
-            *)
-              printf '%s\n' "aic: unknown argument: $1" >&2
-              printf '%s\n' "Try 'aic --help' for usage." >&2
+                -m | --model)
+                  if [[ -z "''${2:-}" ]]; then
+                    printf '%s\n' "aic: $1 requires a model name" >&2
+                    exit 1
+                  fi
+                  model="$2"
+                  shift 2
+                  ;;
+                --exclude)
+                  shift
+                  if (( $# == 0 )); then
+                    printf '%s\n' "aic: --exclude requires at least one path" >&2
+                    exit 1
+                  fi
+                  excludes=("$@")
+                  break
+                  ;;
+                *)
+                  printf '%s\n' "aic: unknown argument: $1" >&2
+                  printf '%s\n' "Try 'aic --help' for usage." >&2
+                  exit 1
+                  ;;
+          esac
+        done
+
+        case "$agent" in
+          codex) ;;
+          opencode)
+            model="''${model:-opencode/nemotron-3-ultra-free}"
+            ;;
+          *)
+            printf '%s\n' "aic: unknown agent: $agent (want: codex or opencode)" >&2
+            exit 1
+            ;;
+        esac
+
+            git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
+              printf '%s\n' "Error: not inside a Git repository" >&2
               exit 1
-              ;;
-      esac
-    done
+            }
 
-    case "$agent" in
-      codex) ;;
-      opencode)
-        model="''${model:-opencode/nemotron-3-ultra-free}"
-        ;;
-      *)
-        printf '%s\n' "aic: unknown agent: $agent (want: codex or opencode)" >&2
-        exit 1
-        ;;
-    esac
+            # Stage new, modified and deleted files.
+            git add -A || exit 1
 
-        git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
-          printf '%s\n' "Error: not inside a Git repository" >&2
+            if (( ''${#excludes[@]} > 0 )); then
+              git restore --staged -- "''${excludes[@]}" || exit 1
+            fi
+
+            if git diff --cached --quiet; then
+              printf '%s\n' "Nothing to commit"
+              exit 0
+            fi
+
+        message_requirements='Produce only a Git commit message. Do not include commentary,
+    Markdown fences, headings such as "Commit message", or analysis.
+
+    Use this format:
+
+    1. An imperative subject line of at most 72 characters.
+    2. A blank line.
+    3. Two to six concise bullet points explaining in plain English:
+       - what changed;
+       - how behaviour or workflow is affected;
+       - important implementation or configuration details;
+       - why the change matters, but only when evident from the diff.
+
+    Group related changes conceptually instead of merely listing filenames.
+    Do not invent motivations or claim that tests passed.
+    Do not modify any files.'
+
+        message_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit.XXXXXX") || {
+          printf '%s\n' "Could not create temporary commit-message file" >&2
           exit 1
         }
+        trap 'rm -f -- "$message_file"' EXIT
 
-        # Stage new, modified and deleted files.
-        git add -A || exit 1
+        rc=0
+        if [[ "$agent" == "codex" ]]; then
+          codex_args=(
+            exec
+            --ephemeral
+            --sandbox read-only
+            --output-last-message "$message_file"
+          )
+          if [[ -n "$model" ]]; then
+            codex_args+=(-m "$model")
+          fi
 
-        if (( ''${#excludes[@]} > 0 )); then
-          git restore --staged -- "''${excludes[@]}" || exit 1
-        fi
+          codex "''${codex_args[@]}" \
+            "
+    Inspect the staged Git changes by running:
 
-        if git diff --cached --quiet; then
-          printf '%s\n' "Nothing to commit"
-          exit 0
-        fi
-
-    message_requirements='Produce only a Git commit message. Do not include commentary,
-Markdown fences, headings such as "Commit message", or analysis.
-
-Use this format:
-
-1. An imperative subject line of at most 72 characters.
-2. A blank line.
-3. Two to six concise bullet points explaining in plain English:
-   - what changed;
-   - how behaviour or workflow is affected;
-   - important implementation or configuration details;
-   - why the change matters, but only when evident from the diff.
-
-Group related changes conceptually instead of merely listing filenames.
-Do not invent motivations or claim that tests passed.
-Do not modify any files.'
-
-    message_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit.XXXXXX") || {
-      printf '%s\n' "Could not create temporary commit-message file" >&2
-      exit 1
-    }
-    trap 'rm -f -- "$message_file"' EXIT
-
-    rc=0
-    if [[ "$agent" == "codex" ]]; then
-      codex_args=(
-        exec
-        --ephemeral
-        --sandbox read-only
-        --output-last-message "$message_file"
-      )
-      if [[ -n "$model" ]]; then
-        codex_args+=(-m "$model")
-      fi
-
-      codex "''${codex_args[@]}" \
-        "
-Inspect the staged Git changes by running:
-
-    git diff --cached --stat
-    git diff --cached
-
-$message_requirements
-" >/dev/null 2>&1 || rc=$?
-      if (( rc != 0 )); then
-        exit "$rc"
-      fi
-    else
-      events_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-events.XXXXXX") || {
-        printf '%s\n' "Could not create temporary event file" >&2
-        exit 1
-      }
-
-      err_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-err.XXXXXX") || {
-        rm -f -- "$events_file"
-        printf '%s\n' "Could not create temporary error file" >&2
-        exit 1
-      }
-
-      opencode_agent="aic-commit-$$-$RANDOM-$RANDOM"
-      opencode_config="{\"agent\":{\"$opencode_agent\":{\"mode\":\"primary\",\"permission\":\"deny\"}}}"
-
-      {
-        printf '%s\n' "Create a Git commit message for the staged changes below.
-
-$message_requirements
-
---- git diff --cached --stat ---"
         git diff --cached --stat
-        printf '%s\n' "
---- git diff --cached ---"
         git diff --cached
-      } | OPENCODE_CONFIG_CONTENT="$opencode_config" \
-        opencode run --pure --format json --agent "$opencode_agent" -m "$model" \
-        >"$events_file" 2>"$err_file"
-      rc=$?
 
-      session_id=$(jq -Rsr '
-        [splits("\n") | fromjson? | .sessionID? // empty] | .[0] // empty
-      ' "$events_file")
+    $message_requirements
+    " >/dev/null 2>&1 || rc=$?
+          if (( rc != 0 )); then
+            exit "$rc"
+          fi
+        else
+          events_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-events.XXXXXX") || {
+            printf '%s\n' "Could not create temporary event file" >&2
+            exit 1
+          }
 
-      delete_rc=0
-      if [[ -n "$session_id" ]]; then
-        OPENCODE_CONFIG_CONTENT="$opencode_config" \
-          opencode session delete --pure "$session_id" \
-          >/dev/null 2>>"$err_file" || delete_rc=$?
-      fi
+          err_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-err.XXXXXX") || {
+            rm -f -- "$events_file"
+            printf '%s\n' "Could not create temporary error file" >&2
+            exit 1
+          }
 
-      if (( delete_rc != 0 )); then
-        printf '%s\n' "aic: could not delete OpenCode session $session_id" >&2
-      fi
+          opencode_agent="aic-commit-$$-$RANDOM-$RANDOM"
+          opencode_config="{\"share\":\"disabled\",\"agent\":{\"$opencode_agent\":{\"mode\":\"primary\",\"permission\":\"deny\"}}}"
 
-      if (( rc != 0 )); then
-        printf '%s\n' "aic: opencode failed (exit $rc)" >&2
-        if [[ -s "$err_file" ]]; then
-          cat "$err_file" >&2
+          session_id=""
+          session_deleted=0
+          cleanup_interrupted_session() {
+            trap - INT
+
+            if [[ -z "$session_id" && -f "$events_file" ]]; then
+              session_id=$(jq -Rsr "
+                [splits(\"\\n\") | fromjson? | .sessionID? // empty] | .[0] // empty
+              " "$events_file")
+            fi
+
+            if [[ -n "$session_id" ]] && (( session_deleted == 0 )); then
+              interrupt_delete_rc=0
+              OPENCODE_CONFIG_CONTENT="$opencode_config" \
+                opencode session delete --pure "$session_id" \
+                >/dev/null 2>>"$err_file" || interrupt_delete_rc=$?
+              if (( interrupt_delete_rc != 0 )); then
+                printf "%s\n" "aic: could not delete interrupted OpenCode session $session_id" >&2
+              fi
+            fi
+
+            rm -f -- "$message_file" "$events_file" "$err_file"
+            exit 130
+          }
+          trap cleanup_interrupted_session INT
+
+          {
+            printf '%s\n' "Create a Git commit message for the staged changes below.
+
+    $message_requirements
+
+    --- git diff --cached --stat ---"
+            git diff --cached --stat
+            printf '%s\n' "
+    --- git diff --cached ---"
+            git diff --cached
+          } | OPENCODE_CONFIG_CONTENT="$opencode_config" \
+            opencode run --pure --format json --agent "$opencode_agent" -m "$model" \
+            >"$events_file" 2>"$err_file" || rc=$?
+
+          session_id=$(jq -Rsr '
+            [splits("\n") | fromjson? | .sessionID? // empty] | .[0] // empty
+          ' "$events_file")
+
+          delete_rc=0
+          if [[ -n "$session_id" ]]; then
+            OPENCODE_CONFIG_CONTENT="$opencode_config" \
+              opencode session delete --pure "$session_id" \
+              >/dev/null 2>>"$err_file" || delete_rc=$?
+            if (( delete_rc == 0 )); then
+              session_deleted=1
+            fi
+          fi
+
+          if (( delete_rc != 0 )); then
+            printf '%s\n' "aic: could not delete OpenCode session $session_id" >&2
+          fi
+
+          if (( rc != 0 )); then
+            printf '%s\n' "aic: opencode failed (exit $rc)" >&2
+            if [[ -s "$err_file" ]]; then
+              cat "$err_file" >&2
+            fi
+            rm -f -- "$events_file" "$err_file"
+            exit "$rc"
+          fi
+
+          if [[ -z "$session_id" ]]; then
+            printf '%s\n' "aic: opencode did not report a session ID" >&2
+            if [[ -s "$err_file" ]]; then
+              cat "$err_file" >&2
+            fi
+            rm -f -- "$events_file" "$err_file"
+            exit 1
+          fi
+
+          if (( delete_rc != 0 )); then
+            if [[ -s "$err_file" ]]; then
+              cat "$err_file" >&2
+            fi
+            rm -f -- "$events_file" "$err_file"
+            exit "$delete_rc"
+          fi
+
+          if ! jq -sj --arg session "$session_id" '
+            [
+              .[]
+              | select(
+                  .type == "text"
+                  and .sessionID == $session
+                  and (.part.text? | type == "string")
+                )
+              | .part.text
+            ]
+            | .[-1] // ""
+          ' "$events_file" >"$message_file"; then
+            printf '%s\n' "aic: opencode returned invalid JSON events" >&2
+            if [[ -s "$err_file" ]]; then
+              cat "$err_file" >&2
+            fi
+            rm -f -- "$events_file" "$err_file"
+            exit 1
+          fi
+
+          rm -f -- "$events_file" "$err_file"
         fi
-        rm -f -- "$events_file" "$err_file"
-        exit "$rc"
-      fi
 
-      if [[ -z "$session_id" ]]; then
-        printf '%s\n' "aic: opencode did not report a session ID" >&2
-        if [[ -s "$err_file" ]]; then
-          cat "$err_file" >&2
-        fi
-        rm -f -- "$events_file" "$err_file"
-        exit 1
-      fi
+        if [[ ! -s "$message_file" ]]; then
+          printf '%s\n' "aic: $agent generated an empty commit message" >&2
+          exit 1
+            fi
 
-      if (( delete_rc != 0 )); then
-        if [[ -s "$err_file" ]]; then
-          cat "$err_file" >&2
-        fi
-        rm -f -- "$events_file" "$err_file"
-        exit "$delete_rc"
-      fi
-
-      if ! jq -sj --arg session "$session_id" '
-        [
-          .[]
-          | select(
-              .type == "text"
-              and .sessionID == $session
-              and (.part.text? | type == "string")
-            )
-          | .part.text
-        ]
-        | .[-1] // ""
-      ' "$events_file" >"$message_file"; then
-        printf '%s\n' "aic: opencode returned invalid JSON events" >&2
-        if [[ -s "$err_file" ]]; then
-          cat "$err_file" >&2
-        fi
-        rm -f -- "$events_file" "$err_file"
-        exit 1
-      fi
-
-      rm -f -- "$events_file" "$err_file"
-    fi
-
-    if [[ ! -s "$message_file" ]]; then
-      printf '%s\n' "aic: $agent generated an empty commit message" >&2
-      exit 1
-        fi
-
-        # Open the generated message and staged diff in the Git editor.
-        git commit --verbose --edit --file="$message_file"
+            # Open the generated message and staged diff in the Git editor.
+            git commit --verbose --edit --file="$message_file"
   '';
 }
