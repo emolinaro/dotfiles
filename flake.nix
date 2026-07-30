@@ -250,6 +250,9 @@
             };
         in
         {
+          aic = pkgs.callPackage ./tests/aic.nix {
+            aicPackage = pkgs.callPackage ./packages/aic.nix { };
+          };
           format =
             pkgs.runCommand "format-check"
               {

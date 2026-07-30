@@ -10,35 +10,50 @@ writeShellApplication {
     git
   ];
   text = ''
-        excludes=()
-        model="''${AIC_MODEL:-}"
+    excludes=()
+    agent="''${AIC_AGENT:-codex}"
+    model="''${AIC_MODEL:-}"
 
         while (( $# > 0 )); do
           case "$1" in
-            -h | --help)
-              cat <<'EOF'
-    Usage: aic [options]
-           aic -h | --help
+        -h | --help)
+          cat <<'EOF'
+Usage: aic [options]
+       aic -h | --help
 
-    Stage all changes, generate a commit message with Codex, then open
-    the Git editor to review and commit.
+Stage all changes, generate a commit message with an AI agent, then
+open the Git editor to review and commit.
 
-    Options:
-      -m, --model NAME    Codex model for this run (overrides AIC_MODEL)
-      --exclude path ...  Stage everything, then unstage these paths
-      -h, --help          Show this help
+Options:
+  -a, --agent NAME    Agent that writes the message: codex (default)
+                      or opencode (overrides AIC_AGENT)
+  -m, --model NAME    Model for this run (overrides AIC_MODEL)
+                      OpenCode default: opencode/nemotron-3-ultra-free
+  --exclude path ...  Stage everything, then unstage these paths
+  -h, --help          Show this help
 
-    Environment:
-      AIC_MODEL           Default Codex model when -m/--model is omitted
+Environment:
+  AIC_AGENT           Default agent when -a/--agent is omitted
+  AIC_MODEL           Default model when -m/--model is omitted
 
-    Examples:
-      aic
-      aic --exclude README.md
-      aic -m gpt-5.6-luna
-      AIC_MODEL=gpt-5.6-luna aic --exclude secrets.env
-    EOF
-        exit 0
-              ;;
+Examples:
+  aic
+  aic --agent opencode
+  aic --agent opencode --model opencode/nemotron-3-ultra-free
+  aic --exclude README.md
+  aic -m gpt-5.6-luna
+  AIC_AGENT=opencode aic --exclude secrets.env
+EOF
+    exit 0
+          ;;
+        -a | --agent)
+          if [[ -z "''${2:-}" ]]; then
+            printf '%s\n' "aic: $1 requires an agent name" >&2
+            exit 1
+          fi
+          agent="$2"
+          shift 2
+          ;;
             -m | --model)
               if [[ -z "''${2:-}" ]]; then
                 printf '%s\n' "aic: $1 requires a model name" >&2
@@ -61,8 +76,19 @@ writeShellApplication {
               printf '%s\n' "Try 'aic --help' for usage." >&2
               exit 1
               ;;
-          esac
-        done
+      esac
+    done
+
+    case "$agent" in
+      codex) ;;
+      opencode)
+        model="''${model:-opencode/nemotron-3-ultra-free}"
+        ;;
+      *)
+        printf '%s\n' "aic: unknown agent: $agent (want: codex or opencode)" >&2
+        exit 1
+        ;;
+    esac
 
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
           printf '%s\n' "Error: not inside a Git repository" >&2
@@ -81,50 +107,86 @@ writeShellApplication {
           exit 0
         fi
 
-        message_file=$(mktemp "''${TMPDIR:-/tmp}/codex-commit.XXXXXX") || {
-          printf '%s\n' "Could not create temporary commit-message file" >&2
-          exit 1
-        }
-        trap 'rm -f -- "$message_file"' EXIT
+    message_requirements='Produce only a Git commit message. Do not include commentary,
+Markdown fences, headings such as "Commit message", or analysis.
 
-        codex_args=(
-          exec
-          --ephemeral
-          --sandbox read-only
-          --output-last-message "$message_file"
-        )
-        if [[ -n "$model" ]]; then
-          codex_args+=(-m "$model")
-        fi
+Use this format:
 
-        codex "''${codex_args[@]}" \
-          '
-    Inspect the staged Git changes by running:
+1. An imperative subject line of at most 72 characters.
+2. A blank line.
+3. Two to six concise bullet points explaining in plain English:
+   - what changed;
+   - how behaviour or workflow is affected;
+   - important implementation or configuration details;
+   - why the change matters, but only when evident from the diff.
 
+Group related changes conceptually instead of merely listing filenames.
+Do not invent motivations or claim that tests passed.
+Do not modify any files.'
+
+    message_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit.XXXXXX") || {
+      printf '%s\n' "Could not create temporary commit-message file" >&2
+      exit 1
+    }
+    trap 'rm -f -- "$message_file"' EXIT
+
+    rc=0
+    if [[ "$agent" == "codex" ]]; then
+      codex_args=(
+        exec
+        --ephemeral
+        --sandbox read-only
+        --output-last-message "$message_file"
+      )
+      if [[ -n "$model" ]]; then
+        codex_args+=(-m "$model")
+      fi
+
+      codex "''${codex_args[@]}" \
+        "
+Inspect the staged Git changes by running:
+
+    git diff --cached --stat
+    git diff --cached
+
+$message_requirements
+" >/dev/null 2>&1 || rc=$?
+      if (( rc != 0 )); then
+        exit "$rc"
+      fi
+    else
+      err_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-err.XXXXXX") || {
+        printf '%s\n' "Could not create temporary error file" >&2
+        exit 1
+      }
+
+      {
+        printf '%s\n' "Create a Git commit message for the staged changes below.
+
+$message_requirements
+
+--- git diff --cached --stat ---"
         git diff --cached --stat
+        printf '%s\n' "
+--- git diff --cached ---"
         git diff --cached
+      } | opencode run --pure -m "$model" >"$message_file" 2>"$err_file"
+      rc=$?
 
-    Produce only a Git commit message. Do not include commentary,
-    Markdown fences, headings such as "Commit message", or analysis.
+      if (( rc != 0 )); then
+        printf '%s\n' "aic: opencode failed (exit $rc)" >&2
+        if [[ -s "$err_file" ]]; then
+          cat "$err_file" >&2
+        fi
+        rm -f -- "$err_file"
+        exit "$rc"
+      fi
+      rm -f -- "$err_file"
+    fi
 
-    Use this format:
-
-    1. An imperative subject line of at most 72 characters.
-    2. A blank line.
-    3. Two to six concise bullet points explaining in plain English:
-       - what changed;
-       - how behaviour or workflow is affected;
-       - important implementation or configuration details;
-       - why the change matters, but only when evident from the diff.
-
-    Group related changes conceptually instead of merely listing filenames.
-    Do not invent motivations or claim that tests passed.
-    Do not modify any files.
-    ' >/dev/null 2>&1
-
-        if [[ ! -s "$message_file" ]]; then
-          printf '%s\n' "Codex generated an empty commit message" >&2
-          exit 1
+    if [[ ! -s "$message_file" ]]; then
+      printf '%s\n' "aic: $agent generated an empty commit message" >&2
+      exit 1
         fi
 
         # Open the generated message and staged diff in the Git editor.
