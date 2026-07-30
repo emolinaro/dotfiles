@@ -36,11 +36,11 @@
     "ghAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1784906131,
-        "narHash": "sha256-R6Ce8aAqe5ZFKaHgSE5amleFL+s+RHfpZakdySf8ixs=",
+        "lastModified": 1785295366,
+        "narHash": "sha256-KCPiKTCz5VL8Gru4DHp9gXCXjyvextnSXVF4zrRsayw=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "fe384b3af00dfdcc68e21e3f65a96b7fe5366dfa",
+        "rev": "32d2ea219676406b7ba01df2cbefee68c0a295bf",
         "type": "github"
       },
       "original": {
@@ -89,11 +89,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1785201215,
-        "narHash": "sha256-CpRc6hE+Sy/dISJo0CR5/LXBjCTUC/MceS9dfCkur5Y=",
+        "lastModified": 1785437065,
+        "narHash": "sha256-K7Tf0u07AnXXTFU1m9gC+oKZy3qj/W9xCu5qou9fRmk=",
         "owner": "ogulcancelik",
         "repo": "herdr",
-        "rev": "1491b7dd9c992ef0ad2b763f3e450befaf25c47f",
+        "rev": "a07871a55ee77eea15e4e7d1b6cccce720c6f066",
         "type": "github"
       },
       "original": {
@@ -196,11 +196,11 @@
     },
     "nixpkgs-linux": {
       "locked": {
-        "lastModified": 1785104993,
-        "narHash": "sha256-eKbrvPoAOFutbYMdbB3r5EQVmFxKv24iKqHPPUXA0gM=",
+        "lastModified": 1785386831,
+        "narHash": "sha256-sPS3CaXH8RAT3FZRuy4VcV47iuYIWMMfa0GbyJKC3o4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "8623c4c20aa4ca2f5fb81510d2944066c3fb0d96",
+        "rev": "21ea275a7c46aef9d4d6ddc962e6d562e9d94183",
         "type": "github"
       },
       "original": {
@@ -213,11 +213,11 @@
     "quotaAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1785221320,
-        "narHash": "sha256-OFcWERoGrgu3+B6Lurp8ZQ6hGY3R2VW0bL+njnTlucE=",
+        "lastModified": 1785282018,
+        "narHash": "sha256-YiYPGwEnG4Tjh0LBDeB+NxWaFgmTVnM9tdKxOrMsHb4=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "a57d34da39d0af8c008866ad0e2d7f6ce616c67e",
+        "rev": "335be6f7ccbb637feb1e0c2b4d30268af41f9f4f",
         "type": "github"
       },
       "original": {
@@ -268,11 +268,11 @@
     "superpowers": {
       "flake": false,
       "locked": {
-        "lastModified": 1784852836,
-        "narHash": "sha256-F5LEk0yNWbMpan1vZSFZM76XSpsFGvA7h8q6Idrvenk=",
+        "lastModified": 1785266736,
+        "narHash": "sha256-fnl+HbPL2qD5Zgz8a1NctjFJSqu6UsyHJAhQMLQNXXc=",
         "owner": "obra",
         "repo": "superpowers",
-        "rev": "3dcbd5c4b48e02263fbf4a3c01e3fe4f81d584d9",
+        "rev": "44c9b2d6e889982ac18c27d05a19fefe335194e1",
         "type": "github"
       },
       "original": {
