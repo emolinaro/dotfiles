@@ -2,12 +2,14 @@
   writeShellApplication,
   coreutils,
   git,
+  jq,
 }:
 writeShellApplication {
   name = "aic";
   runtimeInputs = [
     coreutils
     git
+    jq
   ];
   text = ''
     excludes=()
@@ -155,10 +157,19 @@ $message_requirements
         exit "$rc"
       fi
     else
+      events_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-events.XXXXXX") || {
+        printf '%s\n' "Could not create temporary event file" >&2
+        exit 1
+      }
+
       err_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-err.XXXXXX") || {
+        rm -f -- "$events_file"
         printf '%s\n' "Could not create temporary error file" >&2
         exit 1
       }
+
+      opencode_agent="aic-commit-$$-$RANDOM-$RANDOM"
+      opencode_config="{\"agent\":{\"$opencode_agent\":{\"mode\":\"primary\",\"permission\":\"deny\"}}}"
 
       {
         printf '%s\n' "Create a Git commit message for the staged changes below.
@@ -170,18 +181,73 @@ $message_requirements
         printf '%s\n' "
 --- git diff --cached ---"
         git diff --cached
-      } | opencode run --pure -m "$model" >"$message_file" 2>"$err_file"
+      } | OPENCODE_CONFIG_CONTENT="$opencode_config" \
+        opencode run --pure --format json --agent "$opencode_agent" -m "$model" \
+        >"$events_file" 2>"$err_file"
       rc=$?
+
+      session_id=$(jq -Rsr '
+        [splits("\n") | fromjson? | .sessionID? // empty] | .[0] // empty
+      ' "$events_file")
+
+      delete_rc=0
+      if [[ -n "$session_id" ]]; then
+        OPENCODE_CONFIG_CONTENT="$opencode_config" \
+          opencode session delete --pure "$session_id" \
+          >/dev/null 2>>"$err_file" || delete_rc=$?
+      fi
+
+      if (( delete_rc != 0 )); then
+        printf '%s\n' "aic: could not delete OpenCode session $session_id" >&2
+      fi
 
       if (( rc != 0 )); then
         printf '%s\n' "aic: opencode failed (exit $rc)" >&2
         if [[ -s "$err_file" ]]; then
           cat "$err_file" >&2
         fi
-        rm -f -- "$err_file"
+        rm -f -- "$events_file" "$err_file"
         exit "$rc"
       fi
-      rm -f -- "$err_file"
+
+      if [[ -z "$session_id" ]]; then
+        printf '%s\n' "aic: opencode did not report a session ID" >&2
+        if [[ -s "$err_file" ]]; then
+          cat "$err_file" >&2
+        fi
+        rm -f -- "$events_file" "$err_file"
+        exit 1
+      fi
+
+      if (( delete_rc != 0 )); then
+        if [[ -s "$err_file" ]]; then
+          cat "$err_file" >&2
+        fi
+        rm -f -- "$events_file" "$err_file"
+        exit "$delete_rc"
+      fi
+
+      if ! jq -sj --arg session "$session_id" '
+        [
+          .[]
+          | select(
+              .type == "text"
+              and .sessionID == $session
+              and (.part.text? | type == "string")
+            )
+          | .part.text
+        ]
+        | .[-1] // ""
+      ' "$events_file" >"$message_file"; then
+        printf '%s\n' "aic: opencode returned invalid JSON events" >&2
+        if [[ -s "$err_file" ]]; then
+          cat "$err_file" >&2
+        fi
+        rm -f -- "$events_file" "$err_file"
+        exit 1
+      fi
+
+      rm -f -- "$events_file" "$err_file"
     fi
 
     if [[ ! -s "$message_file" ]]; then
