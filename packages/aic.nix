@@ -2,12 +2,14 @@
   writeShellApplication,
   coreutils,
   git,
+  jq,
 }:
 writeShellApplication {
   name = "aic";
   runtimeInputs = [
     coreutils
     git
+    jq
   ];
   text = ''
         excludes=()
@@ -129,8 +131,9 @@ writeShellApplication {
           printf '%s\n' "Could not create temporary commit-message file" >&2
           exit 1
         }
+        event_file=""
         err_file=""
-        trap 'rm -f -- "$message_file"; [[ -z "$err_file" ]] || rm -f -- "$err_file"' EXIT
+        trap 'rm -f -- "$message_file"; [[ -z "$event_file" ]] || rm -f -- "$event_file"; [[ -z "$err_file" ]] || rm -f -- "$err_file"' EXIT
 
         rc=0
         if [[ "$agent" == "codex" ]]; then
@@ -157,13 +160,17 @@ $message_requirements
             exit "$rc"
           fi
         else
-          # OpenCode has no --output-last-message flag, so capture stdout.
-          # Feed the diff through stdin: the nono sandbox can deny commands
-          # the agent would run itself, and a large diff would overflow argv.
+          event_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-events.XXXXXX") || {
+            printf '%s\n' "Could not create temporary event file" >&2
+            exit 1
+          }
+
           err_file=$(mktemp "''${TMPDIR:-/tmp}/aic-commit-err.XXXXXX") || {
             printf '%s\n' "Could not create temporary error file" >&2
             exit 1
           }
+
+          opencode_config='{"agent":{"aic":{"description":"Generate Git commit messages from supplied diffs","mode":"primary","permission":{"*":"deny"}}}}'
 
           # Free models occasionally fail mid-stream, so retry once.
           for attempt in 1 2; do
@@ -178,7 +185,37 @@ $message_requirements
               printf '%s\n' "
     --- git diff --cached ---"
               git diff --cached
-            } | opencode run --pure -m "$model" >|"$message_file" 2>|"$err_file" || rc=$?
+            } | OPENCODE_CONFIG_CONTENT="$opencode_config" opencode run \
+              --pure \
+              --agent aic \
+              --format json \
+              -m "$model" \
+              >|"$event_file" 2>|"$err_file" || rc=$?
+
+            session_id=$(
+              jq --slurp --raw-output \
+                'map(select(.sessionID? != null) | .sessionID) | first // empty' \
+                "$event_file" 2>/dev/null
+            )
+            if [[ -n "$session_id" ]] \
+              && ! opencode session delete "$session_id" --pure >/dev/null 2>&1; then
+              printf '%s\n' "aic: could not delete opencode session: $session_id" >&2
+              exit 1
+            fi
+
+            if (( rc == 0 )); then
+              jq --exit-status --raw-output --slurp '
+                [
+                  .[]
+                  | select(.type == "text" and .part.time.end? != null)
+                  | .part.text
+                  | select(length > 0)
+                ]
+                | select(length > 0)
+                | join("\n")
+              ' "$event_file" >|"$message_file" || rc=$?
+            fi
+
             if (( rc == 0 )) && [[ -s "$message_file" ]]; then
               break
             fi
