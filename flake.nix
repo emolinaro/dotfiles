@@ -269,6 +269,9 @@
             find . -name '*.sh' -print0 | xargs -0 shellcheck -x
             touch "$out"
           '';
+          aic = pkgs.callPackage ./tests/aic.nix {
+            aicPackage = pkgs.callPackage ./packages/aic.nix { };
+          };
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };
