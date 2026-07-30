@@ -75,6 +75,7 @@ in
       delta
       delve
       dive
+      dust # fast du for ./disk-usage.sh
       eza
       fd # fast find
       fzf # fuzzy finder
