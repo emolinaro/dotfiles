@@ -335,6 +335,22 @@
         };
       });
       checks = forAllSystems (system: {
+        aic =
+          let
+            isLinux = (pkgsFor system).stdenv.hostPlatform.isLinux;
+            isConfiguredDarwin = system == "aarch64-darwin";
+            zshInitContent =
+              if isLinux then
+                (mkUbuntuHome system).config.programs.zsh.initContent
+              else
+                self.darwinConfigurations.mac.config.home-manager.users.${darwinUsername}.programs.zsh.initContent;
+          in
+          if isLinux || isConfiguredDarwin then
+            (pkgsFor system).callPackage ./tests/aic.nix { inherit zshInitContent; }
+          else
+            (pkgsFor system).runCommand "aic-test-not-configured-platform" { } ''
+              touch "$out"
+            '';
         axi-tools = (pkgsFor system).callPackage ./tests/axi-tools.nix {
           axiToolsPackage = axiToolsPackageFor system;
         };
