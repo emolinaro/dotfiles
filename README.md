@@ -14,6 +14,24 @@ setup, cloud and container tooling, managed agent extensions, isolated
 worktree workflows, and local validation before changes are completed. Push,
 pull request, merge, and deployment actions always require explicit approval.
 
+## AI-assisted commits
+
+Run `aic` to stage all changes, generate a commit message with Codex, and open
+the message and staged diff in the Git editor for review. Codex remains the
+default agent; select OpenCode when wanted:
+
+```sh
+aic
+aic --agent opencode
+aic --agent opencode --model opencode/nemotron-3-ultra-free
+```
+
+OpenCode uses `opencode/nemotron-3-ultra-free` when no model is specified.
+`AIC_AGENT` and `AIC_MODEL` set shell defaults, while command-line options take
+precedence. OpenCode runs with sharing and agent permissions disabled, and
+`aic` deletes its temporary session before opening the editor. Run
+`aic --help` for the full agent, model, and exclusion options.
+
 ## Agent sandbox
 
 Use direct clients normally; use `*-nono` for isolated runs. For unattended
