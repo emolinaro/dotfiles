@@ -126,7 +126,20 @@ config.disable_default_key_bindings = true
 config.leader = { key = "Space", mods = "CTRL" }
 config.keys = {
   -- clipboard
-  { key = "c", mods = "CMD", action = wezterm.action.CopyTo("Clipboard") },
+  -- CMD+C copies WezTerm's own selection when there is one (shells, Shift+drag
+  -- over nvim). With no selection it forwards the key to the app so nvim can
+  -- yank its visual selection (mapped in ~/.config/nvim/lua/keys.lua).
+  {
+    key = "c",
+    mods = "CMD",
+    action = wezterm.action_callback(function(window, pane)
+      if window:get_selection_text_for_pane(pane) == "" then
+        window:perform_action(wezterm.action.SendKey({ key = "c", mods = "CMD" }), pane)
+      else
+        window:perform_action(wezterm.action.CopyTo("Clipboard"), pane)
+      end
+    end),
+  },
   { key = "v", mods = "CMD", action = wezterm.action.PasteFrom("Clipboard") },
 
   -- tabs
