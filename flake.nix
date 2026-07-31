@@ -116,11 +116,60 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
-      axiToolsPackageFor =
+      # Build one pnpm-packaged Node CLI from source with a pinned dependency
+      # hash. GNHF passes pruneProd to strip dev dependencies from the closure.
+      pnpmToolFor =
         system:
+        {
+          pname,
+          src,
+          entryPoint,
+          pnpmDepsHash,
+          pruneProd ? false,
+          meta ? { },
+        }:
         let
           pkgs = pkgsFor system;
-          axiTools = [
+        in
+        pkgs.stdenvNoCC.mkDerivation {
+          inherit pname src meta;
+          version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
+
+          pnpmDeps = pkgs.fetchPnpmDeps {
+            inherit pname src;
+            pnpm = pkgs.pnpm_11;
+            fetcherVersion = 4;
+            hash = pnpmDepsHash;
+          };
+
+          nativeBuildInputs = [
+            pkgs.makeWrapper
+            pkgs.nodejs
+            pkgs.pnpm_11
+            pkgs.pnpmConfigHook
+          ];
+
+          buildPhase = ''
+            runHook preBuild
+            pnpm build
+            runHook postBuild
+          '';
+
+          installPhase = ''
+            runHook preInstall
+            ${pkgs.lib.optionalString pruneProd "pnpm prune --prod"}
+            install -dm755 "$out/lib/node_modules/${pname}"
+            cp -r dist node_modules package.json "$out/lib/node_modules/${pname}/"
+            makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/${pname}" --add-flags "$out/lib/node_modules/${pname}/${entryPoint}"
+            runHook postInstall
+          '';
+        };
+
+      axiToolsPackageFor =
+        system:
+        (pkgsFor system).symlinkJoin {
+          name = "axi-tools";
+          paths = map (pnpmToolFor system) [
             {
               pname = "chrome-devtools-axi";
               src = chromeDevtoolsAxi;
@@ -152,95 +201,20 @@
               pnpmDepsHash = "sha256-wxguqzq/KuXekU2KlGJUU9IPJMgUjLZyuscNtZysXfo=";
             }
           ];
-          mkAxiTool =
-            {
-              pname,
-              src,
-              entryPoint,
-              pnpmDepsHash,
-            }:
-            pkgs.stdenvNoCC.mkDerivation {
-              inherit pname src;
-              version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
-
-              pnpmDeps = pkgs.fetchPnpmDeps {
-                inherit pname src;
-                pnpm = pkgs.pnpm_11;
-                fetcherVersion = 4;
-                hash = pnpmDepsHash;
-              };
-
-              nativeBuildInputs = [
-                pkgs.makeWrapper
-                pkgs.nodejs
-                pkgs.pnpm_11
-                pkgs.pnpmConfigHook
-              ];
-
-              buildPhase = ''
-                runHook preBuild
-                pnpm build
-                runHook postBuild
-              '';
-
-              installPhase = ''
-                runHook preInstall
-                install -dm755 "$out/lib/node_modules/${pname}"
-                cp -r dist node_modules package.json "$out/lib/node_modules/${pname}/"
-                makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/${pname}" --add-flags "$out/lib/node_modules/${pname}/${entryPoint}"
-                runHook postInstall
-              '';
-            };
-        in
-        pkgs.symlinkJoin {
-          name = "axi-tools";
-          paths = map mkAxiTool axiTools;
         };
+
       gnhfPackageFor =
         system:
-        let
-          pkgs = pkgsFor system;
-          src = gnhf;
-          version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
-        in
-        pkgs.stdenvNoCC.mkDerivation {
+        pnpmToolFor system {
           pname = "gnhf";
-          inherit src version;
-
-          pnpmDeps = pkgs.fetchPnpmDeps {
-            pname = "gnhf";
-            inherit src;
-            pnpm = pkgs.pnpm_11;
-            fetcherVersion = 4;
-            hash = "sha256-kQHYvZ8LNHGw1pPuTnOTUn26yUY8TmgA0+BO2+cSvLY=";
-          };
-
-          nativeBuildInputs = [
-            pkgs.makeWrapper
-            pkgs.nodejs
-            pkgs.pnpm_11
-            pkgs.pnpmConfigHook
-          ];
-
-          buildPhase = ''
-            runHook preBuild
-            pnpm build
-            runHook postBuild
-          '';
-
-          installPhase = ''
-            runHook preInstall
-            pnpm prune --prod
-            install -dm755 "$out/lib/node_modules/gnhf"
-            cp -r dist node_modules package.json "$out/lib/node_modules/gnhf/"
-            makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/gnhf" --add-flags "$out/lib/node_modules/gnhf/dist/cli.mjs"
-            runHook postInstall
-          '';
-
+          src = gnhf;
+          entryPoint = "dist/cli.mjs";
+          pnpmDepsHash = "sha256-kQHYvZ8LNHGw1pPuTnOTUn26yUY8TmgA0+BO2+cSvLY=";
+          pruneProd = true;
           meta = {
             description = "Pinned GNHF CLI; pick the backend with --agent";
             homepage = "https://github.com/kunchenguid/gnhf";
-            license = pkgs.lib.licenses.mit;
+            license = (pkgsFor system).lib.licenses.mit;
             mainProgram = "gnhf";
             platforms = [
               "aarch64-darwin"
