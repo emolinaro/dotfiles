@@ -45,8 +45,9 @@ nix build .#ci
 nix run ".#nono-runtime-test"
 ```
 
-`.#ci` gates both: `format` re-runs nixfmt/shfmt in check mode and
-`shell-lint` runs shellcheck over every script.
+`.#ci` builds every check for the current system, including `format`, which
+re-runs nixfmt/shfmt in check mode, and `shell-lint`, which runs shellcheck over
+every script.
 
 ## Supported systems
 
