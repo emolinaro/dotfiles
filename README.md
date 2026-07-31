@@ -152,6 +152,24 @@ implementation. Platform scripts can also be run directly when needed:
 Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
 shell. The rebuild restores it with sudo if it has been changed.
 
+## Check and reclaim disk space
+
+Run the managed disk-usage report from any directory:
+
+```sh
+disk-usage
+```
+
+It reports the space used by Nix, Homebrew, gstack, and related caches. If the
+Nix store is using too much space, delete old Nix generations with:
+
+```sh
+nix-collect-garbage -d
+```
+
+This permanently removes old generations, so you can no longer roll back to
+them.
+
 ## Update packages and agent workflows
 
 Nix records the exact revisions of package collections and external agent
