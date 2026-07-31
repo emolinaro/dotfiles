@@ -33,7 +33,7 @@ fi
 
 echo "==> Step 1: Ubuntu integration packages"
 sudo apt-get update
-sudo apt-get install -y \
+sudo apt-get install -y --no-install-recommends \
   ca-certificates curl docker.io xz-utils zsh \
   fonts-noto-color-emoji xvfb \
   libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
