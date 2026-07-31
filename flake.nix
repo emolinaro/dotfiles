@@ -258,25 +258,37 @@
           profiles = ./home/.config/nono/profiles;
           wrapperModule = ./runtime/nono-agent-wrappers.nix;
         };
+      # Shared Home Manager special arguments for both platforms; call sites
+      # pass only their per-platform deltas.
+      homeSpecialArgsFor =
+        system:
+        {
+          username,
+          homeDirectory,
+          herdrPackage,
+        }:
+        {
+          inherit username homeDirectory herdrPackage;
+          axiToolsPackage = axiToolsPackageFor system;
+          gnhfPackage = gnhfPackageFor system;
+          nonoPackage = nonoPackageFor system;
+          chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+          ghAxiSkill = "${ghAxi}/skills/gh-axi";
+          lavishSkill = "${lavish}/skills/lavish";
+          quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
+          superpowersSkill = "${superpowers}/skills";
+          tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
+          gstackRev = gstack.rev;
+          superpowersRev = superpowers.rev;
+        };
       mkUbuntuHome =
         system:
         home-manager.lib.homeManagerConfiguration {
           pkgs = pkgsFor system;
-          extraSpecialArgs = {
-            axiToolsPackage = axiToolsPackageFor system;
-            gnhfPackage = gnhfPackageFor system;
-            chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+          extraSpecialArgs = homeSpecialArgsFor system {
             username = ubuntuUsername;
             homeDirectory = ubuntuHomeDirectory;
             herdrPackage = herdr.packages.${system}.default;
-            nonoPackage = nonoPackageFor system;
-            ghAxiSkill = "${ghAxi}/skills/gh-axi";
-            lavishSkill = "${lavish}/skills/lavish";
-            quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
-            gstackRev = gstack.rev;
-            superpowersSkill = "${superpowers}/skills";
-            superpowersRev = superpowers.rev;
-            tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
           };
           modules = [
             ./home.nix
@@ -297,21 +309,10 @@
           ({ config, ... }: {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = {
-              axiToolsPackage = axiToolsPackageFor config.nixpkgs.hostPlatform.system;
-              gnhfPackage = gnhfPackageFor config.nixpkgs.hostPlatform.system;
-              chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+            home-manager.extraSpecialArgs = homeSpecialArgsFor config.nixpkgs.hostPlatform.system {
               username = darwinUsername;
               homeDirectory = darwinHomeDirectory;
               herdrPackage = null;
-              nonoPackage = nonoPackageFor config.nixpkgs.hostPlatform.system;
-              ghAxiSkill = "${ghAxi}/skills/gh-axi";
-              lavishSkill = "${lavish}/skills/lavish";
-              quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
-              gstackRev = gstack.rev;
-              superpowersSkill = "${superpowers}/skills";
-              superpowersRev = superpowers.rev;
-              tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
             };
             home-manager.users.${darwinUsername} = import ./home.nix;
           })
