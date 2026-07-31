@@ -272,6 +272,16 @@
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };
+          codex-linux =
+            if pkgs.stdenv.hostPlatform.isLinux then
+              pkgs.callPackage ./tests/codex-linux.nix {
+                codexPackage = pkgs.callPackage ./packages/codex.nix { };
+              }
+            else
+              pkgs.runCommand "codex-linux-not-linux" { } ''
+                touch "$out"
+              '';
+          codex-sandbox-setup = pkgs.callPackage ./tests/codex-sandbox-setup.nix { };
           gnhf-package = pkgs.callPackage ./tests/gnhf-package.nix {
             gnhfPackage = gnhfPackageFor system;
           };

@@ -123,10 +123,12 @@ under Nix control.
 
 The bootstrap supports x86_64 and ARM64, uses the current username and home
 directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
-systemd, and adds the current user to the `docker` group. Start a new login
-session after it completes so the shell and Docker group changes take effect,
-then authenticate Codex manually. Restart Codex after a rebuild so it discovers
-newly installed agent skills:
+systemd, and adds the current user to the `docker` group. It also installs the
+system Bubblewrap executable and loads Ubuntu's AppArmor profile so Codex can
+create its sandbox namespaces without weakening the host-wide user namespace
+restriction. Start a new login session after it completes so the shell and
+Docker group changes take effect, then authenticate Codex manually. Restart
+Codex after a rebuild so it discovers newly installed agent skills:
 
 ```sh
 codex login
@@ -148,8 +150,9 @@ implementation. Platform scripts can also be run directly when needed:
 ./scripts/ubuntu/rebuild.sh
 ```
 
-Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
-shell. The rebuild restores it with sudo if it has been changed.
+Both Ubuntu entry points verify the Codex Bubblewrap setup and that
+`/usr/bin/zsh` is the account's login shell. The rebuild repairs either with
+sudo when needed.
 
 ## Check and reclaim disk space
 

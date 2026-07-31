@@ -28,6 +28,7 @@ let
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
   aicPackage = pkgs.callPackage ./packages/aic.nix { };
+  codexPackage = pkgs.callPackage ./packages/codex.nix { };
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
@@ -44,7 +45,7 @@ let
     };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
-    codex = pkgs.codex;
+    codex = codexPackage;
     opencode = pkgs.opencode;
     pi = pkgs.pi-coding-agent;
   };
