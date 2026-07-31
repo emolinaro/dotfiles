@@ -6,6 +6,10 @@ home/.config/herdr/.plugins.lock
 
 # Superpowers workflow artifacts
 docs/superpowers/
+.superpowers/
+
+# GNHF unattended-run artifacts
+.gnhf/
 
 # Lavish review artifacts
 .lavish/
