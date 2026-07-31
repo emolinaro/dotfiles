@@ -85,6 +85,7 @@ writeShellApplication {
           printf '%s\n' "Could not create temporary commit-message file" >&2
           exit 1
         }
+        trap 'rm -f -- "$message_file"' EXIT
 
         codex_args=(
           exec
@@ -119,23 +120,14 @@ writeShellApplication {
     Group related changes conceptually instead of merely listing filenames.
     Do not invent motivations or claim that tests passed.
     Do not modify any files.
-    ' >/dev/null 2>&1 || {
-          status=$?
-          rm -f "$message_file"
-          exit "$status"
-        }
+    ' >/dev/null 2>&1
 
         if [[ ! -s "$message_file" ]]; then
           printf '%s\n' "Codex generated an empty commit message" >&2
-          rm -f "$message_file"
           exit 1
         fi
 
         # Open the generated message and staged diff in the Git editor.
         git commit --verbose --edit --file="$message_file"
-        status=$?
-
-        rm -f "$message_file"
-        exit "$status"
   '';
 }
