@@ -93,84 +93,84 @@ let
     };
 
   fakeNono = pkgs.writeShellScriptBin "nono" ''
-      : "''${WRAPPER_TEST_NONO_TRACE:?WRAPPER_TEST_NONO_TRACE must name a trace file}"
-      : "''${WRAPPER_TEST_CONFIGURED_HOME:?WRAPPER_TEST_CONFIGURED_HOME must name the test home}"
-      if [[ -n "''${BASH_ENV:-}" || -n "''${LD_PRELOAD:-}" \
-        || -n "''${NONO_ALLOW:-}" || -n "''${NONO_PROFILE:-}" ]]; then
-        echo "ambient loader, Git, or Nono variable reached Nono" >&2
-        exit 1
-      fi
-      if [[ "''${DOTFILES_AGENT_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.cache/nono/session.*/home \
-        || "''${HOME:-}" != "$DOTFILES_AGENT_HOME" \
-        || "''${DOTFILES_HOST_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME" \
-        || "''${DOTFILES_WORKTREE_ROOT:-}" != "$(${pkgs.git}/bin/git rev-parse --show-toplevel)" \
-        || "''${GIT_DIR:-}" != "$DOTFILES_AGENT_HOME/.run/git" \
-        || "''${GIT_WORK_TREE:-}" != "$DOTFILES_WORKTREE_ROOT" \
-        || "''${XDG_STATE_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.nono-s/* \
-        || "''${TMPDIR:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.cache/nono/session.*/tmp \
-        || -n "''${TMP:-}" || -n "''${TEMP:-}" ]]; then
-        echo "Nono did not receive isolated session paths" >&2
-        exit 1
-      fi
-      if [[ "''${XDG_CONFIG_HOME:-}" != "$DOTFILES_AGENT_HOME/.config" ]]; then
-        echo "Nono config is not session-local: ''${XDG_CONFIG_HOME:-<unset>}" >&2
-        exit 1
-      fi
-      if [[ ! -L "$DOTFILES_AGENT_HOME/.agents" \
-        || ! -f "$DOTFILES_AGENT_HOME/.config/git/config" \
-        || -L "$DOTFILES_AGENT_HOME/.config/git/config" \
-        || ! -d "$DOTFILES_AGENT_HOME/.gstack" ]]; then
-        echo "shared session state was not staged" >&2
-        exit 1
-      fi
+    : "''${WRAPPER_TEST_NONO_TRACE:?WRAPPER_TEST_NONO_TRACE must name a trace file}"
+    : "''${WRAPPER_TEST_CONFIGURED_HOME:?WRAPPER_TEST_CONFIGURED_HOME must name the test home}"
+    if [[ -n "''${BASH_ENV:-}" || -n "''${LD_PRELOAD:-}" \
+      || -n "''${NONO_ALLOW:-}" || -n "''${NONO_PROFILE:-}" ]]; then
+      echo "ambient loader, Git, or Nono variable reached Nono" >&2
+      exit 1
+    fi
+    if [[ "''${DOTFILES_AGENT_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.cache/nono/session.*/home \
+      || "''${HOME:-}" != "$DOTFILES_AGENT_HOME" \
+      || "''${DOTFILES_HOST_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME" \
+      || "''${DOTFILES_WORKTREE_ROOT:-}" != "$(${pkgs.git}/bin/git rev-parse --show-toplevel)" \
+      || "''${GIT_DIR:-}" != "$DOTFILES_AGENT_HOME/.run/git" \
+      || "''${GIT_WORK_TREE:-}" != "$DOTFILES_WORKTREE_ROOT" \
+      || "''${XDG_STATE_HOME:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.nono-s/* \
+      || "''${TMPDIR:-}" != "$WRAPPER_TEST_CONFIGURED_HOME"/.cache/nono/session.*/tmp \
+      || -n "''${TMP:-}" || -n "''${TEMP:-}" ]]; then
+      echo "Nono did not receive isolated session paths" >&2
+      exit 1
+    fi
+    if [[ "''${XDG_CONFIG_HOME:-}" != "$DOTFILES_AGENT_HOME/.config" ]]; then
+      echo "Nono config is not session-local: ''${XDG_CONFIG_HOME:-<unset>}" >&2
+      exit 1
+    fi
+    if [[ ! -L "$DOTFILES_AGENT_HOME/.agents" \
+      || ! -f "$DOTFILES_AGENT_HOME/.config/git/config" \
+      || -L "$DOTFILES_AGENT_HOME/.config/git/config" \
+      || ! -d "$DOTFILES_AGENT_HOME/.gstack" ]]; then
+      echo "shared session state was not staged" >&2
+      exit 1
+    fi
 
-      arguments=("$@")
-      command_index=-1
-      profile=
-      for ((index = 0; index < ''${#arguments[@]}; index++)); do
-        if [[ "''${arguments[$index]}" == "--profile" ]]; then
-          profile="''${arguments[$((index + 1))]}"
-        elif [[ "''${arguments[$index]}" == "--" ]]; then
-          command_index=$((index + 1))
-          break
-        fi
-      done
-      [[ "$command_index" -ge 0 ]]
+    arguments=("$@")
+    command_index=-1
+    profile=
+    for ((index = 0; index < ''${#arguments[@]}; index++)); do
+      if [[ "''${arguments[$index]}" == "--profile" ]]; then
+        profile="''${arguments[$((index + 1))]}"
+      elif [[ "''${arguments[$index]}" == "--" ]]; then
+        command_index=$((index + 1))
+        break
+      fi
+    done
+    [[ "$command_index" -ge 0 ]]
 
-      case "$profile" in
-        *dotfiles-claude.json)
-          test -d "$DOTFILES_AGENT_HOME/.cache/claude"
-          test -d "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs"
-          test -d "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
-          test -L "$DOTFILES_AGENT_HOME/.claude.json"
-          test -f "$DOTFILES_AGENT_HOME/.claude.json"
-          ;;
-        *dotfiles-codex.json)
-          test -d "$DOTFILES_AGENT_HOME/.codex"
-          test -d "$DOTFILES_AGENT_HOME/.lavish-axi"
-          ;;
-        *dotfiles-opencode.json)
-          test -d "$DOTFILES_AGENT_HOME/.opencode"
-          test -d "$DOTFILES_AGENT_HOME/.config/opencode"
-          test -d "$DOTFILES_AGENT_HOME/.cache/opencode"
-          test -d "$DOTFILES_AGENT_HOME/.local/share/opencode"
-          test -d "$DOTFILES_AGENT_HOME/.local/share/opentui"
-          test -d "$DOTFILES_AGENT_HOME/.npm"
-          test -d "$DOTFILES_AGENT_HOME/.local/state/opencode"
-          ;;
-        *dotfiles-pi.json)
-          test -d "$DOTFILES_AGENT_HOME/.pi"
-          test "$(command -v fd)" = "${pkgs.fd}/bin/fd"
-          ;;
-        *)
-          exit 1
-          ;;
-      esac
-      test -d "$DOTFILES_AGENT_HOME/.cache/axi-tools"
+    case "$profile" in
+      *dotfiles-claude.json)
+        test -d "$DOTFILES_AGENT_HOME/.cache/claude"
+        test -d "$DOTFILES_AGENT_HOME/.cache/claude-cli-nodejs"
+        test -d "$DOTFILES_AGENT_HOME/.local/state/claude/locks"
+        test -L "$DOTFILES_AGENT_HOME/.claude.json"
+        test -f "$DOTFILES_AGENT_HOME/.claude.json"
+        ;;
+      *dotfiles-codex.json)
+        test -d "$DOTFILES_AGENT_HOME/.codex"
+        test -d "$DOTFILES_AGENT_HOME/.lavish-axi"
+        ;;
+      *dotfiles-opencode.json)
+        test -d "$DOTFILES_AGENT_HOME/.opencode"
+        test -d "$DOTFILES_AGENT_HOME/.config/opencode"
+        test -d "$DOTFILES_AGENT_HOME/.cache/opencode"
+        test -d "$DOTFILES_AGENT_HOME/.local/share/opencode"
+        test -d "$DOTFILES_AGENT_HOME/.local/share/opentui"
+        test -d "$DOTFILES_AGENT_HOME/.npm"
+        test -d "$DOTFILES_AGENT_HOME/.local/state/opencode"
+        ;;
+      *dotfiles-pi.json)
+        test -d "$DOTFILES_AGENT_HOME/.pi"
+        test "$(command -v fd)" = "${pkgs.fd}/bin/fd"
+        ;;
+      *)
+        exit 1
+        ;;
+    esac
+    test -d "$DOTFILES_AGENT_HOME/.cache/axi-tools"
 
-      printf '%s\n' "$@" > "$WRAPPER_TEST_NONO_TRACE"
-      "''${arguments[@]:$command_index}"
-    '';
+    printf '%s\n' "$@" > "$WRAPPER_TEST_NONO_TRACE"
+    "''${arguments[@]:$command_index}"
+  '';
   fakeHomeGit = pkgs.writeShellApplication {
     name = "git";
     text = ''
