@@ -26,16 +26,20 @@ configure_codex_sandbox() {
   shift 3
   local -a privileged_command=("$@")
 
-  if codex_bwrap_has_user_namespace_access "$bwrap_path"; then
-    return 0
-  fi
   if [[ ! -x "$bwrap_path" || ! -r "$profile_source" ]]; then
     echo "Error: bubblewrap and its AppArmor profile must be installed before configuring the Codex sandbox." >&2
     return 69
   fi
+  if [[ -r "$profile_target" ]] &&
+    cmp -s -- "$profile_source" "$profile_target" &&
+    codex_bwrap_has_user_namespace_access "$bwrap_path"; then
+    return 0
+  fi
 
   echo "==> Configuring the Codex bubblewrap sandbox"
-  "${privileged_command[@]}" install -m 0644 -- "$profile_source" "$profile_target"
+  if [[ ! -r "$profile_target" ]] || ! cmp -s -- "$profile_source" "$profile_target"; then
+    "${privileged_command[@]}" install -m 0644 -- "$profile_source" "$profile_target"
+  fi
   "${privileged_command[@]}" apparmor_parser -r "$profile_target"
 
   if ! codex_bwrap_has_user_namespace_access "$bwrap_path"; then
@@ -56,9 +60,6 @@ ensure_codex_sandbox() {
   shift 3
   local -a privileged_command=("$@")
 
-  if codex_bwrap_has_user_namespace_access "$bwrap_path"; then
-    return 0
-  fi
   if [[ ! -x "$bwrap_path" || ! -r "$profile_source" ]]; then
     "${privileged_command[@]}" apt-get update
     "${privileged_command[@]}" apt-get install -y --no-install-recommends \
