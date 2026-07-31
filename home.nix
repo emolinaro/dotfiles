@@ -27,6 +27,7 @@ let
   gstackCheckoutMigration = pkgs.callPackage ./runtime/gstack-checkout-migration.nix { };
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
+  aicPackage = pkgs.callPackage ./packages/aic.nix { };
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
@@ -76,6 +77,7 @@ in
       bash-language-server
       btop
       bun
+      aicPackage
       axiToolsPackage
       coreutils # gstack uses gtimeout to bound nested Codex calls
       delta
@@ -196,137 +198,6 @@ in
       [[ -n "$terminfo[kpp]"    ]] && bindkey "$terminfo[kpp]"    history-beginning-search-backward
       [[ -n "$terminfo[knp]"    ]] && bindkey "$terminfo[knp]"    history-beginning-search-forward
 
-      aic() {
-        local -a excludes
-        local model="''${AIC_MODEL:-}"
-
-        while (( $# > 0 )); do
-          case "$1" in
-            -h|--help)
-              cat <<'EOF'
-Usage: aic [options]
-       aic -h | --help
-
-Stage all changes, generate a commit message with Codex, then open
-the Git editor to review and commit.
-
-Options:
-  -m, --model NAME    Codex model for this run (overrides AIC_MODEL)
-  --exclude path ...  Stage everything, then unstage these paths
-  -h, --help          Show this help
-
-Environment:
-  AIC_MODEL           Default Codex model when -m/--model is omitted
-
-Examples:
-  aic
-  aic --exclude README.md
-  aic -m gpt-5.6-luna
-  AIC_MODEL=gpt-5.6-luna aic --exclude secrets.env
-EOF
-              return 0
-              ;;
-            -m|--model)
-              if [[ -z "''${2:-}" ]]; then
-                print -u2 "aic: $1 requires a model name"
-                return 1
-              fi
-              model="$2"
-              shift 2
-              ;;
-            --exclude)
-              shift
-              if (( $# == 0 )); then
-                print -u2 "aic: --exclude requires at least one path"
-                return 1
-              fi
-              excludes=("$@")
-              break
-              ;;
-            *)
-              print -u2 "aic: unknown argument: $1"
-              print -u2 "Try 'aic --help' for usage."
-              return 1
-              ;;
-          esac
-        done
-
-        git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
-          print -u2 "Error: not inside a Git repository"
-          return 1
-        }
-
-        # Stage new, modified and deleted files.
-        git add -A || return 1
-
-        if (( ''${#excludes} > 0 )); then
-          git restore --staged -- "''${excludes[@]}" || return 1
-        fi
-
-        if git diff --cached --quiet; then
-          print "Nothing to commit"
-          return 0
-        fi
-
-        local message_file
-        message_file="$(mktemp "''${TMPDIR:-/tmp}/codex-commit.XXXXXX")" || {
-          print -u2 "Could not create temporary commit-message file"
-          return 1
-        }
-
-        local -a codex_args=(
-          exec
-          --ephemeral
-          --sandbox read-only
-          --output-last-message "$message_file"
-        )
-        if [[ -n "$model" ]]; then
-          codex_args+=(-m "$model")
-        fi
-
-        codex "''${codex_args[@]}" \
-          '
-Inspect the staged Git changes by running:
-
-    git diff --cached --stat
-    git diff --cached
-
-Produce only a Git commit message. Do not include commentary,
-Markdown fences, headings such as "Commit message", or analysis.
-
-Use this format:
-
-1. An imperative subject line of at most 72 characters.
-2. A blank line.
-3. Two to six concise bullet points explaining in plain English:
-   - what changed;
-   - how behaviour or workflow is affected;
-   - important implementation or configuration details;
-   - why the change matters, but only when evident from the diff.
-
-Group related changes conceptually instead of merely listing filenames.
-Do not invent motivations or claim that tests passed.
-Do not modify any files.
-' >/dev/null 2>&1 || {
-          local status=$?
-          rm -f "$message_file"
-          return "$status"
-        }
-
-        if [[ ! -s "$message_file" ]]; then
-          print -u2 "Codex generated an empty commit message"
-          rm -f "$message_file"
-          return 1
-        fi
-
-        # Open the generated message and staged diff in the Git editor.
-        # Do not redirect stdout here — git skips the editor when stdout is not a TTY.
-        git commit --verbose --edit --file="$message_file"
-        local status=$?
-
-        rm -f "$message_file"
-        return "$status"
-      }
     '';
     shellAliases = {
       ".." = "cd ..";
