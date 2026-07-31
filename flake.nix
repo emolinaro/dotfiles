@@ -367,7 +367,7 @@
           nonoPackage = nonoPackageFor system;
           profiles = ./home/.config/nono/profiles;
         };
-        nono-runtime-driver = nonoRuntimeTestFor system;
+        nono-runtime-test = nonoRuntimeTestFor system;
       });
     };
 }
