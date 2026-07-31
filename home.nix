@@ -33,6 +33,12 @@ let
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
+  # macOS GUI apps discover fonts through CoreText, not the Nix profile path.
+  # Keep the Hack Nerd Font family linked into ~/Library/Fonts so WezTerm sees it after reboot.
+  hackFontEntry = variant: lib.mkIf (!isLinux) {
+    force = true;
+    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-${variant}.ttf";
+  };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
     codex = pkgs.codex;
@@ -647,24 +653,10 @@ Do not modify any files.
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   };
-  # macOS GUI apps discover fonts through CoreText, not the Nix profile path.
-  # Keep the Hack Nerd Font family linked into ~/Library/Fonts so WezTerm sees it after reboot.
-  home.file."Library/Fonts/HackNerdFont-Regular.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Regular.ttf";
-  };
-  home.file."Library/Fonts/HackNerdFont-Bold.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Bold.ttf";
-  };
-  home.file."Library/Fonts/HackNerdFont-Italic.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Italic.ttf";
-  };
-  home.file."Library/Fonts/HackNerdFont-BoldItalic.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-BoldItalic.ttf";
-  };
+  home.file."Library/Fonts/HackNerdFont-Regular.ttf" = hackFontEntry "Regular";
+  home.file."Library/Fonts/HackNerdFont-Bold.ttf" = hackFontEntry "Bold";
+  home.file."Library/Fonts/HackNerdFont-Italic.ttf" = hackFontEntry "Italic";
+  home.file."Library/Fonts/HackNerdFont-BoldItalic.ttf" = hackFontEntry "BoldItalic";
   home.file.".config/tmux" = {
     force = true;
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/tmux";
