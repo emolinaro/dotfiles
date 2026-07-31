@@ -4,9 +4,17 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # shellcheck source=scripts/lib-detect.sh
 . "$DIR/scripts/lib-detect.sh"
+# shellcheck source=scripts/lib-codex-sandbox.sh
+. "$DIR/scripts/lib-codex-sandbox.sh"
 
 require_ubuntu_2404
 HOME_TARGET="$(home_target_for_arch)"
+
+ensure_codex_sandbox \
+  /usr/bin/bwrap \
+  /usr/share/apparmor/extra-profiles/bwrap-userns-restrict \
+  /etc/apparmor.d/bwrap-userns-restrict \
+  sudo
 
 ln -sfn "$DIR" "$HOME/.dotfiles"
 export DOTFILES_USERNAME="${USER:-$(id -un)}"
