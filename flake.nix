@@ -412,8 +412,18 @@
           # git ls-files keeps the formatter on tracked files only, matching
           # the format check's fileset view.
           text = ''
-            git ls-files -z '*.nix' | xargs -0 -r nixfmt
-            git ls-files -z '*.sh' | xargs -0 -r shfmt -w -i 2 -ci
+            existing_tracked_files() {
+              local path
+              git ls-files -z "$1" |
+                while IFS= read -r -d $'\0' path; do
+                  if [[ -e "$path" ]]; then
+                    printf '%s\0' "$path"
+                  fi
+                done
+            }
+
+            existing_tracked_files '*.nix' | xargs -0 -r nixfmt --
+            existing_tracked_files '*.sh' | xargs -0 -r shfmt -w -i 2 -ci --
           '';
         }
       );

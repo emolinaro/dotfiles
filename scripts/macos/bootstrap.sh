@@ -29,8 +29,8 @@ echo "==> Step 3: first darwin-rebuild switch (pinned to flake.lock)"
 # freshly installed `nix` would not be found under sudo even though it's
 # on PATH here. Resolve the absolute path first and invoke that instead.
 NIX_BIN="$(command -v nix)"
-DARWIN_REV="$("$NIX_BIN" eval --impure --raw --expr \
-  "(builtins.fromJSON (builtins.readFile $DIR/flake.lock)).nodes.\"nix-darwin\".locked.rev")"
+DARWIN_REV="$(DOTFILES_LOCK_FILE="$DIR/flake.lock" "$NIX_BIN" eval --impure --raw --expr \
+  '(builtins.fromJSON (builtins.readFile (builtins.getEnv "DOTFILES_LOCK_FILE"))).nodes."nix-darwin".locked.rev')"
 # "mac" is the flake host label - if you renamed it, change it in flake.nix
 # and rebuild.sh too.
 sudo "$NIX_BIN" run "github:nix-darwin/nix-darwin/$DARWIN_REV#darwin-rebuild" -- \
