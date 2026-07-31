@@ -46,7 +46,7 @@ nix build \
   ".#checks.$system.gnhf-package" \
   ".#checks.$system.nono-home-command-surface" \
   ".#checks.$system.nono-profiles" \
-  ".#checks.$system.nono-runtime-driver"
+  ".#checks.$system.nono-runtime-test"
 nix run ".#nono-runtime-test"
 ```
 
@@ -80,7 +80,7 @@ Before you run it: open the config files and change the values listed in "Make i
 2. Symlinks this repo to `~/.dotfiles`.
    This has to happen before the first build, because `home.nix` points at config files through `~/.dotfiles`.
 3. Runs the first `darwin-rebuild switch`.
-   It fetches the `darwin-rebuild` tool from the nix-darwin 26.05 release branch, then applies this repo's locked flake config.
+   It fetches the `darwin-rebuild` tool at the exact nix-darwin revision pinned in `flake.lock`, then applies this repo's locked flake config.
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
