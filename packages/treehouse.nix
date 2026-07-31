@@ -30,8 +30,9 @@ let
       hash = "sha256-L+PgEiCuUalnw+W6bM8Q7IO9uujkIDaNGUKFqNBMnvg=";
     };
   };
-  release = releases.${stdenvNoCC.hostPlatform.system}
-    or (throw "treehouse is unsupported on ${stdenvNoCC.hostPlatform.system}");
+  release =
+    releases.${stdenvNoCC.hostPlatform.system}
+      or (throw "treehouse is unsupported on ${stdenvNoCC.hostPlatform.system}");
 in
 stdenvNoCC.mkDerivation {
   pname = "treehouse";

@@ -237,8 +237,38 @@
         system:
         let
           pkgs = pkgsFor system;
+          lintSrc =
+            let
+              fs = pkgs.lib.fileset;
+            in
+            fs.toSource {
+              root = ./.;
+              fileset = fs.unions [
+                (fs.fileFilter (file: file.hasExt "nix") ./.)
+                (fs.fileFilter (file: file.hasExt "sh") ./.)
+              ];
+            };
         in
         {
+          format =
+            pkgs.runCommand "format-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.nixfmt
+                  pkgs.shfmt
+                ];
+              }
+              ''
+                cd ${lintSrc}
+                find . -name '*.nix' -print0 | xargs -0 nixfmt --check
+                find . -name '*.sh' -print0 | xargs -0 shfmt -i 2 -ci -d
+                touch "$out"
+              '';
+          shell-lint = pkgs.runCommand "shell-lint-check" { nativeBuildInputs = [ pkgs.shellcheck ]; } ''
+            cd ${lintSrc}
+            find . -name '*.sh' -print0 | xargs -0 shellcheck -x
+            touch "$out"
+          '';
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };
@@ -364,5 +394,28 @@
         };
       });
       checks = forAllSystems checksForSystem;
+
+      # Combined formatter: Nix via nixfmt (RFC style), shell via shfmt.
+      formatter = forAllSystems (
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        pkgs.writeShellApplication {
+          name = "fmt-tree";
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.git
+            pkgs.nixfmt
+            pkgs.shfmt
+          ];
+          # git ls-files keeps the formatter on tracked files only, matching
+          # the format check's fileset view.
+          text = ''
+            git ls-files -z '*.nix' | xargs -0 -r nixfmt
+            git ls-files -z '*.sh' | xargs -0 -r shfmt -w -i 2 -ci
+          '';
+        }
+      );
     };
 }
