@@ -154,10 +154,11 @@ shell. The rebuild restores it with sudo if it has been changed.
 
 ## Check and reclaim disk space
 
-Run the managed disk-usage report from any directory:
+Run the managed disk-usage report from the dotfiles checkout:
 
 ```sh
-disk-usage
+cd ~/.dotfiles
+./disk-usage.sh
 ```
 
 It reports the space used by Nix, Homebrew, gstack, and related caches. If the

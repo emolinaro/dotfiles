@@ -150,8 +150,6 @@ in
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
     HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
   };
-  home.sessionPath = [ "${config.home.homeDirectory}/.local/bin" ];
-
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true; # ghost text from history
@@ -581,8 +579,6 @@ Do not modify any files.
   };
 
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
-  home.file.".local/bin/disk-usage".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/scripts/disk-usage.sh";
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".zprofile" = lib.mkIf (!isLinux) {
