@@ -4,27 +4,11 @@
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+# shellcheck source=scripts/lib-detect.sh
+. "$DIR/scripts/lib-detect.sh"
 
-if [[ ! -r /etc/os-release ]]; then
-  echo "Error: /etc/os-release is missing; Ubuntu 24.04 is required." >&2
-  exit 1
-fi
-
-# shellcheck disable=SC1091
-. /etc/os-release
-if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "24.04" ]]; then
-  echo "Error: Ubuntu 24.04 is required; found ${PRETTY_NAME:-unknown OS}." >&2
-  exit 1
-fi
-
-case "$(uname -m)" in
-  x86_64) HOME_TARGET="ubuntu-x86_64" ;;
-  aarch64|arm64) HOME_TARGET="ubuntu-aarch64" ;;
-  *)
-    echo "Error: unsupported architecture $(uname -m); expected x86_64 or aarch64." >&2
-    exit 1
-    ;;
-esac
+require_ubuntu_2404
+HOME_TARGET="$(home_target_for_arch)"
 
 if [[ "$(id -u)" -eq 0 ]]; then
   echo "Error: run this script as the target user, not as root." >&2
@@ -33,7 +17,7 @@ fi
 
 echo "==> Step 1: Ubuntu integration packages"
 sudo apt-get update
-sudo apt-get install -y \
+sudo apt-get install -y --no-install-recommends \
   ca-certificates curl docker.io xz-utils zsh \
   fonts-noto-color-emoji xvfb \
   libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
@@ -45,8 +29,8 @@ echo "==> Step 2: Determinate Nix"
 if command -v nix >/dev/null 2>&1; then
   echo "    nix already installed, skipping"
 else
-  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
-    | sh -s -- install --no-confirm
+  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix |
+    sh -s -- install --no-confirm
   # shellcheck disable=SC1091
   . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 fi

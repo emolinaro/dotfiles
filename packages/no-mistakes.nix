@@ -1,4 +1,8 @@
-{ fetchurl, lib, stdenvNoCC }:
+{
+  fetchurl,
+  lib,
+  stdenvNoCC,
+}:
 
 let
   version = "1.41.2";
@@ -24,8 +28,9 @@ let
       hash = "sha256-oQDFi9/n359Zjs7DJVPV+9jrAHmRL8gw82IBH9nciCU=";
     };
   };
-  release = releases.${stdenvNoCC.hostPlatform.system}
-    or (throw "no-mistakes is unsupported on ${stdenvNoCC.hostPlatform.system}");
+  release =
+    releases.${stdenvNoCC.hostPlatform.system}
+      or (throw "no-mistakes is unsupported on ${stdenvNoCC.hostPlatform.system}");
 in
 stdenvNoCC.mkDerivation {
   pname = "no-mistakes";
