@@ -122,8 +122,10 @@ the correct archive for each supported architecture. Update checks remain
 under Nix control.
 
 The bootstrap supports x86_64 and ARM64, uses the current username and home
-directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
-systemd, and adds the current user to the `docker` group. Start a new login
+directory, relaxes Ubuntu's default AppArmor restriction on unprivileged user
+namespaces (required by Codex's bubblewrap sandbox), changes the login shell to
+`/usr/bin/zsh`, enables Docker through systemd, and adds the current user to
+the `docker` group. Start a new login
 session after it completes so the shell and Docker group changes take effect,
 then authenticate Codex manually. Restart Codex after a rebuild so it discovers
 newly installed agent skills:
