@@ -180,19 +180,23 @@ workflows in `flake.lock`. Update every input from the repository root with:
 nix flake update
 ```
 
-Update one or more named inputs without changing the others by listing them:
+Update one or more named inputs without changing the others by listing them
+in a single command:
 
 ```sh
-nix flake update lavish
-nix flake update chromeDevtoolsAxi
-nix flake update ghAxi
-nix flake update quotaAxi
-nix flake update tasksAxi
-nix flake update gnhf
-nix flake update gstack
-nix flake update superpowers
-nix flake update nixpkgs nixpkgs-linux
+nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack superpowers
 ```
+
+Every input updates independently:
+
+| Input | Contents |
+| --- | --- |
+| `nixpkgs` | Package collection for macOS |
+| `nixpkgs-linux` | Package collection for both Ubuntu targets |
+| `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
+| `gnhf` | GNHF CLI source |
+| `gstack`, `superpowers` | Agent workflow skills |
+| `herdr`, `home-manager`, `nix-darwin`, `nix-homebrew` | Platform tooling and Nix modules |
 
 The first rebuild after this layout change moves only the managed gstack
 checkout from `~/.gstack/repos/gstack` to
@@ -202,13 +206,9 @@ move, and recovery is a direct move back to the original path before the next
 rebuild.
 
 Most Nix packages come from a shared Nixpkgs input, so an individual package
-such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
-the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `gnhf`, `lavish`,
-`quotaAxi`, `tasksAxi`, `gstack`, `superpowers`, `herdr`, `home-manager`, and
-`nix-darwin` can be updated independently. Precompiled release packages are
-versioned in `packages/`; source-built Axi Tools and GNHF also pin
-`pnpmDepsHash` in `flake.nix`, which may need refreshing after an input
+such as `kubectl` cannot be updated independently. Precompiled release
+packages are versioned in `packages/`; source-built Axi Tools and GNHF also
+pin `pnpmDepsHash` in `flake.nix`, which may need refreshing after an input
 update if dependencies changed.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
