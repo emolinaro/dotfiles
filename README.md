@@ -37,11 +37,16 @@ gnhf --agent opencode "your objective"
 - Validation:
 
 ```sh
+nix fmt  # Nix (nixfmt, RFC style) plus shell (shfmt -i 2 -ci)
+
 nix flake check --all-systems --impure --no-build
 
 nix build .#ci
 nix run ".#nono-runtime-test"
 ```
+
+`.#ci` gates both: `format` re-runs nixfmt/shfmt in check mode and
+`shell-lint` runs shellcheck over every script.
 
 ## Supported systems
 

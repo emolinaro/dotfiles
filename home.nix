@@ -36,10 +36,12 @@ let
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
   # macOS GUI apps discover fonts through CoreText, not the Nix profile path.
   # Keep the Hack Nerd Font family linked into ~/Library/Fonts so WezTerm sees it after reboot.
-  hackFontEntry = variant: lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-${variant}.ttf";
-  };
+  hackFontEntry =
+    variant:
+    lib.mkIf (!isLinux) {
+      force = true;
+      source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-${variant}.ttf";
+    };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
     codex = pkgs.codex;
