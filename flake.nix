@@ -232,6 +232,59 @@
           profiles = ./home/.config/nono/profiles;
           wrapperModule = ./runtime/nono-agent-wrappers.nix;
         };
+
+      checksForSystem =
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        {
+          axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
+            axiToolsPackage = axiToolsPackageFor system;
+          };
+          gnhf-package = pkgs.callPackage ./tests/gnhf-package.nix {
+            gnhfPackage = gnhfPackageFor system;
+          };
+          gstack-checkout-migration = pkgs.callPackage ./tests/gstack-checkout-migration.nix {
+            migrationPackage = pkgs.callPackage ./runtime/gstack-checkout-migration.nix { };
+          };
+          nono-package = pkgs.callPackage ./tests/nono-package.nix {
+            nonoPackage = nonoPackageFor system;
+          };
+          nono-agent-wrappers = pkgs.callPackage ./tests/nono-agent-wrappers.nix {
+            inherit agentRegistry;
+            profiles = ./home/.config/nono/profiles;
+            wrapperModule = ./runtime/nono-agent-wrappers.nix;
+          };
+          nono-home-command-surface =
+            if pkgs.stdenv.hostPlatform.isLinux then
+              pkgs.callPackage ./tests/nono-home-command-surface.nix {
+                inherit agentRegistry;
+                homePath = (mkUbuntuHome system).config.home.path;
+              }
+            else
+              pkgs.runCommand "nono-home-command-surface-not-linux" { } ''
+                touch "$out"
+              '';
+          nono-profiles = pkgs.callPackage ./tests/nono-profiles.nix {
+            inherit agentRegistry;
+            nonoPackage = nonoPackageFor system;
+            profiles = ./home/.config/nono/profiles;
+          };
+          nono-runtime-test = nonoRuntimeTestFor system;
+        };
+
+      # One-command validation entry point: `nix build .#ci` builds every
+      # check without duplicating their names at the call site.
+      ciFor =
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        # linkFarmFromDrvs links the derivations themselves rather than
+        # merging their stores, so file-output checks do not collide.
+        pkgs.linkFarmFromDrvs "ci" (pkgs.lib.attrValues (checksForSystem system));
+
       # Shared Home Manager special arguments for both platforms; call sites
       # pass only their per-platform deltas.
       homeSpecialArgsFor =
@@ -297,6 +350,7 @@
         ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
       };
       packages = forAllSystems (system: {
+        ci = ciFor system;
         axi-tools = axiToolsPackageFor system;
         gnhf = gnhfPackageFor system;
         nono = nonoPackageFor system;
@@ -309,40 +363,6 @@
           program = "${nonoRuntimeTestFor system}/bin/nono-runtime-test";
         };
       });
-      checks = forAllSystems (system: {
-        axi-tools = (pkgsFor system).callPackage ./tests/axi-tools.nix {
-          axiToolsPackage = axiToolsPackageFor system;
-        };
-        gnhf-package = (pkgsFor system).callPackage ./tests/gnhf-package.nix {
-          gnhfPackage = gnhfPackageFor system;
-        };
-        gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
-          migrationPackage = (pkgsFor system).callPackage ./runtime/gstack-checkout-migration.nix { };
-        };
-        nono-package = (pkgsFor system).callPackage ./tests/nono-package.nix {
-          nonoPackage = nonoPackageFor system;
-        };
-        nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
-          inherit agentRegistry;
-          profiles = ./home/.config/nono/profiles;
-          wrapperModule = ./runtime/nono-agent-wrappers.nix;
-        };
-        nono-home-command-surface =
-          if (pkgsFor system).stdenv.hostPlatform.isLinux then
-            (pkgsFor system).callPackage ./tests/nono-home-command-surface.nix {
-              inherit agentRegistry;
-              homePath = (mkUbuntuHome system).config.home.path;
-            }
-          else
-            (pkgsFor system).runCommand "nono-home-command-surface-not-linux" { } ''
-              touch "$out"
-            '';
-        nono-profiles = (pkgsFor system).callPackage ./tests/nono-profiles.nix {
-          inherit agentRegistry;
-          nonoPackage = nonoPackageFor system;
-          profiles = ./home/.config/nono/profiles;
-        };
-        nono-runtime-test = nonoRuntimeTestFor system;
-      });
+      checks = forAllSystems checksForSystem;
     };
 }

@@ -39,14 +39,7 @@ gnhf --agent opencode "your objective"
 ```sh
 nix flake check --all-systems --impure --no-build
 
-system="$(nix eval --impure --raw --expr builtins.currentSystem)"
-nix build \
-  ".#checks.$system.nono-package" \
-  ".#checks.$system.nono-agent-wrappers" \
-  ".#checks.$system.gnhf-package" \
-  ".#checks.$system.nono-home-command-surface" \
-  ".#checks.$system.nono-profiles" \
-  ".#checks.$system.nono-runtime-test"
+nix build .#ci
 nix run ".#nono-runtime-test"
 ```
 
