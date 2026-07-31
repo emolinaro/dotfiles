@@ -274,9 +274,7 @@
           };
           codex-linux =
             if pkgs.stdenv.hostPlatform.isLinux then
-              pkgs.callPackage ./tests/codex-linux.nix {
-                codexPackage = pkgs.callPackage ./packages/codex.nix { };
-              }
+              pkgs.callPackage ./tests/codex-linux.nix { }
             else
               pkgs.runCommand "codex-linux-not-linux" { } ''
                 touch "$out"

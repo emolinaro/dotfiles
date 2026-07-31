@@ -17,6 +17,10 @@ let
       test -e "$CODEX_APPARMOR_PROFILE_LOADED"
     '';
   };
+  runtimeAllowedBwrap = pkgs.writeShellApplication {
+    name = "bwrap";
+    text = "true";
+  };
   profile = pkgs.writeText "bwrap-userns-restrict" "test AppArmor profile\n";
   sudo = pkgs.writeShellApplication {
     name = "sudo";
@@ -63,6 +67,15 @@ pkgs.runCommand "codex-sandbox-setup-test"
 
     cmp "${profile}" "$CODEX_APPARMOR_PROFILE_TARGET"
     test -e "$CODEX_APPARMOR_PROFILE_LOADED"
+
+    export CODEX_APPARMOR_PROFILE_TARGET="$TMPDIR/etc/apparmor.d/runtime-allowed-bwrap"
+    configure_codex_sandbox \
+      "${runtimeAllowedBwrap}/bin/bwrap" \
+      "${profile}" \
+      "$CODEX_APPARMOR_PROFILE_TARGET" \
+      sudo
+
+    cmp "${profile}" "$CODEX_APPARMOR_PROFILE_TARGET"
 
     missing_root="$TMPDIR/missing-prerequisites"
     export CODEX_TEST_BWRAP_TEMPLATE="${bwrap}/bin/bwrap"
