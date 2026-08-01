@@ -280,6 +280,7 @@
           };
           herdr-config = pkgs.callPackage ./tests/herdr-config.nix {
             configFile = ./home/.config/herdr/config.toml;
+            herdrPackage = herdr.packages.${system}.default;
           };
           nono-package = pkgs.callPackage ./tests/nono-package.nix {
             nonoPackage = nonoPackageFor system;
