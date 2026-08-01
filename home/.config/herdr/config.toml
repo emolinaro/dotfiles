@@ -60,6 +60,13 @@ copy_on_select = true
 # Keep Herdr's mouse-native UI enabled.
 mouse_capture = true
 
+[ui.sidebar.agents]
+# Preserve the default first row and show the live, state-colored status before the agent name.
+rows = [
+  ["state_icon", "workspace", "tab"],
+  ["state_text", "agent"],
+]
+
 [ui.toast.clipboard]
 # Show visual confirmation when clipboard copy succeeds.
 enabled = true
