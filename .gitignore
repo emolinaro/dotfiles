@@ -6,15 +6,8 @@ home/.config/herdr/release-notes.json
 home/.config/herdr/*.sock
 home/.config/herdr/.plugins.lock
 
-# Superpowers workflow artifacts
+# Superpowers docs scratch 
 docs/superpowers/
-.superpowers/
-
-# GNHF unattended-run artifacts
-.gnhf/
-
-# Lavish review artifacts
-.lavish/
 
 # macOS + nix build noise
 .DS_Store
