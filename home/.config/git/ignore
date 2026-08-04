@@ -43,12 +43,12 @@ Thumbs.db
 ###################
 .ipynb_checkpoints
 
-# Agents
-.codex/
-.cursor/
+# Agent run artifacts / local state
+.gnhf/
+.lavish/
+.superpowers/
 
 # Firstmate #
 # ###########
 pause-all/
 reply-format/
-
