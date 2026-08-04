@@ -458,6 +458,9 @@ in
   };
 
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
+  # Git reads ~/.config/git/ignore by default (no core.excludesFile needed).
+  home.file.".config/git/ignore".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/git/ignore";
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".zprofile" = lib.mkIf (!isLinux) {
