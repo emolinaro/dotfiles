@@ -63,3 +63,7 @@ mouse_capture = true
 [ui.toast.clipboard]
 # Show visual confirmation when clipboard copy succeeds.
 enabled = true
+
+[experimental]
+kitty_graphics = true
+
