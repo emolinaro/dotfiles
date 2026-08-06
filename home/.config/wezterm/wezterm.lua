@@ -2,6 +2,8 @@ local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
 
+config.enable_kitty_graphics = true
+
 local function with_alpha(color, alpha)
   local h, s, l, _ = wezterm.color.parse(color):hsla()
   return wezterm.color.from_hsla(h, s, l, alpha)

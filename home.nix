@@ -103,6 +103,7 @@ in
       httpie
       jq # json on the command line
       just
+      kitty.kitten # kitten CLI only, no kitty terminal
       k9s
       kubectl
       kubelogin-oidc
