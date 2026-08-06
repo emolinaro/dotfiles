@@ -192,13 +192,13 @@
               pname = "quota-axi";
               src = quotaAxi;
               entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-l3bTF7qXLSfS7JNbJfM8RiaYy7vkzrkJoIDRYdiG9R8=";
+              pnpmDepsHash = "sha256-aLdrQE+ADG7lFVPFyvHZPiOcNGq7RH0HzTbZz6D78+I=";
             }
             {
               pname = "tasks-axi";
               src = tasksAxi;
               entryPoint = "dist/bin/tasks-axi.js";
-              pnpmDepsHash = "sha256-wxguqzq/KuXekU2KlGJUU9IPJMgUjLZyuscNtZysXfo=";
+              pnpmDepsHash = "sha256-ZB9J2XF7epX+Ow02yTEibuWOOabrr8gIIO0kNv9QuQ8=";
             }
           ];
         };
