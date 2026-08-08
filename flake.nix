@@ -174,13 +174,13 @@
               pname = "chrome-devtools-axi";
               src = chromeDevtoolsAxi;
               entryPoint = "dist/bin/chrome-devtools-axi.js";
-              pnpmDepsHash = "sha256-UPNA+pa9vaq3S9bH6s7yVoqgtsPJ7iu7eRFfTkpS8UU=";
+              pnpmDepsHash = "sha256-U1aU9Dzij/RHsbNSjIi5TEgdbi4qJwA5XTL1W121+3g=";
             }
             {
               pname = "gh-axi";
               src = ghAxi;
               entryPoint = "dist/bin/gh-axi.js";
-              pnpmDepsHash = "sha256-snoKB2/sZmuvqFtmUAVPcyL6hcGX7+EGRN+49wwPX1o=";
+              pnpmDepsHash = "sha256-2P0ZZjbJY/cUHRWSxVwFqeL862WjTuFxXC/IdelMsXI=";
             }
             {
               pname = "lavish-axi";
@@ -192,13 +192,13 @@
               pname = "quota-axi";
               src = quotaAxi;
               entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-aLdrQE+ADG7lFVPFyvHZPiOcNGq7RH0HzTbZz6D78+I=";
+              pnpmDepsHash = "sha256-O53HEnorhv1aJqxpFTNuF0gltEG6lrYO6n+mwdzeF70=";
             }
             {
               pname = "tasks-axi";
               src = tasksAxi;
               entryPoint = "dist/bin/tasks-axi.js";
-              pnpmDepsHash = "sha256-ZB9J2XF7epX+Ow02yTEibuWOOabrr8gIIO0kNv9QuQ8=";
+              pnpmDepsHash = "sha256-eAubA7AAm25Tet0V1bi5dp1MRPniIW6AsQ463/lJEyc=";
             }
           ];
         };
