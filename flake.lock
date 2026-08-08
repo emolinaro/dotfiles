@@ -20,11 +20,11 @@
     "chromeDevtoolsAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1785516769,
-        "narHash": "sha256-EXCaqHQmFx0h0CsG9jOV3Hj/818iK8bToDZvUbLFp6E=",
+        "lastModified": 1786075549,
+        "narHash": "sha256-ZiEtrZDvWV4xpIb68R0BE7H86pWuwm9QRV0o9JmAh8I=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "7d6102bb3160dfa0978523431091776314688717",
+        "rev": "1a91f5fa2a8e381e502b914116e9bafb1a819f48",
         "type": "github"
       },
       "original": {
@@ -36,11 +36,11 @@
     "ghAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1786007575,
-        "narHash": "sha256-UAvqAP0/V3m5FOm2JgGqdhZG85IQwL0T8ZeeIQqx4uI=",
+        "lastModified": 1786075543,
+        "narHash": "sha256-E9SahmNcpY2a1Uy5CqLe3A5BIv1ecO/xZtZd6zGpv5c=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "fb1f6f692556cc9bcdf275d015fc5da3f96d9a77",
+        "rev": "75bc3e996bbd87efecaa3a4accbd35ca4bc970d9",
         "type": "github"
       },
       "original": {
@@ -68,11 +68,11 @@
     "gstack": {
       "flake": false,
       "locked": {
-        "lastModified": 1784079226,
-        "narHash": "sha256-Zr/pcWscmdi53OMjmY72qJiZLaQ9FKNnyd3dRGX0g5Q=",
+        "lastModified": 1786140492,
+        "narHash": "sha256-idwawPnV45Ttl4HiDExlQjTNJr6sekFdS3eqtaUQK8M=",
         "owner": "garrytan",
         "repo": "gstack",
-        "rev": "a3259400a366593e0c909dd9ac3e59752efd2488",
+        "rev": "960c3a8d6c4d14cb4c5e551a8847f8ec7c4267df",
         "type": "github"
       },
       "original": {
@@ -89,11 +89,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1786036064,
-        "narHash": "sha256-X5JL9GFOQTsQq+biFxsZwdfq7k6DGTUN6N1NpRKnbls=",
+        "lastModified": 1786144556,
+        "narHash": "sha256-clM2DkZ8jxKFtve/TxuZpu6elVeu34qikIIA37FRhYc=",
         "owner": "ogulcancelik",
         "repo": "herdr",
-        "rev": "d16af2660a99c6d238f0c7844339e6179515dc3a",
+        "rev": "6f311498aeeb27c0973781961ef94e8d0016ed17",
         "type": "github"
       },
       "original": {
@@ -126,11 +126,11 @@
     "lavish": {
       "flake": false,
       "locked": {
-        "lastModified": 1785539192,
-        "narHash": "sha256-dUDiiTnNZGqm1l4UNGUb3DjMCRG9cx2ufygv7+DgQJc=",
+        "lastModified": 1786074020,
+        "narHash": "sha256-TqZUe+55a02+ov08X9ZEoFIIzhSfBaNM/SmJVsS7ydk=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "7c64184adce8b2b18c1cb072779305303b8079d9",
+        "rev": "542819086b799d907e7eddf0a1fadd2eb60c3dfe",
         "type": "github"
       },
       "original": {
@@ -213,11 +213,11 @@
     "quotaAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1785965536,
-        "narHash": "sha256-UbwLaxNciwArtRxyzI3rmpTXD0HolLkJEP6vb9qe3as=",
+        "lastModified": 1786165272,
+        "narHash": "sha256-PMaeW03eHEDB8pYfQW7dQfSm5BAVQratdnGp9qKAMVw=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "229ad37fd6ed368b08f76439c1db15959510a4f7",
+        "rev": "170dd33065168774ce39584a2e4110df3aa959cb",
         "type": "github"
       },
       "original": {
@@ -284,11 +284,11 @@
     "tasksAxi": {
       "flake": false,
       "locked": {
-        "lastModified": 1785516844,
-        "narHash": "sha256-UbbAz2wXMlASbkWc0QvAtVVzjprBSu8hSJzyAaaQlTE=",
+        "lastModified": 1786079439,
+        "narHash": "sha256-obwgvKls8GljbUdFrl7ht9+k0AEQjdqvLGf4UHscv+M=",
         "owner": "kunchenguid",
         "repo": "tasks-axi",
-        "rev": "ead3419d5acb4a4fde8e3ecbaa60e4e53f99f54b",
+        "rev": "44a41f38f3c74e5337c10b88ca2e1555374c6af4",
         "type": "github"
       },
       "original": {
