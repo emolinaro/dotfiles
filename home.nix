@@ -492,6 +492,8 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".pi/agent/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".pi/agent/themes/dark-bright-dim.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.pi/agent/themes/dark-bright-dim.json";
   home.file.".config/opencode/opencode.json".text = builtins.toJSON {
     model = "openai/gpt-5.6-sol";
     plugin = [
