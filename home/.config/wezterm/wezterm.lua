@@ -151,7 +151,7 @@ config.keys = {
   { key = "DownArrow", mods = "CTRL|ALT", action = snap_window("bottom") },
 
   -- splits (panes)
-  { key = "d", mods = "CTRL", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
+  --  { key = "d", mods = "CTRL", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
   { key = "v", mods = "LEADER", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
   { key = "-", mods = "LEADER", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
   { key = "x", mods = "LEADER", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
