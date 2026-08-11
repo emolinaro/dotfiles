@@ -74,6 +74,8 @@ config.font_size = 15.0
 config.window_background_opacity = window_bg_opacity
 config.macos_window_background_blur = 50
 config.hide_tab_bar_if_only_one_tab = true
+config.skip_close_confirmation_for_processes_named = {}
+config.window_close_confirmation = "AlwaysPrompt"
 config.window_decorations = "RESIZE"
 config.window_frame = {
   font = wezterm.font("Hack Nerd Font", { weight = "Bold" }),
@@ -149,6 +151,7 @@ config.keys = {
   { key = "DownArrow", mods = "CTRL|ALT", action = snap_window("bottom") },
 
   -- splits (panes)
+  { key = "d", mods = "CTRL", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
   { key = "v", mods = "LEADER", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
   { key = "-", mods = "LEADER", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
   { key = "x", mods = "LEADER", action = wezterm.action.CloseCurrentPane({ confirm = true }) },
