@@ -126,6 +126,7 @@ in
       tree
       treehousePackage
       tree-sitter
+      unixtools.column # align text into columns and tables
       uv
       watchexec
       yq-go
