@@ -37,18 +37,17 @@ gnhf --agent opencode "your objective"
 - Validation:
 
 ```sh
+nix fmt  # Nix (nixfmt, RFC style) plus shell (shfmt -i 2 -ci)
+
 nix flake check --all-systems --impure --no-build
 
-system="$(nix eval --impure --raw --expr builtins.currentSystem)"
-nix build \
-  ".#checks.$system.nono-package" \
-  ".#checks.$system.nono-agent-wrappers" \
-  ".#checks.$system.gnhf-package" \
-  ".#checks.$system.nono-home-command-surface" \
-  ".#checks.$system.nono-profiles" \
-  ".#checks.$system.nono-runtime-driver"
+nix build .#ci
 nix run ".#nono-runtime-test"
 ```
+
+`.#ci` builds every check for the current system, including `format`, which
+re-runs nixfmt/shfmt in check mode, and `shell-lint`, which runs shellcheck over
+every script.
 
 ## Supported systems
 
@@ -80,7 +79,7 @@ Before you run it: open the config files and change the values listed in "Make i
 2. Symlinks this repo to `~/.dotfiles`.
    This has to happen before the first build, because `home.nix` points at config files through `~/.dotfiles`.
 3. Runs the first `darwin-rebuild switch`.
-   It fetches the `darwin-rebuild` tool from the nix-darwin 26.05 release branch, then applies this repo's locked flake config.
+   It fetches the `darwin-rebuild` tool at the exact nix-darwin revision pinned in `flake.lock`, then applies this repo's locked flake config.
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
@@ -123,8 +122,10 @@ the correct archive for each supported architecture. Update checks remain
 under Nix control.
 
 The bootstrap supports x86_64 and ARM64, uses the current username and home
-directory, changes the login shell to `/usr/bin/zsh`, enables Docker through
-systemd, and adds the current user to the `docker` group. Start a new login
+directory, relaxes Ubuntu's default AppArmor restriction on unprivileged user
+namespaces (required by Codex's bubblewrap sandbox), changes the login shell to
+`/usr/bin/zsh`, enables Docker through systemd, and adds the current user to
+the `docker` group. Start a new login
 session after it completes so the shell and Docker group changes take effect,
 then authenticate Codex manually. Restart Codex after a rebuild so it discovers
 newly installed agent skills:
@@ -152,6 +153,25 @@ implementation. Platform scripts can also be run directly when needed:
 Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
 shell. The rebuild restores it with sudo if it has been changed.
 
+## Check and reclaim disk space
+
+Run the managed disk-usage report from the dotfiles checkout:
+
+```sh
+cd ~/.dotfiles
+./disk-usage.sh
+```
+
+It reports the space used by Nix, Homebrew, gstack, and related caches. If the
+Nix store is using too much space, delete old Nix generations with:
+
+```sh
+nix-collect-garbage -d
+```
+
+This permanently removes old generations, so you can no longer roll back to
+them.
+
 ## Update packages and agent workflows
 
 Nix records the exact revisions of package collections and external agent
@@ -161,19 +181,23 @@ workflows in `flake.lock`. Update every input from the repository root with:
 nix flake update
 ```
 
-Update one or more named inputs without changing the others by listing them:
+Update one or more named inputs without changing the others by listing them
+in a single command:
 
 ```sh
-nix flake update lavish
-nix flake update chromeDevtoolsAxi
-nix flake update ghAxi
-nix flake update quotaAxi
-nix flake update tasksAxi
-nix flake update gnhf
-nix flake update gstack
-nix flake update superpowers
-nix flake update nixpkgs nixpkgs-linux
+nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack superpowers
 ```
+
+Every input updates independently:
+
+| Input | Contents |
+| --- | --- |
+| `nixpkgs` | Package collection for macOS |
+| `nixpkgs-linux` | Package collection for both Ubuntu targets |
+| `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
+| `gnhf` | GNHF CLI source |
+| `gstack`, `superpowers` | Agent workflow skills |
+| `herdr`, `home-manager`, `nix-darwin`, `nix-homebrew` | Platform tooling and Nix modules |
 
 The first rebuild after this layout change moves only the managed gstack
 checkout from `~/.gstack/repos/gstack` to
@@ -183,13 +207,9 @@ move, and recovery is a direct move back to the original path before the next
 rebuild.
 
 Most Nix packages come from a shared Nixpkgs input, so an individual package
-such as `kubectl` cannot be updated independently. Updating `nixpkgs` updates
-the macOS package collection, while `nixpkgs-linux` updates both Ubuntu
-targets. Inputs such as `chromeDevtoolsAxi`, `ghAxi`, `gnhf`, `lavish`,
-`quotaAxi`, `tasksAxi`, `gstack`, `superpowers`, `herdr`, `home-manager`, and
-`nix-darwin` can be updated independently. Precompiled release packages are
-versioned in `packages/`; source-built Axi Tools and GNHF also pin
-`pnpmDepsHash` in `flake.nix`, which may need refreshing after an input
+such as `kubectl` cannot be updated independently. Precompiled release
+packages are versioned in `packages/`; source-built Axi Tools and GNHF also
+pin `pnpmDepsHash` in `flake.nix`, which may need refreshing after an input
 update if dependencies changed.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,

@@ -4,27 +4,11 @@
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+# shellcheck source=scripts/lib-detect.sh
+. "$DIR/scripts/lib-detect.sh"
 
-if [[ ! -r /etc/os-release ]]; then
-  echo "Error: /etc/os-release is missing; Ubuntu 24.04 is required." >&2
-  exit 1
-fi
-
-# shellcheck disable=SC1091
-. /etc/os-release
-if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "24.04" ]]; then
-  echo "Error: Ubuntu 24.04 is required; found ${PRETTY_NAME:-unknown OS}." >&2
-  exit 1
-fi
-
-case "$(uname -m)" in
-  x86_64) HOME_TARGET="ubuntu-x86_64" ;;
-  aarch64|arm64) HOME_TARGET="ubuntu-aarch64" ;;
-  *)
-    echo "Error: unsupported architecture $(uname -m); expected x86_64 or aarch64." >&2
-    exit 1
-    ;;
-esac
+require_ubuntu_2404
+HOME_TARGET="$(home_target_for_arch)"
 
 if [[ "$(id -u)" -eq 0 ]]; then
   echo "Error: run this script as the target user, not as root." >&2
@@ -33,7 +17,7 @@ fi
 
 echo "==> Step 1: Ubuntu integration packages"
 sudo apt-get update
-sudo apt-get install -y \
+sudo apt-get install -y --no-install-recommends \
   ca-certificates curl docker.io xz-utils zsh \
   fonts-noto-color-emoji xvfb \
   libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
@@ -41,26 +25,40 @@ sudo apt-get install -y \
   libnspr4 libnss3 libpango-1.0-0 libx11-6 libxcb1 libxcomposite1 \
   libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2
 
-echo "==> Step 2: Determinate Nix"
+echo "==> Step 2: allow unprivileged user namespaces (Codex sandbox)"
+# Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor by default.
+# Codex's Linux sandbox runs bubblewrap from the Nix store, which has no
+# AppArmor profile, so the kernel blocks `bwrap --unshare-user` and sandboxed
+# commands break. Relax the restriction system-wide via a persistent sysctl.
+userns_node="/proc/sys/kernel/apparmor_restrict_unprivileged_userns"
+if [[ ! -e "$userns_node" || "$(<"$userns_node")" == "0" ]]; then
+  echo "    unprivileged user namespaces already allowed, skipping"
+else
+  echo "kernel.apparmor_restrict_unprivileged_userns=0" |
+    sudo tee /etc/sysctl.d/60-userns.conf >/dev/null
+  sudo sysctl --system
+fi
+
+echo "==> Step 3: Determinate Nix"
 if command -v nix >/dev/null 2>&1; then
   echo "    nix already installed, skipping"
 else
-  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
-    | sh -s -- install --no-confirm
+  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix |
+    sh -s -- install --no-confirm
   # shellcheck disable=SC1091
   . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 fi
 
-echo "==> Step 3: symlink this repo to ~/.dotfiles"
+echo "==> Step 4: symlink this repo to ~/.dotfiles"
 ln -sfn "$DIR" "$HOME/.dotfiles"
 
-echo "==> Step 4: first Home Manager switch"
+echo "==> Step 5: first Home Manager switch"
 export DOTFILES_USERNAME="${USER:-$(id -un)}"
 export DOTFILES_HOME="$HOME"
 nix run github:nix-community/home-manager/release-26.05 -- \
   switch --impure --flake "$HOME/.dotfiles#$HOME_TARGET"
 
-echo "==> Step 5: set Zsh as the login shell"
+echo "==> Step 6: set Zsh as the login shell"
 CURRENT_LOGIN_SHELL="$(getent passwd "$DOTFILES_USERNAME" | cut -d: -f7)"
 if [[ "$CURRENT_LOGIN_SHELL" != "/usr/bin/zsh" ]]; then
   sudo chsh -s /usr/bin/zsh "$DOTFILES_USERNAME"
@@ -68,7 +66,7 @@ else
   echo "    Zsh is already the login shell, skipping"
 fi
 
-echo "==> Step 6: enable Docker"
+echo "==> Step 7: enable Docker"
 sudo systemctl enable --now docker.service
 if id -nG "$DOTFILES_USERNAME" | tr ' ' '\n' | grep -qx docker; then
   echo "    $DOTFILES_USERNAME is already in the docker group, skipping"

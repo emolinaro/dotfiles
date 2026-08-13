@@ -1,31 +1,36 @@
-{ fetchurl, lib, stdenvNoCC }:
+{
+  fetchurl,
+  lib,
+  stdenvNoCC,
+}:
 
 let
-  version = "1.40.3";
+  version = "1.41.2";
   releases = {
     aarch64-darwin = {
       os = "darwin";
       arch = "arm64";
-      hash = "sha256-wFdmSihooUmKF2trx1bwc9xop+P/OibYeHQQrCWlpNY=";
+      hash = "sha256-WcOWPZJdsniG3s6ZrvMOhzuXjO4cKXusHxYyhUJx7/4=";
     };
     x86_64-darwin = {
       os = "darwin";
       arch = "amd64";
-      hash = "sha256-0vw4isEsoP551Pc4KZp5heSUybm5ZBOKTb1bBG8HQ6A=";
+      hash = "sha256-6OkuoI0+ecv8pT2FUybyQNbnyyUk+ui2yW1nsbFuC3A=";
     };
     aarch64-linux = {
       os = "linux";
       arch = "arm64";
-      hash = "sha256-+GKTxPs32D00yPUcyK6xEW+pqeIOwz4nCdgENUosilE=";
+      hash = "sha256-CSD+NoSm5r0ZliiHoG0UYJGwVCs3it4VndlAzq1ovCM=";
     };
     x86_64-linux = {
       os = "linux";
       arch = "amd64";
-      hash = "sha256-DzJbh6Cv5hqXoirv/ix1WCfIzWe2s8qkppZHW6HoTGk=";
+      hash = "sha256-oQDFi9/n359Zjs7DJVPV+9jrAHmRL8gw82IBH9nciCU=";
     };
   };
-  release = releases.${stdenvNoCC.hostPlatform.system}
-    or (throw "no-mistakes is unsupported on ${stdenvNoCC.hostPlatform.system}");
+  release =
+    releases.${stdenvNoCC.hostPlatform.system}
+      or (throw "no-mistakes is unsupported on ${stdenvNoCC.hostPlatform.system}");
 in
 stdenvNoCC.mkDerivation {
   pname = "no-mistakes";

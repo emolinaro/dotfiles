@@ -116,103 +116,30 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
-      axiToolsPackageFor =
+      # Build one pnpm-packaged Node CLI from source with a pinned dependency
+      # hash. GNHF passes pruneProd to strip dev dependencies from the closure.
+      pnpmToolFor =
         system:
+        {
+          pname,
+          src,
+          entryPoint,
+          pnpmDepsHash,
+          pruneProd ? false,
+          meta ? { },
+        }:
         let
           pkgs = pkgsFor system;
-          axiTools = [
-            {
-              pname = "chrome-devtools-axi";
-              src = chromeDevtoolsAxi;
-              entryPoint = "dist/bin/chrome-devtools-axi.js";
-              pnpmDepsHash = "sha256-UPNA+pa9vaq3S9bH6s7yVoqgtsPJ7iu7eRFfTkpS8UU=";
-            }
-            {
-              pname = "gh-axi";
-              src = ghAxi;
-              entryPoint = "dist/bin/gh-axi.js";
-              pnpmDepsHash = "sha256-snoKB2/sZmuvqFtmUAVPcyL6hcGX7+EGRN+49wwPX1o=";
-            }
-            {
-              pname = "lavish-axi";
-              src = lavish;
-              entryPoint = "dist/cli.mjs";
-              pnpmDepsHash = "sha256-DLCtgOtlPHe3GA1P0xfjJ1X1eJhFkH/hQcoEt+5b164=";
-            }
-            {
-              pname = "quota-axi";
-              src = quotaAxi;
-              entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-l3bTF7qXLSfS7JNbJfM8RiaYy7vkzrkJoIDRYdiG9R8=";
-            }
-            {
-              pname = "tasks-axi";
-              src = tasksAxi;
-              entryPoint = "dist/bin/tasks-axi.js";
-              pnpmDepsHash = "sha256-wxguqzq/KuXekU2KlGJUU9IPJMgUjLZyuscNtZysXfo=";
-            }
-          ];
-          mkAxiTool =
-            {
-              pname,
-              src,
-              entryPoint,
-              pnpmDepsHash,
-            }:
-            pkgs.stdenvNoCC.mkDerivation {
-              inherit pname src;
-              version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
-
-              pnpmDeps = pkgs.fetchPnpmDeps {
-                inherit pname src;
-                pnpm = pkgs.pnpm_11;
-                fetcherVersion = 4;
-                hash = pnpmDepsHash;
-              };
-
-              nativeBuildInputs = [
-                pkgs.makeWrapper
-                pkgs.nodejs
-                pkgs.pnpm_11
-                pkgs.pnpmConfigHook
-              ];
-
-              buildPhase = ''
-                runHook preBuild
-                pnpm build
-                runHook postBuild
-              '';
-
-              installPhase = ''
-                runHook preInstall
-                install -dm755 "$out/lib/node_modules/${pname}"
-                cp -r dist node_modules package.json "$out/lib/node_modules/${pname}/"
-                makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/${pname}" --add-flags "$out/lib/node_modules/${pname}/${entryPoint}"
-                runHook postInstall
-              '';
-            };
-        in
-        pkgs.symlinkJoin {
-          name = "axi-tools";
-          paths = map mkAxiTool axiTools;
-        };
-      gnhfPackageFor =
-        system:
-        let
-          pkgs = pkgsFor system;
-          src = gnhf;
-          version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
         in
         pkgs.stdenvNoCC.mkDerivation {
-          pname = "gnhf";
-          inherit src version;
+          inherit pname src meta;
+          version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
 
           pnpmDeps = pkgs.fetchPnpmDeps {
-            pname = "gnhf";
-            inherit src;
+            inherit pname src;
             pnpm = pkgs.pnpm_11;
             fetcherVersion = 4;
-            hash = "sha256-kQHYvZ8LNHGw1pPuTnOTUn26yUY8TmgA0+BO2+cSvLY=";
+            hash = pnpmDepsHash;
           };
 
           nativeBuildInputs = [
@@ -230,17 +157,64 @@
 
           installPhase = ''
             runHook preInstall
-            pnpm prune --prod
-            install -dm755 "$out/lib/node_modules/gnhf"
-            cp -r dist node_modules package.json "$out/lib/node_modules/gnhf/"
-            makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/gnhf" --add-flags "$out/lib/node_modules/gnhf/dist/cli.mjs"
+            ${pkgs.lib.optionalString pruneProd "pnpm prune --prod"}
+            install -dm755 "$out/lib/node_modules/${pname}"
+            cp -r dist node_modules package.json "$out/lib/node_modules/${pname}/"
+            makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/${pname}" --add-flags "$out/lib/node_modules/${pname}/${entryPoint}"
             runHook postInstall
           '';
+        };
 
+      axiToolsPackageFor =
+        system:
+        (pkgsFor system).symlinkJoin {
+          name = "axi-tools";
+          paths = map (pnpmToolFor system) [
+            {
+              pname = "chrome-devtools-axi";
+              src = chromeDevtoolsAxi;
+              entryPoint = "dist/bin/chrome-devtools-axi.js";
+              pnpmDepsHash = "sha256-U1aU9Dzij/RHsbNSjIi5TEgdbi4qJwA5XTL1W121+3g=";
+            }
+            {
+              pname = "gh-axi";
+              src = ghAxi;
+              entryPoint = "dist/bin/gh-axi.js";
+              pnpmDepsHash = "sha256-2P0ZZjbJY/cUHRWSxVwFqeL862WjTuFxXC/IdelMsXI=";
+            }
+            {
+              pname = "lavish-axi";
+              src = lavish;
+              entryPoint = "dist/cli.mjs";
+              pnpmDepsHash = "sha256-DLCtgOtlPHe3GA1P0xfjJ1X1eJhFkH/hQcoEt+5b164=";
+            }
+            {
+              pname = "quota-axi";
+              src = quotaAxi;
+              entryPoint = "dist/bin/quota-axi.js";
+              pnpmDepsHash = "sha256-O53HEnorhv1aJqxpFTNuF0gltEG6lrYO6n+mwdzeF70=";
+            }
+            {
+              pname = "tasks-axi";
+              src = tasksAxi;
+              entryPoint = "dist/bin/tasks-axi.js";
+              pnpmDepsHash = "sha256-eAubA7AAm25Tet0V1bi5dp1MRPniIW6AsQ463/lJEyc=";
+            }
+          ];
+        };
+
+      gnhfPackageFor =
+        system:
+        pnpmToolFor system {
+          pname = "gnhf";
+          src = gnhf;
+          entryPoint = "dist/cli.mjs";
+          pnpmDepsHash = "sha256-kQHYvZ8LNHGw1pPuTnOTUn26yUY8TmgA0+BO2+cSvLY=";
+          pruneProd = true;
           meta = {
             description = "Pinned GNHF CLI; pick the backend with --agent";
             homepage = "https://github.com/kunchenguid/gnhf";
-            license = pkgs.lib.licenses.mit;
+            license = (pkgsFor system).lib.licenses.mit;
             mainProgram = "gnhf";
             platforms = [
               "aarch64-darwin"
@@ -258,25 +232,120 @@
           profiles = ./home/.config/nono/profiles;
           wrapperModule = ./runtime/nono-agent-wrappers.nix;
         };
+
+      checksForSystem =
+        system:
+        let
+          pkgs = pkgsFor system;
+          lintSrc =
+            let
+              fs = pkgs.lib.fileset;
+            in
+            fs.toSource {
+              root = ./.;
+              fileset = fs.unions [
+                (fs.fileFilter (file: file.hasExt "nix") ./.)
+                (fs.fileFilter (file: file.hasExt "sh") ./.)
+              ];
+            };
+        in
+        {
+          format =
+            pkgs.runCommand "format-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.nixfmt
+                  pkgs.shfmt
+                ];
+              }
+              ''
+                cd ${lintSrc}
+                find . -name '*.nix' -print0 | xargs -0 nixfmt --check
+                find . -name '*.sh' -print0 | xargs -0 shfmt -i 2 -ci -d
+                touch "$out"
+              '';
+          shell-lint = pkgs.runCommand "shell-lint-check" { nativeBuildInputs = [ pkgs.shellcheck ]; } ''
+            cd ${lintSrc}
+            find . -name '*.sh' -print0 | xargs -0 shellcheck -x
+            touch "$out"
+          '';
+          axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
+            axiToolsPackage = axiToolsPackageFor system;
+          };
+          gnhf-package = pkgs.callPackage ./tests/gnhf-package.nix {
+            gnhfPackage = gnhfPackageFor system;
+          };
+          gstack-checkout-migration = pkgs.callPackage ./tests/gstack-checkout-migration.nix {
+            migrationPackage = pkgs.callPackage ./runtime/gstack-checkout-migration.nix { };
+          };
+          nono-package = pkgs.callPackage ./tests/nono-package.nix {
+            nonoPackage = nonoPackageFor system;
+          };
+          nono-agent-wrappers = pkgs.callPackage ./tests/nono-agent-wrappers.nix {
+            inherit agentRegistry;
+            profiles = ./home/.config/nono/profiles;
+            wrapperModule = ./runtime/nono-agent-wrappers.nix;
+          };
+          nono-home-command-surface =
+            if pkgs.stdenv.hostPlatform.isLinux then
+              pkgs.callPackage ./tests/nono-home-command-surface.nix {
+                inherit agentRegistry;
+                homePath = (mkUbuntuHome system).config.home.path;
+              }
+            else
+              pkgs.runCommand "nono-home-command-surface-not-linux" { } ''
+                touch "$out"
+              '';
+          nono-profiles = pkgs.callPackage ./tests/nono-profiles.nix {
+            inherit agentRegistry;
+            nonoPackage = nonoPackageFor system;
+            profiles = ./home/.config/nono/profiles;
+          };
+          nono-runtime-test = nonoRuntimeTestFor system;
+        };
+
+      # One-command validation entry point: `nix build .#ci` builds every
+      # check without duplicating their names at the call site.
+      ciFor =
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        # linkFarmFromDrvs links the derivations themselves rather than
+        # merging their stores, so file-output checks do not collide.
+        pkgs.linkFarmFromDrvs "ci" (pkgs.lib.attrValues (checksForSystem system));
+
+      # Shared Home Manager special arguments for both platforms; call sites
+      # pass only their per-platform deltas.
+      homeSpecialArgsFor =
+        system:
+        {
+          username,
+          homeDirectory,
+          herdrPackage,
+        }:
+        {
+          inherit username homeDirectory herdrPackage;
+          axiToolsPackage = axiToolsPackageFor system;
+          gnhfPackage = gnhfPackageFor system;
+          nonoPackage = nonoPackageFor system;
+          chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+          ghAxiSkill = "${ghAxi}/skills/gh-axi";
+          lavishSkill = "${lavish}/skills/lavish";
+          quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
+          superpowersSkill = "${superpowers}/skills";
+          tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
+          gstackRev = gstack.rev;
+          superpowersRev = superpowers.rev;
+        };
       mkUbuntuHome =
         system:
         home-manager.lib.homeManagerConfiguration {
           pkgs = pkgsFor system;
-          extraSpecialArgs = {
-            axiToolsPackage = axiToolsPackageFor system;
-            gnhfPackage = gnhfPackageFor system;
-            chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+          extraSpecialArgs = homeSpecialArgsFor system {
             username = ubuntuUsername;
             homeDirectory = ubuntuHomeDirectory;
             herdrPackage = herdr.packages.${system}.default;
-            nonoPackage = nonoPackageFor system;
-            ghAxiSkill = "${ghAxi}/skills/gh-axi";
-            lavishSkill = "${lavish}/skills/lavish";
-            quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
-            gstackRev = gstack.rev;
-            superpowersSkill = "${superpowers}/skills";
-            superpowersRev = superpowers.rev;
-            tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
           };
           modules = [
             ./home.nix
@@ -297,21 +366,10 @@
           ({ config, ... }: {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = {
-              axiToolsPackage = axiToolsPackageFor config.nixpkgs.hostPlatform.system;
-              gnhfPackage = gnhfPackageFor config.nixpkgs.hostPlatform.system;
-              chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
+            home-manager.extraSpecialArgs = homeSpecialArgsFor config.nixpkgs.hostPlatform.system {
               username = darwinUsername;
               homeDirectory = darwinHomeDirectory;
               herdrPackage = null;
-              nonoPackage = nonoPackageFor config.nixpkgs.hostPlatform.system;
-              ghAxiSkill = "${ghAxi}/skills/gh-axi";
-              lavishSkill = "${lavish}/skills/lavish";
-              quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
-              gstackRev = gstack.rev;
-              superpowersSkill = "${superpowers}/skills";
-              superpowersRev = superpowers.rev;
-              tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
             };
             home-manager.users.${darwinUsername} = import ./home.nix;
           })
@@ -322,6 +380,7 @@
         ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
       };
       packages = forAllSystems (system: {
+        ci = ciFor system;
         axi-tools = axiToolsPackageFor system;
         gnhf = gnhfPackageFor system;
         nono = nonoPackageFor system;
@@ -334,40 +393,39 @@
           program = "${nonoRuntimeTestFor system}/bin/nono-runtime-test";
         };
       });
-      checks = forAllSystems (system: {
-        axi-tools = (pkgsFor system).callPackage ./tests/axi-tools.nix {
-          axiToolsPackage = axiToolsPackageFor system;
-        };
-        gnhf-package = (pkgsFor system).callPackage ./tests/gnhf-package.nix {
-          gnhfPackage = gnhfPackageFor system;
-        };
-        gstack-checkout-migration = (pkgsFor system).callPackage ./tests/gstack-checkout-migration.nix {
-          migrationPackage = (pkgsFor system).callPackage ./runtime/gstack-checkout-migration.nix { };
-        };
-        nono-package = (pkgsFor system).callPackage ./tests/nono-package.nix {
-          nonoPackage = nonoPackageFor system;
-        };
-        nono-agent-wrappers = (pkgsFor system).callPackage ./tests/nono-agent-wrappers.nix {
-          inherit agentRegistry;
-          profiles = ./home/.config/nono/profiles;
-          wrapperModule = ./runtime/nono-agent-wrappers.nix;
-        };
-        nono-home-command-surface =
-          if (pkgsFor system).stdenv.hostPlatform.isLinux then
-            (pkgsFor system).callPackage ./tests/nono-home-command-surface.nix {
-              inherit agentRegistry;
-              homePath = (mkUbuntuHome system).config.home.path;
+      checks = forAllSystems checksForSystem;
+
+      # Combined formatter: Nix via nixfmt (RFC style), shell via shfmt.
+      formatter = forAllSystems (
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        pkgs.writeShellApplication {
+          name = "fmt-tree";
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.git
+            pkgs.nixfmt
+            pkgs.shfmt
+          ];
+          # git ls-files keeps the formatter on tracked files only, matching
+          # the format check's fileset view.
+          text = ''
+            existing_tracked_files() {
+              local path
+              git ls-files -z "$1" |
+                while IFS= read -r -d $'\0' path; do
+                  if [[ -e "$path" ]]; then
+                    printf '%s\0' "$path"
+                  fi
+                done
             }
-          else
-            (pkgsFor system).runCommand "nono-home-command-surface-not-linux" { } ''
-              touch "$out"
-            '';
-        nono-profiles = (pkgsFor system).callPackage ./tests/nono-profiles.nix {
-          inherit agentRegistry;
-          nonoPackage = nonoPackageFor system;
-          profiles = ./home/.config/nono/profiles;
-        };
-        nono-runtime-driver = nonoRuntimeTestFor system;
-      });
+
+            existing_tracked_files '*.nix' | xargs -0 -r nixfmt --
+            existing_tracked_files '*.sh' | xargs -0 -r shfmt -w -i 2 -ci --
+          '';
+        }
+      );
     };
 }

@@ -27,12 +27,21 @@ let
   gstackCheckoutMigration = pkgs.callPackage ./runtime/gstack-checkout-migration.nix { };
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
+  aicPackage = pkgs.callPackage ./packages/aic.nix { };
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
   homebrewPrefix = if pkgs.stdenv.hostPlatform.isAarch64 then "/opt/homebrew" else "/usr/local";
   platformPath = if isLinux then "/usr/local/bin" else "${homebrewPrefix}/bin:/usr/local/bin";
   herdrCommand = if isLinux then lib.getExe herdrPackage else "${homebrewPrefix}/bin/herdr";
+  # macOS GUI apps discover fonts through CoreText, not the Nix profile path.
+  # Keep the Hack Nerd Font family linked into ~/Library/Fonts so WezTerm sees it after reboot.
+  hackFontEntry =
+    variant:
+    lib.mkIf (!isLinux) {
+      force = true;
+      source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-${variant}.ttf";
+    };
   linuxAgentPackages = {
     claude = pkgs.claude-code;
     codex = pkgs.codex;
@@ -70,11 +79,13 @@ in
       bash-language-server
       btop
       bun
+      aicPackage
       axiToolsPackage
       coreutils # gstack uses gtimeout to bound nested Codex calls
       delta
       delve
       dive
+      dust # fast du for ./disk-usage.sh
       eza
       fd # fast find
       fzf # fuzzy finder
@@ -92,6 +103,7 @@ in
       httpie
       jq # json on the command line
       just
+      kitty.kitten # kitten CLI only, no kitty terminal
       k9s
       kubectl
       kubelogin-oidc
@@ -114,6 +126,7 @@ in
       tree
       treehousePackage
       tree-sitter
+      unixtools.column # align text into columns and tables
       uv
       watchexec
       yq-go
@@ -149,7 +162,6 @@ in
     # Keep the portable Herdr config symlinked, but put runtime sockets on a local filesystem.
     HERDR_SOCKET_PATH = "${config.home.homeDirectory}/.cache/herdr/herdr.sock";
   };
-
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true; # ghost text from history
@@ -190,137 +202,6 @@ in
       [[ -n "$terminfo[kpp]"    ]] && bindkey "$terminfo[kpp]"    history-beginning-search-backward
       [[ -n "$terminfo[knp]"    ]] && bindkey "$terminfo[knp]"    history-beginning-search-forward
 
-      aic() {
-        local -a excludes
-        local model="''${AIC_MODEL:-}"
-
-        while (( $# > 0 )); do
-          case "$1" in
-            -h|--help)
-              cat <<'EOF'
-Usage: aic [options]
-       aic -h | --help
-
-Stage all changes, generate a commit message with Codex, then open
-the Git editor to review and commit.
-
-Options:
-  -m, --model NAME    Codex model for this run (overrides AIC_MODEL)
-  --exclude path ...  Stage everything, then unstage these paths
-  -h, --help          Show this help
-
-Environment:
-  AIC_MODEL           Default Codex model when -m/--model is omitted
-
-Examples:
-  aic
-  aic --exclude README.md
-  aic -m gpt-5.6-luna
-  AIC_MODEL=gpt-5.6-luna aic --exclude secrets.env
-EOF
-              return 0
-              ;;
-            -m|--model)
-              if [[ -z "''${2:-}" ]]; then
-                print -u2 "aic: $1 requires a model name"
-                return 1
-              fi
-              model="$2"
-              shift 2
-              ;;
-            --exclude)
-              shift
-              if (( $# == 0 )); then
-                print -u2 "aic: --exclude requires at least one path"
-                return 1
-              fi
-              excludes=("$@")
-              break
-              ;;
-            *)
-              print -u2 "aic: unknown argument: $1"
-              print -u2 "Try 'aic --help' for usage."
-              return 1
-              ;;
-          esac
-        done
-
-        git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
-          print -u2 "Error: not inside a Git repository"
-          return 1
-        }
-
-        # Stage new, modified and deleted files.
-        git add -A || return 1
-
-        if (( ''${#excludes} > 0 )); then
-          git restore --staged -- "''${excludes[@]}" || return 1
-        fi
-
-        if git diff --cached --quiet; then
-          print "Nothing to commit"
-          return 0
-        fi
-
-        local message_file
-        message_file="$(mktemp "''${TMPDIR:-/tmp}/codex-commit.XXXXXX")" || {
-          print -u2 "Could not create temporary commit-message file"
-          return 1
-        }
-
-        local -a codex_args=(
-          exec
-          --ephemeral
-          --sandbox read-only
-          --output-last-message "$message_file"
-        )
-        if [[ -n "$model" ]]; then
-          codex_args+=(-m "$model")
-        fi
-
-        codex "''${codex_args[@]}" \
-          '
-Inspect the staged Git changes by running:
-
-    git diff --cached --stat
-    git diff --cached
-
-Produce only a Git commit message. Do not include commentary,
-Markdown fences, headings such as "Commit message", or analysis.
-
-Use this format:
-
-1. An imperative subject line of at most 72 characters.
-2. A blank line.
-3. Two to six concise bullet points explaining in plain English:
-   - what changed;
-   - how behaviour or workflow is affected;
-   - important implementation or configuration details;
-   - why the change matters, but only when evident from the diff.
-
-Group related changes conceptually instead of merely listing filenames.
-Do not invent motivations or claim that tests passed.
-Do not modify any files.
-' >/dev/null 2>&1 || {
-          local status=$?
-          rm -f "$message_file"
-          return "$status"
-        }
-
-        if [[ ! -s "$message_file" ]]; then
-          print -u2 "Codex generated an empty commit message"
-          rm -f "$message_file"
-          return 1
-        fi
-
-        # Open the generated message and staged diff in the Git editor.
-        # Do not redirect stdout here — git skips the editor when stdout is not a TTY.
-        git commit --verbose --edit --file="$message_file"
-        local status=$?
-
-        rm -f "$message_file"
-        return "$status"
-      }
     '';
     shellAliases = {
       ".." = "cd ..";
@@ -579,6 +460,9 @@ Do not modify any files.
   };
 
   # Edit-in-place: the real file stays in my repo, ~/.config just points at it.
+  # Git reads ~/.config/git/ignore by default (no core.excludesFile needed).
+  home.file.".config/git/ignore".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/git/ignore";
   home.file.".config/nvim".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".zprofile" = lib.mkIf (!isLinux) {
@@ -609,6 +493,8 @@ Do not modify any files.
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".pi/agent/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".pi/agent/themes/dark-bright-dim.json".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.pi/agent/themes/dark-bright-dim.json";
   home.file.".config/opencode/opencode.json".text = builtins.toJSON {
     model = "openai/gpt-5.6-sol";
     plugin = [
@@ -647,24 +533,10 @@ Do not modify any files.
   home.file.".config/wezterm" = lib.mkIf (!isLinux) {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   };
-  # macOS GUI apps discover fonts through CoreText, not the Nix profile path.
-  # Keep the Hack Nerd Font family linked into ~/Library/Fonts so WezTerm sees it after reboot.
-  home.file."Library/Fonts/HackNerdFont-Regular.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Regular.ttf";
-  };
-  home.file."Library/Fonts/HackNerdFont-Bold.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Bold.ttf";
-  };
-  home.file."Library/Fonts/HackNerdFont-Italic.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-Italic.ttf";
-  };
-  home.file."Library/Fonts/HackNerdFont-BoldItalic.ttf" = lib.mkIf (!isLinux) {
-    force = true;
-    source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-BoldItalic.ttf";
-  };
+  home.file."Library/Fonts/HackNerdFont-Regular.ttf" = hackFontEntry "Regular";
+  home.file."Library/Fonts/HackNerdFont-Bold.ttf" = hackFontEntry "Bold";
+  home.file."Library/Fonts/HackNerdFont-Italic.ttf" = hackFontEntry "Italic";
+  home.file."Library/Fonts/HackNerdFont-BoldItalic.ttf" = hackFontEntry "BoldItalic";
   home.file.".config/tmux" = {
     force = true;
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/tmux";
@@ -738,11 +610,23 @@ Do not modify any files.
         gstack_dir=${lib.escapeShellArg gstackCheckout}
         if [[ ! -d "$gstack_dir/.git" ]]; then
           $DRY_RUN_CMD mkdir -p "$(dirname "$gstack_dir")"
+          # Clone without a working tree, then materialize the flake-pinned revision.
+          # A plain clone would leave default-branch files that are not the pin.
           $DRY_RUN_CMD ${pkgs.git}/bin/git clone --no-checkout \
             https://github.com/garrytan/gstack.git "$gstack_dir"
+          if [[ -z "''${DRY_RUN:-}" ]]; then
+            ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+            ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+          fi
         fi
 
         if [[ -z "''${DRY_RUN:-}" ]]; then
+          # Recover clones left empty by an interrupted earlier bootstrap/activate.
+          if [[ ! -e "$gstack_dir/setup" ]]; then
+            ${pkgs.git}/bin/git -C "$gstack_dir" fetch --depth 1 origin ${lib.escapeShellArg gstackRev}
+            ${pkgs.git}/bin/git -C "$gstack_dir" checkout --detach ${lib.escapeShellArg gstackRev}
+          fi
+
           setup_state_file="$HOME/.gstack/.dotfiles-setup-state"
           expected_setup_state="gstack=${gstackRev};hosts=auto-prefix-v1"
           current_setup_state=""
