@@ -3,6 +3,7 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 config.enable_kitty_graphics = true
+config.enable_kitty_keyboard = true
 
 local function with_alpha(color, alpha)
   local h, s, l, _ = wezterm.color.parse(color):hsla()

@@ -272,6 +272,10 @@
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };
+          clipboard-keybindings = pkgs.callPackage ./tests/clipboard-keybindings.nix {
+            nvimKeys = ./home/.config/nvim/lua/keys.lua;
+            weztermConfig = ./home/.config/wezterm/wezterm.lua;
+          };
           gnhf-package = pkgs.callPackage ./tests/gnhf-package.nix {
             gnhfPackage = gnhfPackageFor system;
           };
