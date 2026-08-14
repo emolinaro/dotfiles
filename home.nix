@@ -101,6 +101,7 @@ in
       highlight
       htop
       httpie
+      hyperfine # benchmark shell commands
       jq # json on the command line
       just
       kitty.kitten # kitten CLI only, no kitty terminal
