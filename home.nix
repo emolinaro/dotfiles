@@ -1,4 +1,5 @@
 {
+  agentPkgs,
   axiToolsPackage,
   chromeDevtoolsAxiSkill,
   config,
@@ -43,10 +44,10 @@ let
       source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-${variant}.ttf";
     };
   linuxAgentPackages = {
-    claude = pkgs.claude-code;
-    codex = pkgs.codex;
-    opencode = pkgs.opencode;
-    pi = pkgs.pi-coding-agent;
+    claude = agentPkgs.claude-code;
+    codex = agentPkgs.codex;
+    opencode = agentPkgs.opencode;
+    pi = agentPkgs.pi-coding-agent;
   };
   agentExecutables = lib.genAttrs agentNames (
     name: if isLinux then lib.getExe linuxAgentPackages.${name} else "${homebrewPrefix}/bin/${name}"

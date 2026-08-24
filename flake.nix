@@ -5,6 +5,8 @@
     # Keep the core Nix modules on matching release branches.
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     nixpkgs-linux.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # Agent CLIs move quickly, so keep them on a separately pinned unstable input.
+    nixpkgs-agents.url = "github:NixOS/nixpkgs/nixos-unstable";
     nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -71,6 +73,7 @@
       nix-homebrew,
       home-manager,
       nixpkgs,
+      nixpkgs-agents,
       nixpkgs-linux,
       herdr,
       lavish,
@@ -112,6 +115,12 @@
       pkgsFor =
         system:
         import (if nixpkgs.lib.hasSuffix "-darwin" system then nixpkgs else nixpkgs-linux) {
+          inherit system;
+          config.allowUnfree = true;
+        };
+      agentPkgsFor =
+        system:
+        import nixpkgs-agents {
           inherit system;
           config.allowUnfree = true;
         };
@@ -326,6 +335,7 @@
         }:
         {
           inherit username homeDirectory herdrPackage;
+          agentPkgs = agentPkgsFor system;
           axiToolsPackage = axiToolsPackageFor system;
           gnhfPackage = gnhfPackageFor system;
           nonoPackage = nonoPackageFor system;
