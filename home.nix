@@ -223,6 +223,13 @@ in
       mv = "mv -i";
       rm = "rm -i";
       vi = "nvim";
+    } // lib.optionalAttrs (!isLinux) {
+      # Copy the previous command to the clipboard (pbcopy is macOS-only).
+      cpcmd = "fc -ln -1 | pbcopy";
+    } // lib.optionalAttrs isLinux {
+      # Copy the previous command via the OSC 52 escape sequence: WezTerm supports it,
+      # no clipboard package needed, and it works over SSH.
+      cpcmd = ''printf '\033]52;c;%s\007' "$(fc -ln -1 | base64 -w0)"'';
     };
   };
 
