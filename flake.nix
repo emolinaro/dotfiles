@@ -136,6 +136,8 @@
           pnpmDepsHash,
           pruneProd ? false,
           meta ? { },
+          # Extra shell run inside fetchPnpmDeps before `pnpm install` (e.g. pnpm config).
+          prePnpmInstall ? "",
         }:
         let
           pkgs = pkgsFor system;
@@ -145,7 +147,7 @@
           version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
 
           pnpmDeps = pkgs.fetchPnpmDeps {
-            inherit pname src;
+            inherit pname src prePnpmInstall;
             pnpm = pkgs.pnpm_11;
             fetcherVersion = 4;
             hash = pnpmDepsHash;
@@ -196,6 +198,23 @@
               src = lavish;
               entryPoint = "dist/cli.mjs";
               pnpmDepsHash = "sha256-DLCtgOtlPHe3GA1P0xfjJ1X1eJhFkH/hQcoEt+5b164=";
+              # pnpm 11.21 re-validates lockfile entries against its no-downgrade trust
+              # policy and rejects chokidar@4.0.3 / langium@3.3.1 because those versions
+              # were published without the provenance attestations that earlier releases
+              # of the same packages carry. Both tarballs are old, integrity-pinned in the
+              # lockfile, and published by the original author accounts (paulmillr, msujew),
+              # so this is a false positive rather than a takeover. Exclude only these two
+              # packages and keep the policy active for everything else.
+              # Note: `pnpm config set` stringifies list values and the fetcher's yq is
+              # the Python (jq-wrapper) flavor, so append real YAML to pnpm-workspace.yaml
+              # (the fetched source does not define trustPolicyExclude yet).
+              prePnpmInstall = ''
+                cat >> pnpm-workspace.yaml <<'EOF'
+                trustPolicyExclude:
+                  - chokidar
+                  - langium
+                EOF
+              '';
             }
             {
               pname = "quota-axi";
