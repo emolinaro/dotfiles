@@ -188,12 +188,21 @@ in a single command:
 nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack superpowers
 ```
 
+Linux agent CLIs use a separately pinned unstable package collection. Update
+Claude, Codex, OpenCode, and Pi without changing the main Ubuntu package set:
+
+```sh
+nix flake update nixpkgs-agents
+./rebuild.sh
+```
+
 Every input updates independently:
 
 | Input | Contents |
 | --- | --- |
 | `nixpkgs` | Package collection for macOS |
 | `nixpkgs-linux` | Package collection for both Ubuntu targets |
+| `nixpkgs-agents` | Unstable package collection for Linux agent CLIs |
 | `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
 | `gnhf` | GNHF CLI source |
 | `gstack`, `superpowers` | Agent workflow skills |
