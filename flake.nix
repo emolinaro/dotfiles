@@ -197,7 +197,7 @@
               pname = "lavish-axi";
               src = lavish;
               entryPoint = "dist/cli.mjs";
-              pnpmDepsHash = "sha256-DLCtgOtlPHe3GA1P0xfjJ1X1eJhFkH/hQcoEt+5b164=";
+              pnpmDepsHash = "sha256-Ag2s1xr0P2egphjqJKG02UbHlKVwA3A1tDMOjD8KnlE=";
               # pnpm 11.21 re-validates lockfile entries against its no-downgrade trust
               # policy and rejects chokidar@4.0.3 / langium@3.3.1 because those versions
               # were published without the provenance attestations that earlier releases
@@ -220,7 +220,7 @@
               pname = "quota-axi";
               src = quotaAxi;
               entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-O53HEnorhv1aJqxpFTNuF0gltEG6lrYO6n+mwdzeF70=";
+              pnpmDepsHash = "sha256-dWRK3kNESr8osq8FDIVTeE4IcHAR/0lBudUZOrDXl9M=";
             }
             {
               pname = "tasks-axi";

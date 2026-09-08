@@ -217,9 +217,23 @@ rebuild.
 
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Precompiled release
-packages are versioned in `packages/`; source-built Axi Tools and GNHF also
-pin `pnpmDepsHash` in `flake.nix`, which may need refreshing after an input
-update if dependencies changed.
+packages (`no-mistakes`, `treehouse`, `nono`) pin their version and per-platform
+tarball hashes in `packages/`. Update one to its latest GitHub release with:
+
+```sh
+./update-release.sh no-mistakes
+```
+
+Pass an explicit version to pin something other than the latest release:
+
+```sh
+./update-release.sh treehouse 2.2.0
+```
+
+The script resolves the release, prefetches every platform tarball, and
+rewrites the pinned version and hashes in `packages/<tool>.nix`. Source-built
+Axi Tools and GNHF also pin `pnpmDepsHash` in `flake.nix`, which may need
+refreshing after an input update if dependencies changed.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
 `quota-axi`, and `tasks-axi` on `PATH` after a rebuild.
