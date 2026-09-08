@@ -1,4 +1,4 @@
-agent: [codex, claude, opencode, pi]
+agent: pi 
 
 test:
   evidence:
