@@ -29,6 +29,8 @@ let
   isLinux = pkgs.stdenv.hostPlatform.isLinux;
   nonoProfiles = ./home/.config/nono/profiles;
   aicPackage = pkgs.callPackage ./packages/aic.nix { };
+  dshPackage = pkgs.callPackage ./packages/dsh.nix { };
+  dshTuiPackage = pkgs.callPackage ./packages/dsh-tui.nix { };
   noMistakesPackage = pkgs.callPackage ./packages/no-mistakes.nix { };
   treehousePackage = pkgs.callPackage ./packages/treehouse.nix { };
   ezaIcons = if isLinux then "never" else "always";
@@ -46,11 +48,20 @@ let
   linuxAgentPackages = {
     claude = agentPkgs.claude-code;
     codex = agentPkgs.codex;
+    dsh = dshPackage;
     opencode = agentPkgs.opencode;
     pi = agentPkgs.pi-coding-agent;
   };
+  # DeepSeek Harness is npm-only, so both platforms run the pinned Nix
+  # build instead of a Homebrew binary.
   agentExecutables = lib.genAttrs agentNames (
-    name: if isLinux then lib.getExe linuxAgentPackages.${name} else "${homebrewPrefix}/bin/${name}"
+    name:
+    if name == "dsh" then
+      lib.getExe dshPackage
+    else if isLinux then
+      lib.getExe linuxAgentPackages.${name}
+    else
+      "${homebrewPrefix}/bin/${name}"
   );
   agentWrappers = pkgs.callPackage ./runtime/nono-agent-wrappers.nix {
     inherit
@@ -85,6 +96,8 @@ in
       (if isLinux then coreutils else coreutils-prefixed) # avoid shadowing macOS BSD tools
       delta
       delve
+      dshPackage
+      dshTuiPackage
       dive
       dust # fast du for ./disk-usage.sh
       eza
@@ -118,6 +131,7 @@ in
       noMistakesPackage
       gnhfPackage
       pre-commit
+      pnpm # dsh profile bootstrap delegates plugin installs to pnpm
       python3
       ripgrep # fast search
       ruff
