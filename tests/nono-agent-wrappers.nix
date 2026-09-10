@@ -149,6 +149,11 @@ let
         test -d "$DOTFILES_AGENT_HOME/.codex"
         test -d "$DOTFILES_AGENT_HOME/.lavish-axi"
         ;;
+      *dotfiles-dsh.json)
+        test -d "$DOTFILES_AGENT_HOME/.dsh"
+        test -d "$DOTFILES_AGENT_HOME/.dsh-tui"
+        test -d "$DOTFILES_AGENT_HOME/.local/share/pnpm"
+        ;;
       *dotfiles-opencode.json)
         test -d "$DOTFILES_AGENT_HOME/.opencode"
         test -d "$DOTFILES_AGENT_HOME/.config/opencode"

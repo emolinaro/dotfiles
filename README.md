@@ -23,13 +23,14 @@ becomes GNHF's default; a new GNHF configuration starts with Claude.
 ```sh
 claude-nono
 codex-nono
+dsh-nono
 opencode-nono
 pi-nono
 gnhf --agent codex "your objective"
 gnhf --agent opencode "your objective"
 ```
 
-- `*-nono`: isolated worktree+HOME; only `auth.json` syncs back.
+- `*-nono`: isolated worktree+HOME; only the agent's credential file syncs back (`auth.json`; `.dsh/dsh-auth/credentials.json` for dsh).
 - Git/reconcile: local `reflog`+`index`; remote refs sync only from a clean host.
 - Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unusable in sparse/split-index/submodule/alternate-object/unlinked states.
 - Hardening: strips sensitive env; proxy-only egress via allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) + `DOTFILES_NONO_OPEN_PORTS`; disables keychain/cert/browser/container access.
@@ -235,8 +236,21 @@ rewrites the pinned version and hashes in `packages/<tool>.nix`. Source-built
 Axi Tools and GNHF also pin `pnpmDepsHash` in `flake.nix`, which may need
 refreshing after an input update if dependencies changed.
 
+The DeepSeek Harness packages (`dsh`, `dsh-tui`) pin npm registry tarballs in
+`packages/` with hashes, and `dsh` additionally pins its runtime dependency
+closure through `packages/dsh-package-lock.json` and `npmDepsHash` in
+`packages/dsh.nix`. Update one to a newer npm release by changing the pinned
+version, prefetching both tarball hashes
+(`nix store prefetch-file <registry tarball url>`), regenerating the lockfile
+(`npm install --package-lock-only --ignore-scripts` with `devDependencies`
+stripped from the tarball's `package.json`, then copy it to
+`packages/dsh-package-lock.json`), and refreshing `npmDepsHash` from the
+build failure message. `pnpm` is installed alongside because `dsh plugin`
+delegates profile installs to it.
+
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
-`quota-axi`, and `tasks-axi` on `PATH` after a rebuild.
+`quota-axi`, `tasks-axi`, `dsh`, `dsh-tui`, and `pnpm` on `PATH` after a
+rebuild.
 
 Review and validate every lock update before applying it:
 

@@ -278,5 +278,17 @@ pkgs.runCommand "nono-profiles-test"
       and ((.filesystem.deny // []) | length == 0)
     ' "$profile_dir/dotfiles-pi.json" >/dev/null
 
+    jq --exit-status '
+      (.filesystem.allow | contains([
+        "$DOTFILES_AGENT_HOME/.dsh",
+        "$DOTFILES_AGENT_HOME/.dsh-tui",
+        "$DOTFILES_AGENT_HOME/.cache/axi-tools",
+        "$DOTFILES_AGENT_HOME/.cache/dsh-tui-standalone",
+        "$DOTFILES_AGENT_HOME/.cache/pnpm",
+        "$DOTFILES_AGENT_HOME/.local/share/pnpm"
+      ]))
+      and ((.filesystem.deny // []) | length == 0)
+    ' "$profile_dir/dotfiles-dsh.json" >/dev/null
+
     touch "$out"
   ''
