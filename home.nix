@@ -67,7 +67,10 @@ in
 {
   home.username = username;
   home.homeDirectory = homeDirectory;
-  home.stateVersion = "24.11";
+  # The repo was provisioned directly on the 26.05 release branches
+  # (nixpkgs, home-manager, nix-darwin); track them instead of a stale
+  # pre-26.05 template value.
+  home.stateVersion = "26.05";
 
   # Avoid re-evaluating every Home Manager option to generate options.json.
   manual.manpages.enable = false;
@@ -166,6 +169,10 @@ in
   };
   programs.zsh = {
     enable = true;
+    # HM 26.05 defaults dotDir to ~/.config/zsh, which would move HISTFILE
+    # and stop the explicit ~/.zprofile (OrbStack hook) from loading.
+    # Keep zsh files in $HOME to preserve that behavior.
+    dotDir = config.home.homeDirectory;
     autosuggestion.enable = true; # ghost text from history
     syntaxHighlighting.enable = true; # commands turn green when valid
     initContent = ''
