@@ -22,7 +22,7 @@
   users.users.${username} = {
     home = homeDirectory;
   };
-  system.stateVersion = 6;
+  system.stateVersion = 7;
   system.defaults = {
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
