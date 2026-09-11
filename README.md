@@ -190,8 +190,8 @@ in a single command:
 nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack superpowers
 ```
 
-Linux agent CLIs use a separately pinned unstable package collection. Update
-Claude, Codex, OpenCode, and Pi without changing the main Ubuntu package set:
+On Linux, update Claude, Codex, OpenCode, and Pi through their separately
+pinned unstable package collection without changing the main Ubuntu package set:
 
 ```sh
 nix flake update nixpkgs-agents
@@ -204,7 +204,7 @@ Every input updates independently:
 | --- | --- |
 | `nixpkgs` | Package collection for macOS |
 | `nixpkgs-linux` | Package collection for both Ubuntu targets |
-| `nixpkgs-agents` | Unstable package collection for Linux agent CLIs |
+| `nixpkgs-agents` | Unstable agent package collection |
 | `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
 | `gnhf` | GNHF CLI source |
 | `gstack`, `superpowers` | Agent workflow skills |
@@ -237,17 +237,20 @@ rewrites the pinned version and hashes in `packages/<tool>.nix`. Source-built
 Axi Tools and GNHF also pin `pnpmDepsHash` in `flake.nix`, which may need
 refreshing after an input update if dependencies changed.
 
-The DeepSeek Harness packages (`dsh`, `dsh-tui`) pin npm registry tarballs in
-`packages/` with hashes, and `dsh` additionally pins its runtime dependency
-closure through `packages/dsh-package-lock.json` and `npmDepsHash` in
-`packages/dsh.nix`. Update one to a newer npm release by changing the pinned
-version, prefetching both tarball hashes
-(`nix store prefetch-file <registry tarball url>`), regenerating the lockfile
-(`npm install --package-lock-only --ignore-scripts` with `devDependencies`
-stripped from the tarball's `package.json`, then copy it to
-`packages/dsh-package-lock.json`), and refreshing `npmDepsHash` from the
-build failure message. `pnpm` is installed alongside because `dsh plugin`
-delegates profile installs to it.
+The DeepSeek Harness CLI (`dsh`) and TUI launcher (`dsh-tui`) pin npm registry
+tarballs in their respective `packages/*.nix` files. To update either package,
+change its version and prefetch the matching tarball's hash with
+`nix store prefetch-file <registry-tarball-url>`.
+
+Only `dsh` also pins its runtime dependencies through
+`packages/dsh-package-lock.json` and `npmDepsHash` in `packages/dsh.nix`.
+When updating it, regenerate the lockfile by running
+`npm install --package-lock-only --ignore-scripts` in the extracted `dsh`
+tarball directory after removing `devDependencies` from `package.json`, then
+copy the resulting lockfile to `packages/dsh-package-lock.json`. Temporarily
+set `npmDepsHash = lib.fakeHash;`, run `nix build .#dsh`, and replace the fake
+hash with the hash reported by the mismatch. Profile installs delegated by
+`dsh plugin` use `pnpm`.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
 `quota-axi`, `tasks-axi`, `dsh`, `dsh-tui`, and `pnpm` on `PATH` after a
@@ -256,7 +259,7 @@ rebuild.
 Review and validate every lock update before applying it:
 
 ```sh
-git diff -- flake.lock
+git diff -- flake.lock packages/
 nix flake check --all-systems --impure --no-build
 ./rebuild.sh
 ```
