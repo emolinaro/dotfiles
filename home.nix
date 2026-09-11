@@ -48,7 +48,6 @@ let
   linuxAgentPackages = {
     claude = agentPkgs.claude-code;
     codex = agentPkgs.codex;
-    dsh = dshPackage;
     opencode = agentPkgs.opencode;
     pi = agentPkgs.pi-coding-agent;
   };
