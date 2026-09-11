@@ -45,8 +45,6 @@ buildNpmPackage {
   installPhase = ''
     runHook preInstall
 
-    # Mirror an `npm install -g` layout: the package plus its dependency
-    # tree under lib/node_modules, bins symlinked at the top level.
     install -dm755 "$out/lib/node_modules/@deepseek-ai/dsh"
     cp -r lib package.json node_modules "$out/lib/node_modules/@deepseek-ai/dsh/"
     makeWrapper ${lib.getExe nodejs} "$out/bin/dsh" \
