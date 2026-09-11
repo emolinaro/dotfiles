@@ -286,6 +286,7 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_AGENT_HOME/.cache/pnpm",
         "$DOTFILES_AGENT_HOME/.local/share/pnpm"
       ]))
+      and .environment.set_vars.DSH_PERMISSION_MODE == "danger-full-access"
       and ((.filesystem.deny // []) | length == 0)
     ' "$profile_dir/dotfiles-dsh.json" >/dev/null
 

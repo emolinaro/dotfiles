@@ -31,6 +31,7 @@ gnhf --agent opencode "your objective"
 ```
 
 - `*-nono`: isolated worktree+HOME; only the agent's credential file syncs back (`~/.dsh/.credentials.yaml` for dsh).
+- `dsh-nono`: Nono provides the OS sandbox and sets `DSH_PERMISSION_MODE=danger-full-access` to prevent nested sandbox failures.
 - Git/reconcile: local `reflog`+`index`; remote refs sync only from a clean host.
 - Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unusable in sparse/split-index/submodule/alternate-object/unlinked states.
 - Hardening: strips sensitive env; proxy-only egress via allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) + `DOTFILES_NONO_OPEN_PORTS`; disables keychain/cert/browser/container access.

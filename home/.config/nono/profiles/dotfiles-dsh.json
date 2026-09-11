@@ -6,6 +6,11 @@
     "description": "DeepSeek Harness with isolated session state",
     "author": "dotfiles"
   },
+  "environment": {
+    "set_vars": {
+      "DSH_PERMISSION_MODE": "danger-full-access"
+    }
+  },
   "filesystem": {
     "allow": [
       "$DOTFILES_AGENT_HOME/.dsh",
