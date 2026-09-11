@@ -7,11 +7,18 @@
 
 let
   agentNames = builtins.attrNames agentRegistry;
+  authPaths = {
+    claude = ".claude/.credentials.json";
+    codex = ".codex/auth.json";
+    dsh = ".dsh/.credentials.yaml";
+    opencode = ".local/share/opencode/auth.json";
+    pi = ".pi/agent/auth.json";
+  };
   configuredHome = "/@NONO_TEST_HOME@";
   mkRecorder =
     name:
     let
-      authRelative = builtins.head agentRegistry.${name}.persistentFiles;
+      authRelative = authPaths.${name};
     in
     pkgs.writeShellApplication {
       inherit name;
@@ -331,7 +338,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     ${pkgs.lib.concatMapStringsSep "\n" (
       name:
       let
-        authRelative = builtins.head agentRegistry.${name}.persistentFiles;
+        authRelative = authPaths.${name};
       in
       ''
         mkdir -p "$HOME/$(${pkgs.coreutils}/bin/dirname ${pkgs.lib.escapeShellArg authRelative})"
@@ -409,7 +416,7 @@ pkgs.runCommand "nono-agent-wrappers-test"
     ${pkgs.lib.concatMapStringsSep "\n" (
       name:
       "assert_nono_wrapper ${name} ${agentExecutables.${name}} "
-      + pkgs.lib.escapeShellArg (builtins.head agentRegistry.${name}.persistentFiles)
+      + pkgs.lib.escapeShellArg authPaths.${name}
     ) agentNames}
     unset GIT_DIR NONO_ALLOW NONO_PROFILE
 

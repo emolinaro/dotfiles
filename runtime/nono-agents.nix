@@ -103,14 +103,13 @@ in
     clientArguments = [ ];
     filteredJsonPaths = [ ];
     persistentFiles = [
-      ".dsh/dsh-auth/credentials.json"
+      ".dsh/.credentials.yaml"
     ];
     profile = "dotfiles-dsh";
     stagedPaths = commonStagedPaths;
     writableDirectories = commonWritableDirectories ++ [
       ".dsh"
       ".dsh-tui"
-      ".cache/dsh-tui-standalone"
       ".local/share/pnpm"
       ".cache/pnpm"
     ];
