@@ -75,6 +75,9 @@ in
   # Avoid re-evaluating every Home Manager option to generate options.json.
   manual.manpages.enable = false;
 
+  # Preserve man-db; HM 26.05 defaults to the system man on macOS.
+  programs.man.package = pkgs.man;
+
   home.packages =
     with pkgs;
     [
