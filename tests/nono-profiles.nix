@@ -283,7 +283,6 @@ pkgs.runCommand "nono-profiles-test"
         "$DOTFILES_AGENT_HOME/.dsh",
         "$DOTFILES_AGENT_HOME/.dsh-tui",
         "$DOTFILES_AGENT_HOME/.cache/axi-tools",
-        "$DOTFILES_AGENT_HOME/.cache/dsh-tui-standalone",
         "$DOTFILES_AGENT_HOME/.cache/pnpm",
         "$DOTFILES_AGENT_HOME/.local/share/pnpm"
       ]))

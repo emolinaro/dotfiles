@@ -23,14 +23,14 @@ becomes GNHF's default; a new GNHF configuration starts with Claude.
 ```sh
 claude-nono
 codex-nono
-dsh-nono
+dsh-nono --profile headless "your objective"
 opencode-nono
 pi-nono
 gnhf --agent codex "your objective"
 gnhf --agent opencode "your objective"
 ```
 
-- `*-nono`: isolated worktree+HOME; only the agent's credential file syncs back (`auth.json`; `.dsh/dsh-auth/credentials.json` for dsh).
+- `*-nono`: isolated worktree+HOME; only the agent's credential file syncs back (`~/.dsh/.credentials.yaml` for dsh).
 - Git/reconcile: local `reflog`+`index`; remote refs sync only from a clean host.
 - Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unusable in sparse/split-index/submodule/alternate-object/unlinked states.
 - Hardening: strips sensitive env; proxy-only egress via allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) + `DOTFILES_NONO_OPEN_PORTS`; disables keychain/cert/browser/container access.

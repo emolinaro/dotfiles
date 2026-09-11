@@ -31,10 +31,8 @@ stdenvNoCC.mkDerivation {
     install -dm755 "$out/lib/node_modules/@deepseek-harness-tui/dsh-tui"
     cp -r bin lib presets cordis.yml cordis.patch.yml dsh-ecosystem-spec package.json \
       "$out/lib/node_modules/@deepseek-harness-tui/dsh-tui/"
-    for binary in dsh-tui dst; do
-      makeWrapper ${lib.getExe nodejs} "$out/bin/$binary" \
-        --add-flags "$out/lib/node_modules/@deepseek-harness-tui/dsh-tui/bin/dsh-tui.js"
-    done
+    makeWrapper ${lib.getExe nodejs} "$out/bin/dsh-tui" \
+      --add-flags "$out/lib/node_modules/@deepseek-harness-tui/dsh-tui/bin/dsh-tui.js"
 
     runHook postInstall
   '';
