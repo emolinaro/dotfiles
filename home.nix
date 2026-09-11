@@ -67,9 +67,8 @@ in
 {
   home.username = username;
   home.homeDirectory = homeDirectory;
-  # The repo was provisioned directly on the 26.05 release branches
-  # (nixpkgs, home-manager, nix-darwin); track them instead of a stale
-  # pre-26.05 template value.
+  # Compatibility baseline for the release used at initial provisioning.
+  # Keep it fixed during routine input upgrades.
   home.stateVersion = "26.05";
 
   # Avoid re-evaluating every Home Manager option to generate options.json.
