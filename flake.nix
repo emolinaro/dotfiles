@@ -276,6 +276,14 @@
                 (fs.fileFilter (file: file.hasExt "sh") ./.)
               ];
             };
+          ubuntuPlatformDetectionSrc = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./scripts/lib-detect.sh
+              ./tests/fixtures/os-release
+              ./tests/ubuntu-platform-detection.sh
+            ];
+          };
         in
         {
           format =
@@ -297,6 +305,13 @@
             find . -name '*.sh' -print0 | xargs -0 shellcheck -x
             touch "$out"
           '';
+          ubuntu-platform-detection =
+            pkgs.runCommand "ubuntu-platform-detection-test" { nativeBuildInputs = [ pkgs.bash ]; }
+              ''
+                cd ${ubuntuPlatformDetectionSrc}
+                bash tests/ubuntu-platform-detection.sh
+                touch "$out"
+              '';
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };

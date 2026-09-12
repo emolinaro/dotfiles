@@ -54,8 +54,9 @@ every script.
 - macOS on Apple Silicon, by default.
 - Intel Mac: set `nixpkgs.hostPlatform = "x86_64-darwin";` in
   `configuration.nix`.
-- Headless Ubuntu 24.04 on x86_64 or ARM64. The Ubuntu bootstrap requires a
-  non-root user with sudo access and selects the correct architecture automatically.
+- Headless Ubuntu 24.04 or 26.04 on x86_64 or ARM64. The Ubuntu bootstrap
+  requires a non-root user with sudo access and selects the correct architecture
+  automatically.
 
 ## Fresh macOS setup
 
@@ -105,7 +106,7 @@ Edit the config files in place, then apply:
 That's it.
 No separate build-and-copy step.
 
-## Fresh Ubuntu 24.04 setup
+## Fresh Ubuntu setup
 
 Clone the repo as the user who will own the configuration, then run:
 
@@ -142,8 +143,9 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-The root scripts detect macOS or Ubuntu 24.04 and dispatch to the matching
-implementation. Platform scripts can also be run directly when needed:
+The root scripts detect macOS or a supported Ubuntu release (24.04 or 26.04)
+and dispatch to the matching implementation. Platform scripts can also be run
+directly when needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
