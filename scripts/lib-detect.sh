@@ -9,16 +9,21 @@ dotfiles_repo_root() {
   (cd "$lib_dir/.." && pwd -P)
 }
 
-require_ubuntu_2404() {
-  if [[ ! -r /etc/os-release ]]; then
-    echo "Error: /etc/os-release is missing; Ubuntu 24.04 is required." >&2
+require_supported_ubuntu() {
+  local os_release="${1:-/etc/os-release}"
+  local ID=""
+  local PRETTY_NAME=""
+  local VERSION_ID=""
+
+  if [[ ! -r "$os_release" ]]; then
+    echo "Error: $os_release is missing; Ubuntu 24.04 or 26.04 is required." >&2
     exit 1
   fi
 
-  # shellcheck disable=SC1091
-  . /etc/os-release
-  if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "24.04" ]]; then
-    echo "Error: Ubuntu 24.04 is required; found ${PRETTY_NAME:-unknown OS}." >&2
+  # shellcheck disable=SC1090
+  . "$os_release"
+  if [[ "$ID" != "ubuntu" || ("$VERSION_ID" != "24.04" && "$VERSION_ID" != "26.04") ]]; then
+    echo "Error: Ubuntu 24.04 or 26.04 is required; found ${PRETTY_NAME:-unknown OS}." >&2
     exit 1
   fi
 }
@@ -47,7 +52,7 @@ dotfiles_dispatch() {
       exec "$root/scripts/macos/$command_name" "$@"
       ;;
     Linux)
-      require_ubuntu_2404
+      require_supported_ubuntu
       exec "$root/scripts/ubuntu/$command_name" "$@"
       ;;
     *)
