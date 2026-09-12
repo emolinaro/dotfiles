@@ -143,7 +143,7 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-The root scripts detect macOS or a supported Ubuntu release (24.04 or 26.04)
+The root scripts detect macOS or a [supported Ubuntu release](#supported-systems)
 and dispatch to the matching implementation. Platform scripts can also be run
 directly when needed:
 
