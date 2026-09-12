@@ -5,7 +5,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # shellcheck source=scripts/lib-detect.sh
 . "$DIR/scripts/lib-detect.sh"
 
-require_ubuntu_2404
+require_supported_ubuntu
 HOME_TARGET="$(home_target_for_arch)"
 
 ln -sfn "$DIR" "$HOME/.dotfiles"
