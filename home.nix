@@ -67,10 +67,15 @@ in
 {
   home.username = username;
   home.homeDirectory = homeDirectory;
-  home.stateVersion = "24.11";
+  # Compatibility baseline for the release used at initial provisioning.
+  # Keep it fixed during routine input upgrades.
+  home.stateVersion = "26.05";
 
   # Avoid re-evaluating every Home Manager option to generate options.json.
   manual.manpages.enable = false;
+
+  # Preserve man-db; HM 26.05 defaults to the system man on macOS.
+  programs.man.package = pkgs.man;
 
   home.packages =
     with pkgs;
@@ -166,6 +171,10 @@ in
   };
   programs.zsh = {
     enable = true;
+    # HM 26.05 defaults dotDir to ~/.config/zsh, which would move HISTFILE
+    # and stop the explicit ~/.zprofile (OrbStack hook) from loading.
+    # Keep zsh files in $HOME to preserve that behavior.
+    dotDir = config.home.homeDirectory;
     autosuggestion.enable = true; # ghost text from history
     syntaxHighlighting.enable = true; # commands turn green when valid
     initContent = ''
