@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Takes a fresh Ubuntu 24.04 server from nothing to a Home Manager config.
+# Takes a fresh supported Ubuntu server from nothing to a Home Manager config.
 # Run this once. After it finishes, use ./rebuild.sh for later changes.
 set -euo pipefail
 
@@ -7,7 +7,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # shellcheck source=scripts/lib-detect.sh
 . "$DIR/scripts/lib-detect.sh"
 
-require_ubuntu_2404
+require_supported_ubuntu
 HOME_TARGET="$(home_target_for_arch)"
 
 if [[ "$(id -u)" -eq 0 ]]; then
@@ -26,7 +26,8 @@ sudo apt-get install -y --no-install-recommends \
   libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2
 
 echo "==> Step 2: allow unprivileged user namespaces (Codex sandbox)"
-# Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor by default.
+# Supported Ubuntu releases restrict unprivileged user namespaces via AppArmor
+# by default.
 # Codex's Linux sandbox runs bubblewrap from the Nix store, which has no
 # AppArmor profile, so the kernel blocks `bwrap --unshare-user` and sandboxed
 # commands break. Relax the restriction system-wide via a persistent sysctl.
