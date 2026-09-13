@@ -1,0 +1,23 @@
+{
+  "extends": "dotfiles-agent-base",
+  "meta": {
+    "name": "dotfiles-dsh",
+    "version": "1.0.0",
+    "description": "DeepSeek Harness with isolated session state",
+    "author": "dotfiles"
+  },
+  "environment": {
+    "set_vars": {
+      "DSH_PERMISSION_MODE": "danger-full-access"
+    }
+  },
+  "filesystem": {
+    "allow": [
+      "$DOTFILES_AGENT_HOME/.dsh",
+      "$DOTFILES_AGENT_HOME/.dsh-tui",
+      "$DOTFILES_AGENT_HOME/.cache/axi-tools",
+      "$DOTFILES_AGENT_HOME/.cache/pnpm",
+      "$DOTFILES_AGENT_HOME/.local/share/pnpm"
+    ]
+  }
+}

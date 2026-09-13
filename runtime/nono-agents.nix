@@ -99,6 +99,22 @@ in
     ];
     writableFiles = [ ];
   };
+  dsh = {
+    clientArguments = [ ];
+    filteredJsonPaths = [ ];
+    persistentFiles = [
+      ".dsh/.credentials.yaml"
+    ];
+    profile = "dotfiles-dsh";
+    stagedPaths = commonStagedPaths;
+    writableDirectories = commonWritableDirectories ++ [
+      ".dsh"
+      ".dsh-tui"
+      ".local/share/pnpm"
+      ".cache/pnpm"
+    ];
+    writableFiles = [ ];
+  };
   opencode = {
     clientArguments = [ ];
     filteredJsonPaths = [ ];

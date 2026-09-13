@@ -125,6 +125,8 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      dshPackageFor = system: (pkgsFor system).callPackage ./packages/dsh.nix { };
+      dshTuiPackageFor = system: (pkgsFor system).callPackage ./packages/dsh-tui.nix { };
       # Build one pnpm-packaged Node CLI from source with a pinned dependency
       # hash. GNHF passes pruneProd to strip dev dependencies from the closure.
       pnpmToolFor =
@@ -315,6 +317,10 @@
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };
+          dsh-package = pkgs.callPackage ./tests/dsh-package.nix {
+            dshPackage = dshPackageFor system;
+            dshTuiPackage = dshTuiPackageFor system;
+          };
           gnhf-package = pkgs.callPackage ./tests/gnhf-package.nix {
             gnhfPackage = gnhfPackageFor system;
           };
@@ -426,6 +432,8 @@
       packages = forAllSystems (system: {
         ci = ciFor system;
         axi-tools = axiToolsPackageFor system;
+        dsh = dshPackageFor system;
+        dsh-tui = dshTuiPackageFor system;
         gnhf = gnhfPackageFor system;
         nono = nonoPackageFor system;
         nono-runtime-test = nonoRuntimeTestFor system;

@@ -23,13 +23,15 @@ becomes GNHF's default; a new GNHF configuration starts with Claude.
 ```sh
 claude-nono
 codex-nono
+dsh-nono --profile headless "your objective"
 opencode-nono
 pi-nono
 gnhf --agent codex "your objective"
 gnhf --agent opencode "your objective"
 ```
 
-- `*-nono`: isolated worktree+HOME; only `auth.json` syncs back.
+- `*-nono`: isolated worktree+HOME; only the agent's credential file syncs back (`~/.dsh/.credentials.yaml` for dsh).
+- `dsh-nono`: Nono provides the OS sandbox and sets `DSH_PERMISSION_MODE=danger-full-access` to prevent nested sandbox failures.
 - Git/reconcile: local `reflog`+`index`; remote refs sync only from a clean host.
 - Runtime: blocks merge/rebase/cherry-pick/revert/bisect; unusable in sparse/split-index/submodule/alternate-object/unlinked states.
 - Hardening: strips sensitive env; proxy-only egress via allowlist (`DOTFILES_NONO_ALLOW_DOMAINS`, `chatgpt.com`) + `DOTFILES_NONO_OPEN_PORTS`; disables keychain/cert/browser/container access.
@@ -190,8 +192,8 @@ in a single command:
 nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack superpowers
 ```
 
-Linux agent CLIs use a separately pinned unstable package collection. Update
-Claude, Codex, OpenCode, and Pi without changing the main Ubuntu package set:
+On Linux, update Claude, Codex, OpenCode, and Pi through their separately
+pinned unstable package collection without changing the main Ubuntu package set:
 
 ```sh
 nix flake update nixpkgs-agents
@@ -204,7 +206,7 @@ Every input updates independently:
 | --- | --- |
 | `nixpkgs` | Package collection for macOS |
 | `nixpkgs-linux` | Package collection for both Ubuntu targets |
-| `nixpkgs-agents` | Unstable package collection for Linux agent CLIs |
+| `nixpkgs-agents` | Unstable agent package collection |
 | `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
 | `gnhf` | GNHF CLI source |
 | `gstack`, `superpowers` | Agent workflow skills |
@@ -237,13 +239,29 @@ rewrites the pinned version and hashes in `packages/<tool>.nix`. Source-built
 Axi Tools and GNHF also pin `pnpmDepsHash` in `flake.nix`, which may need
 refreshing after an input update if dependencies changed.
 
+The DeepSeek Harness CLI (`dsh`) and TUI launcher (`dsh-tui`) pin npm registry
+tarballs in their respective `packages/*.nix` files. To update either package,
+change its version and prefetch the matching tarball's hash with
+`nix store prefetch-file <registry-tarball-url>`.
+
+Only `dsh` also pins its runtime dependencies through
+`packages/dsh-package-lock.json` and `npmDepsHash` in `packages/dsh.nix`.
+When updating it, regenerate the lockfile by running
+`npm install --package-lock-only --ignore-scripts` in the extracted `dsh`
+tarball directory after removing `devDependencies` from `package.json`, then
+copy the resulting lockfile to `packages/dsh-package-lock.json`. Temporarily
+set `npmDepsHash = lib.fakeHash;`, run `nix build .#dsh`, and replace the fake
+hash with the hash reported by the mismatch. Profile installs delegated by
+`dsh plugin` use `pnpm`.
+
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
-`quota-axi`, and `tasks-axi` on `PATH` after a rebuild.
+`quota-axi`, `tasks-axi`, `dsh`, `dsh-tui`, and `pnpm` on `PATH` after a
+rebuild.
 
 Review and validate every lock update before applying it:
 
 ```sh
-git diff -- flake.lock
+git diff -- flake.lock packages/
 nix flake check --all-systems --impure --no-build
 ./rebuild.sh
 ```
