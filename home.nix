@@ -125,6 +125,7 @@ in
       pre-commit
       python3
       ripgrep # fast search
+      rsync # GNU rsync; macOS ships openrsync (protocol 29) which lacks newer flags
       ruff
       shellcheck
       shfmt
