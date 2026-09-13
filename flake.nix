@@ -321,6 +321,10 @@
           gstack-checkout-migration = pkgs.callPackage ./tests/gstack-checkout-migration.nix {
             migrationPackage = pkgs.callPackage ./runtime/gstack-checkout-migration.nix { };
           };
+          herdr-config = pkgs.callPackage ./tests/herdr-config.nix {
+            configFile = ./home/.config/herdr/config.toml;
+            herdrPackage = herdr.packages.${system}.default;
+          };
           nono-package = pkgs.callPackage ./tests/nono-package.nix {
             nonoPackage = nonoPackageFor system;
           };
