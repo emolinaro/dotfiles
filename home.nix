@@ -184,9 +184,6 @@ in
         printf '\033]11;#000000\007\033]10;#f5f5f5\007'
       ''}
 
-      # Make Starship right prompt align cleanly in Zsh
-      ZLE_RPROMPT_INDENT=0
-
       bindkey '^f' autosuggest-accept
 
       # Home / End keys
@@ -294,8 +291,9 @@ in
       scan_timeout = 20;
       command_timeout = 300;
 
-      format = "$username$hostname$directory$custom$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$golang$cmd_duration$line_break$jobs$status$character";
-      right_format = "$time";
+      # Keep the clock on the directory row so multiline commands copy cleanly.
+      format = "$username$hostname$directory$custom$git_branch$git_status$git_metrics$package$nix_shell$direnv$kubernetes$docker_context$python$nodejs$golang$cmd_duration$fill$time$line_break$jobs$status$character";
+      fill.symbol = " ";
 
       character = {
         success_symbol = "[❯](purple)";
