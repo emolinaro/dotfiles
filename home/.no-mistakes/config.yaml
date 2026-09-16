@@ -1,4 +1,7 @@
-agent: pi 
+agent: pi
+
+review_agent_timeout: "90m"
+agent_timeout: "90m"
 
 test:
   evidence:
