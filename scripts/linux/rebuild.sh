@@ -5,8 +5,8 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 # shellcheck source=scripts/lib-detect.sh
 . "$DIR/scripts/lib-detect.sh"
 
-require_supported_ubuntu
-HOME_TARGET="$(home_target_for_arch)"
+require_supported_linux_distro
+HOME_TARGET="$(home_target_for_linux_arch)"
 
 ln -sfn "$DIR" "$HOME/.dotfiles"
 export DOTFILES_USERNAME="${USER:-$(id -un)}"

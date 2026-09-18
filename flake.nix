@@ -15,7 +15,7 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
-    # Use Herdr independently so Ubuntu gets the upstream-supported Nix build.
+    # Use Herdr independently so Linux gets the upstream-supported Nix build.
     herdr.url = "github:ogulcancelik/herdr";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
 
@@ -103,8 +103,8 @@
         else
           throw "Unable to determine the non-root macOS user. Run the setup as a sudo-capable user with --impure.";
       darwinHomeDirectory = "/Users/${darwinUsername}";
-      ubuntuUsername = envOr "DOTFILES_USERNAME" "ubuntu";
-      ubuntuHomeDirectory = envOr "DOTFILES_HOME" "/home/${ubuntuUsername}";
+      linuxUsername = envOr "DOTFILES_USERNAME" "ubuntu";
+      linuxHomeDirectory = envOr "DOTFILES_HOME" "/home/${linuxUsername}";
       supportedSystems = [
         "aarch64-darwin"
         "x86_64-darwin"
@@ -276,12 +276,12 @@
                 (fs.fileFilter (file: file.hasExt "sh") ./.)
               ];
             };
-          ubuntuPlatformDetectionSrc = pkgs.lib.fileset.toSource {
+          linuxPlatformDetectionSrc = pkgs.lib.fileset.toSource {
             root = ./.;
             fileset = pkgs.lib.fileset.unions [
               ./scripts/lib-detect.sh
               ./tests/fixtures/os-release
-              ./tests/ubuntu-platform-detection.sh
+              ./tests/linux-platform-detection.sh
             ];
           };
         in
@@ -305,11 +305,11 @@
             find . -name '*.sh' -print0 | xargs -0 shellcheck -x
             touch "$out"
           '';
-          ubuntu-platform-detection =
-            pkgs.runCommand "ubuntu-platform-detection-test" { nativeBuildInputs = [ pkgs.bash ]; }
+          linux-platform-detection =
+            pkgs.runCommand "linux-platform-detection-test" { nativeBuildInputs = [ pkgs.bash ]; }
               ''
-                cd ${ubuntuPlatformDetectionSrc}
-                bash tests/ubuntu-platform-detection.sh
+                cd ${linuxPlatformDetectionSrc}
+                bash tests/linux-platform-detection.sh
                 touch "$out"
               '';
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
@@ -333,7 +333,7 @@
             if pkgs.stdenv.hostPlatform.isLinux then
               pkgs.callPackage ./tests/nono-home-command-surface.nix {
                 inherit agentRegistry;
-                homePath = (mkUbuntuHome system).config.home.path;
+                homePath = (mkLinuxHome system).config.home.path;
               }
             else
               pkgs.runCommand "nono-home-command-surface-not-linux" { } ''
@@ -382,13 +382,13 @@
           gstackRev = gstack.rev;
           superpowersRev = superpowers.rev;
         };
-      mkUbuntuHome =
+      mkLinuxHome =
         system:
         home-manager.lib.homeManagerConfiguration {
           pkgs = pkgsFor system;
           extraSpecialArgs = homeSpecialArgsFor system {
-            username = ubuntuUsername;
-            homeDirectory = ubuntuHomeDirectory;
+            username = linuxUsername;
+            homeDirectory = linuxHomeDirectory;
             herdrPackage = herdr.packages.${system}.default;
           };
           modules = [
@@ -420,8 +420,12 @@
         ];
       };
       homeConfigurations = {
-        ubuntu-x86_64 = mkUbuntuHome "x86_64-linux";
-        ubuntu-aarch64 = mkUbuntuHome "aarch64-linux";
+        linux-x86_64 = mkLinuxHome "x86_64-linux";
+        linux-aarch64 = mkLinuxHome "aarch64-linux";
+        # Compatibility aliases for machines provisioned before the targets
+        # became distro-neutral. They point at the same configurations.
+        ubuntu-x86_64 = mkLinuxHome "x86_64-linux";
+        ubuntu-aarch64 = mkLinuxHome "aarch64-linux";
       };
       packages = forAllSystems (system: {
         ci = ciFor system;
