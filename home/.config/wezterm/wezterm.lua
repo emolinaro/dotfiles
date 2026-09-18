@@ -176,4 +176,18 @@ config.keys = {
   { key = "0", mods = "CMD", action = wezterm.action.ResetFontSize },
 }
 
+local resurrect = wezterm.plugin.require(
+  "https://github.com/YedPool/resurrect.wezterm"
+)
+
+resurrect.setup(config, {
+  status_bar = false,
+  periodic_interval = 60,
+  save_workspaces = true,
+  save_windows = true,
+  save_tabs = true,
+  auto_restore_prompt = true,
+})
+
+
 return config
