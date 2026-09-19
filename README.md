@@ -1,6 +1,6 @@
 # dotfiles
 
-My personal macOS and Ubuntu setup, managed with Nix and Home Manager.
+My personal macOS, Ubuntu, and Arch Linux setup, managed with Nix and Home Manager.
 One repo, one command, and a fresh machine ends up configured the same way every time.
 
 ## What you get
@@ -54,9 +54,9 @@ every script.
 - macOS on Apple Silicon, by default.
 - Intel Mac: set `nixpkgs.hostPlatform = "x86_64-darwin";` in
   `configuration.nix`.
-- Headless Ubuntu 24.04 or 26.04 on x86_64 or ARM64. The Ubuntu bootstrap
-  requires a non-root user with sudo access and selects the correct architecture
-  automatically.
+- Headless Ubuntu 24.04 or 26.04 or Arch Linux (including Arch Linux ARM)
+  on x86_64 or ARM64. The Linux bootstrap requires a non-root user with sudo
+  access and selects the correct architecture automatically.
 
 ## Fresh macOS setup
 
@@ -106,7 +106,7 @@ Edit the config files in place, then apply:
 That's it.
 No separate build-and-copy step.
 
-## Fresh Ubuntu setup
+## Fresh Ubuntu or Arch setup
 
 Clone the repo as the user who will own the configuration, then run:
 
@@ -116,26 +116,27 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-The Ubuntu setup is headless. Apt installs only system-level prerequisites;
-Home Manager installs the shared user environment. Platform-specific package
-sources are selected declaratively, and checksum-pinned binary packages choose
-the correct archive for each supported architecture. Update checks remain
-under Nix control.
+The Linux setup is headless. The distro package manager installs only
+system-level prerequisites; Home Manager installs the shared user environment.
+Platform-specific package sources are selected declaratively, and
+checksum-pinned binary packages choose the correct archive for each supported
+architecture. Update checks remain under Nix control.
 
-The bootstrap supports x86_64 and ARM64, uses the current username and home
-directory, relaxes Ubuntu's default AppArmor restriction on unprivileged user
-namespaces (required by Codex's bubblewrap sandbox), changes the login shell to
+The bootstrap supports Ubuntu and Arch Linux on x86_64 and ARM64, uses the
+current username and home directory, changes the login shell to
 `/usr/bin/zsh`, enables Docker through systemd, and adds the current user to
-the `docker` group. Start a new login
-session after it completes so the shell and Docker group changes take effect,
-then authenticate Codex manually. Restart Codex after a rebuild so it discovers
-newly installed agent skills:
+the `docker` group. On Ubuntu it additionally relaxes the default AppArmor
+restriction on unprivileged user namespaces (required by Codex's bubblewrap
+sandbox); Arch does not restrict them, so the step is skipped. Start a new
+login session after it completes so the shell and Docker group changes take
+effect, then authenticate Codex manually. Restart Codex after a rebuild so it
+discovers newly installed agent skills:
 
 ```sh
 codex login
 ```
 
-### Rebuild Ubuntu
+### Rebuild Linux
 
 Apply later changes with:
 
@@ -143,17 +144,14 @@ Apply later changes with:
 ./rebuild.sh
 ```
 
-The root scripts detect macOS or a [supported Ubuntu release](#supported-systems)
+The root scripts detect macOS or a [supported Linux distribution](#supported-systems)
 and dispatch to the matching implementation. Platform scripts can also be run
 directly when needed:
 
 ```sh
 ./scripts/macos/rebuild.sh
-./scripts/ubuntu/rebuild.sh
+./scripts/linux/rebuild.sh
 ```
-
-Both Ubuntu entry points verify that `/usr/bin/zsh` is the account's login
-shell. The rebuild restores it with sudo if it has been changed.
 
 ## Check and reclaim disk space
 
@@ -191,7 +189,7 @@ nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack su
 ```
 
 Linux agent CLIs use a separately pinned unstable package collection. Update
-Claude, Codex, OpenCode, and Pi without changing the main Ubuntu package set:
+Claude, Codex, OpenCode, and Pi without changing the main Linux package set:
 
 ```sh
 nix flake update nixpkgs-agents
@@ -203,7 +201,7 @@ Every input updates independently:
 | Input | Contents |
 | --- | --- |
 | `nixpkgs` | Package collection for macOS |
-| `nixpkgs-linux` | Package collection for both Ubuntu targets |
+| `nixpkgs-linux` | Package collection for both Linux targets |
 | `nixpkgs-agents` | Unstable package collection for Linux agent CLIs |
 | `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
 | `gnhf` | GNHF CLI source |
