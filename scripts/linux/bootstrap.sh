@@ -86,8 +86,11 @@ ln -sfn "$DIR" "$HOME/.dotfiles"
 echo "==> Step 5: first Home Manager switch"
 export DOTFILES_USERNAME="${USER:-$(id -un)}"
 export DOTFILES_HOME="$HOME"
+# -b moves pre-existing files that Home Manager would clobber (desktop
+# distros ship their own starship.toml, herdr, opencode configs) to
+# <name>.backup instead of failing the switch.
 nix run github:nix-community/home-manager/release-26.05 -- \
-  switch --impure --flake "$HOME/.dotfiles#$HOME_TARGET"
+  switch -b backup --impure --flake "$HOME/.dotfiles#$HOME_TARGET"
 
 echo "==> Step 6: set Zsh as the login shell"
 CURRENT_LOGIN_SHELL="$(getent passwd "$DOTFILES_USERNAME" | cut -d: -f7)"
