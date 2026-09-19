@@ -147,6 +147,7 @@ in
         pkgs.docker-compose
         pkgs.gcc # nvim-treesitter compiles parsers with cc
         herdrPackage
+        pkgs.inetutils # hostname, telnet, ftp; macOS ships BSD equivalents
         pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
         pkgs.procps
       ]
