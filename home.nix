@@ -43,10 +43,14 @@ let
       force = true;
       source = "${pkgs.nerd-fonts.hack}/share/fonts/truetype/NerdFonts/Hack/HackNerdFont-${variant}.ttf";
     };
+  # Claude, Codex, and OpenCode release daily and nixpkgs trails upstream
+  # by days to weeks, so pin their GitHub release tarballs directly (updated
+  # with ./update-release.sh). Pi is npm-only upstream and moves slowly
+  # enough to stay on the pinned unstable nixpkgs input.
   linuxAgentPackages = {
-    claude = agentPkgs.claude-code;
-    codex = agentPkgs.codex;
-    opencode = agentPkgs.opencode;
+    claude = pkgs.callPackage ./packages/claude-code.nix { };
+    codex = pkgs.callPackage ./packages/codex.nix { };
+    opencode = pkgs.callPackage ./packages/opencode.nix { };
     pi = agentPkgs.pi-coding-agent;
   };
   agentExecutables = lib.genAttrs agentNames (
