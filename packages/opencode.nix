@@ -35,6 +35,9 @@ stdenvNoCC.mkDerivation {
 
   sourceRoot = ".";
   dontBuild = true;
+  # Bun single-file executable: stripping breaks the appended payload offset
+  # and the binary degrades to running as plain Bun instead of opencode.
+  dontStrip = true;
 
   nativeBuildInputs = [
     autoPatchelfHook
