@@ -182,11 +182,13 @@ local resurrect = wezterm.plugin.require(
 
 resurrect.setup(config, {
   status_bar = false,
-  periodic_interval = 60,
+  periodic_interval = 600,
+  retention_days = 7,
   save_workspaces = true,
   save_windows = true,
   save_tabs = true,
-  auto_restore_prompt = true,
+  auto_restore_prompt = false,
+  claude_hooks = false,
 })
 
 
