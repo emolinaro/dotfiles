@@ -262,25 +262,28 @@ in
     ];
   };
 
-  programs.git.settings = {
-    user = {
-      name = "emolinaro";
-      email = "40191802+emolinaro@users.noreply.github.com";
-    };
-    fetch.prune = true;
-    push.autoSetupRemote = true;
-    rerere.enabled = true;
-    rerere.autoUpdate = true;
-    merge.conflictStyle = "zdiff3";
-    worktree.guessRemote = true;
-    core.editor = "nvim";
-    core.pager = "delta";
-    commit.verbose = true;
-    interactive.diffFilter = "delta --color-only";
-    delta = {
-      navigate = true;
-      line-numbers = true;
-      side-by-side = false;
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "emolinaro";
+        email = "40191802+emolinaro@users.noreply.github.com";
+      };
+      fetch.prune = true;
+      push.autoSetupRemote = true;
+      rerere.enabled = true;
+      rerere.autoUpdate = true;
+      merge.conflictStyle = "zdiff3";
+      worktree.guessRemote = true;
+      core.editor = "nvim";
+      core.pager = "delta";
+      commit.verbose = true;
+      interactive.diffFilter = "delta --color-only";
+      delta = {
+        navigate = true;
+        line-numbers = true;
+        side-by-side = false;
+      };
     };
   };
 
