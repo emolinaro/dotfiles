@@ -50,6 +50,7 @@
       "opencode"
       "pi-coding-agent"
       "midnight-commander"
+      "ffmpeg"
       "pkg-config"
     ];
     casks = [
