@@ -188,8 +188,19 @@ in a single command:
 nix flake update lavish chromeDevtoolsAxi ghAxi quotaAxi tasksAxi gnhf gstack superpowers
 ```
 
-Linux agent CLIs use a separately pinned unstable package collection. Update
-Claude, Codex, OpenCode, and Pi without changing the main Linux package set:
+Linux agent CLIs split by update cadence. Claude, Codex, and OpenCode
+release daily and nixpkgs trails upstream by days to weeks, so they are
+pinned directly to GitHub release tarballs in `packages/` and updated with
+the release script (same flow as no-mistakes and treehouse):
+
+```sh
+./update-release.sh claude-code codex opencode
+./rebuild.sh
+```
+
+Pi is npm-only upstream and moves slowly enough to stay on the separately
+pinned unstable nixpkgs input. Update Pi without changing the main Linux
+package set:
 
 ```sh
 nix flake update nixpkgs-agents
@@ -202,7 +213,7 @@ Every input updates independently:
 | --- | --- |
 | `nixpkgs` | Package collection for macOS |
 | `nixpkgs-linux` | Package collection for both Linux targets |
-| `nixpkgs-agents` | Unstable package collection for Linux agent CLIs |
+| `nixpkgs-agents` | Unstable package collection for the Linux Pi agent CLI |
 | `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
 | `gnhf` | GNHF CLI source |
 | `gstack`, `superpowers` | Agent workflow skills |
@@ -217,7 +228,8 @@ rebuild.
 
 Most Nix packages come from a shared Nixpkgs input, so an individual package
 such as `kubectl` cannot be updated independently. Precompiled release
-packages (`no-mistakes`, `treehouse`, `nono`) pin their version and per-platform
+packages (`no-mistakes`, `treehouse`, `nono`, and the agent CLIs
+`claude-code`, `codex`, `opencode`) pin their version and per-platform
 tarball hashes in `packages/`. Update one to its latest GitHub release with:
 
 ```sh

@@ -5,7 +5,8 @@
 #   update-release.sh <tool> [version]
 #
 # <tool> names a package file in packages/ that pins a GitHub release tarball
-# (for example no-mistakes, treehouse, or nono). The script resolves the
+# (for example no-mistakes, treehouse, nono, or the agent CLIs claude-code,
+# codex, and opencode). The script resolves the
 # latest release, or uses the requested version, prefetches every platform
 # tarball with `nix store prefetch-file`, and rewrites the pinned version
 # and hashes in packages/<tool>.nix in place.
@@ -71,6 +72,12 @@ owner="${github_path%%/*}"
 repo="${github_path#*/}"
 repo="${repo%%/*}"
 
+# The tag prefix sits between "releases/download/" and "${version}" in the
+# URL template ("v" for most tools, "rust-v" for codex). Strip it from the
+# resolved tag so the pinned version stays prefix-free.
+tag_prefix="${url_template##*releases/download/}"
+tag_prefix="${tag_prefix%%\$\{version\}*}"
+
 # --- Resolve the target version ----------------------------------------------
 
 if [[ -n "$requested_version" ]]; then
@@ -88,7 +95,7 @@ else
     echo "Error: no published release found for $owner/$repo" >&2
     exit 1
   fi
-  new_version="${tag#v}"
+  new_version="${tag#"$tag_prefix"}"
 fi
 
 if [[ "$new_version" == "$current_version" ]]; then

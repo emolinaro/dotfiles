@@ -315,6 +315,13 @@
           axi-tools = pkgs.callPackage ./tests/axi-tools.nix {
             axiToolsPackage = axiToolsPackageFor system;
           };
+          agent-clis =
+            if pkgs.stdenv.hostPlatform.isLinux then
+              pkgs.callPackage ./tests/agent-clis.nix { }
+            else
+              pkgs.runCommand "agent-clis-not-linux" { } ''
+                touch "$out"
+              '';
           gnhf-package = pkgs.callPackage ./tests/gnhf-package.nix {
             gnhfPackage = gnhfPackageFor system;
           };
@@ -427,14 +434,24 @@
         ubuntu-x86_64 = mkLinuxHome "x86_64-linux";
         ubuntu-aarch64 = mkLinuxHome "aarch64-linux";
       };
-      packages = forAllSystems (system: {
-        ci = ciFor system;
-        axi-tools = axiToolsPackageFor system;
-        gnhf = gnhfPackageFor system;
-        nono = nonoPackageFor system;
-        nono-runtime-test = nonoRuntimeTestFor system;
-        default = nonoPackageFor system;
-      });
+      packages = forAllSystems (
+        system:
+        {
+          ci = ciFor system;
+          axi-tools = axiToolsPackageFor system;
+          gnhf = gnhfPackageFor system;
+          nono = nonoPackageFor system;
+          nono-runtime-test = nonoRuntimeTestFor system;
+          default = nonoPackageFor system;
+        }
+        # Agent CLIs are Linux-only release pins (macOS installs them via
+        # Homebrew), so expose them only on the two Linux systems.
+        // nixpkgs.lib.optionalAttrs (nixpkgs.lib.hasSuffix "-linux" system) {
+          claude-code = (pkgsFor system).callPackage ./packages/claude-code.nix { };
+          codex = (pkgsFor system).callPackage ./packages/codex.nix { };
+          opencode = (pkgsFor system).callPackage ./packages/opencode.nix { };
+        }
+      );
       apps = forAllSystems (system: {
         nono-runtime-test = {
           type = "app";
