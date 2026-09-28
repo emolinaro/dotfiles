@@ -8,6 +8,8 @@ name = "rose-pine"
 # Active tab: same color code as the WezTerm active tab (gold bg on moon base fg).
 accent = "#f6c177"
 panel_bg = "#232136"
+# Workspace/agent section rule and sidebar divider: Rosé Pine gold.
+surface_dim = "#f6c177"
 
 [keys]
 # Same prefix as default tmux
@@ -55,10 +57,25 @@ close_workspace = "prefix+shift+d"
 toggle_sidebar = "prefix+b"
 
 [ui]
+# More room for workspace and tab names; allow further widening by dragging.
+sidebar_width = 52
+sidebar_max_width = 72
 # Drag-select text and copy it to the system clipboard on mouse release.
 copy_on_select = true
 # Keep Herdr's mouse-native UI enabled.
 mouse_capture = true
+
+[ui.sidebar.agents]
+# Rosé Pine hierarchy: muted context, bold workspaces, iris tab names.
+rows = [
+  [
+    "state_icon",
+    { token = "machine", fg = "#908caa", dim = false },
+    "workspace",
+    { token = "tab", fg = "#c4a7e7", bold = false, dim = false },
+  ],
+  [{ token = "agent", fg = "#908caa", dim = false }],
+]
 
 [ui.toast.clipboard]
 # Show visual confirmation when clipboard copy succeeds.
