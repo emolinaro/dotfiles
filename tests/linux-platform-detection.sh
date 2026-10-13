@@ -79,7 +79,7 @@ assert_home_target() {
 
   local shim_dir
   shim_dir="$(mktemp -d)"
-  printf '#!/usr/bin/env bash\necho "%s"\n' "$arch" >"$shim_dir/uname"
+  printf '#!%s\necho "%s"\n' "$BASH" "$arch" >"$shim_dir/uname"
   chmod +x "$shim_dir/uname"
   if output="$(PATH="$shim_dir:$PATH" home_target_for_linux_arch)"; then
     if [[ "$output" == "$expected" ]]; then
@@ -128,7 +128,7 @@ assert_home_target_rejects() {
   local shim_dir
 
   shim_dir="$(mktemp -d)"
-  printf '#!/usr/bin/env bash\necho "%s"\n' "$arch" >"$shim_dir/uname"
+  printf '#!%s\necho "%s"\n' "$BASH" "$arch" >"$shim_dir/uname"
   chmod +x "$shim_dir/uname"
   if PATH="$shim_dir:$PATH" home_target_for_linux_arch >/dev/null 2>&1; then
     fail "$name: unexpectedly accepted"

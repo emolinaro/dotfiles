@@ -237,7 +237,7 @@
           pname = "gnhf";
           src = gnhf;
           entryPoint = "dist/cli.mjs";
-          pnpmDepsHash = "sha256-kQHYvZ8LNHGw1pPuTnOTUn26yUY8TmgA0+BO2+cSvLY=";
+          pnpmDepsHash = "sha256-CBjHhN5VxVDl6xOn2fDowPhh22MueNwb5jZ/rmKQ0Tw=";
           pruneProd = true;
           meta = {
             description = "Pinned GNHF CLI; pick the backend with --agent";
