@@ -52,6 +52,7 @@
       "midnight-commander"
       "ffmpeg"
       "pkg-config"
+      "watch"
     ];
     casks = [
       "claude-code"
