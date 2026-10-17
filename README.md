@@ -54,7 +54,7 @@ every script.
 - macOS on Apple Silicon, by default.
 - Intel Mac: set `nixpkgs.hostPlatform = "x86_64-darwin";` in
   `configuration.nix`.
-- Headless Ubuntu 24.04 or 26.04 or Arch Linux (including Arch Linux ARM)
+- Headless Ubuntu 24.04 or 26.04 or Arch Linux (including Arch Linux ARM and Omarchy)
   on x86_64 or ARM64. The Linux bootstrap requires a non-root user with sudo
   access and selects the correct architecture automatically.
 
@@ -122,7 +122,7 @@ Platform-specific package sources are selected declaratively, and
 checksum-pinned binary packages choose the correct archive for each supported
 architecture. Update checks remain under Nix control.
 
-The bootstrap supports Ubuntu and Arch Linux on x86_64 and ARM64, uses the
+The bootstrap supports Ubuntu and Arch Linux (including Omarchy) on x86_64 and ARM64, uses the
 current username and home directory, changes the login shell to
 `/usr/bin/zsh`, enables Docker through systemd, and adds the current user to
 the `docker` group. On Ubuntu it additionally relaxes the default AppArmor

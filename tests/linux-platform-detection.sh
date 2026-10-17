@@ -99,6 +99,7 @@ assert_accepts "accepts Ubuntu 24.04" "$fixtures/ubuntu-24.04"
 assert_accepts "accepts Ubuntu 26.04" "$fixtures/ubuntu-26.04"
 assert_accepts "accepts Arch Linux" "$fixtures/arch"
 assert_accepts "accepts Arch Linux ARM" "$fixtures/archarm"
+assert_accepts "accepts Omarchy" "$fixtures/omarchy"
 assert_rejects \
   "rejects unsupported Ubuntu releases" \
   "$fixtures/ubuntu-25.10" \
@@ -110,11 +111,12 @@ assert_rejects \
 assert_rejects \
   "rejects a missing os-release file" \
   "$fixtures/missing" \
-  "is missing; supported Linux distros: ubuntu, arch, archarm."
+  "is missing; supported Linux distros: ubuntu, arch, archarm, omarchy."
 
 assert_distro_id "detects Ubuntu" "$fixtures/ubuntu-24.04" "ubuntu"
 assert_distro_id "detects Arch" "$fixtures/arch" "arch"
 assert_distro_id "detects Arch Linux ARM via ID" "$fixtures/archarm" "arch"
+assert_distro_id "detects Omarchy as Arch" "$fixtures/omarchy" "arch"
 assert_distro_id_rejects "rejects a missing os-release file" "$fixtures/missing"
 assert_distro_id_rejects "rejects an unsupported distro" "$fixtures/debian-13"
 

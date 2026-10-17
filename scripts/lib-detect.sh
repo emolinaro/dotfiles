@@ -11,7 +11,7 @@ dotfiles_repo_root() {
 
 # Linux distributions whose shared scripts/linux flow this repo supports.
 # Values must match the os-release ID field.
-supported_linux_distros="ubuntu arch archarm"
+supported_linux_distros="ubuntu arch archarm omarchy"
 
 require_supported_linux_distro() {
   local os_release="${1:-/etc/os-release}"
@@ -35,7 +35,7 @@ require_supported_linux_distro() {
         exit 1
       fi
       ;;
-    arch | archarm) ;;
+    arch | archarm | omarchy) ;;
     *)
       echo "Error: unsupported Linux distribution ${PRETTY_NAME:-unknown} (ID=${ID:-unknown}); supported: ${supported_linux_distros// /, }." >&2
       exit 1
@@ -59,8 +59,8 @@ home_target_for_linux_arch() {
 
 # Detect the current Linux distribution from /etc/os-release. Echoes a
 # normalized family ID used by the shared Linux scripts: "ubuntu" or "arch".
-# Arch derivatives such as Arch Linux ARM (ID=archarm, ID_LIKE=arch) map to
-# "arch"; unknown IDs fall back to their ID_LIKE family when it is supported.
+# Arch Linux ARM (ID=archarm) and Omarchy (ID=omarchy) map to "arch";
+# unknown IDs fall back to their ID_LIKE family when it is supported.
 linux_distro_id() {
   local os_release="${1:-/etc/os-release}"
   local ID=""
@@ -75,7 +75,7 @@ linux_distro_id() {
   . "$os_release"
   case "$ID" in
     ubuntu | arch) echo "$ID" ;;
-    archarm) echo "arch" ;;
+    archarm | omarchy) echo "arch" ;;
     *)
       if [[ "$ID_LIKE" == *"arch"* ]]; then
         echo "arch"
