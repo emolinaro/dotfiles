@@ -20,9 +20,13 @@ local function first_non_nil(...)
 end
 
 -- ui
--- Use the WebGpu/Metal renderer: the default OpenGL front end freezes/crashes
--- when resuming from the macOS lock screen or display sleep (wezterm#7291).
-config.front_end = "WebGpu"
+-- The default OpenGL front end freezes/crashes when resuming from the macOS
+-- lock screen or display sleep (wezterm#7291), so use WebGpu there. On Linux
+-- the wgpu back end can panic during EGL init (seen on virtio-gpu), so keep
+-- the default OpenGL front end.
+if wezterm.target_triple:find("darwin", 1, true) then
+  config.front_end = "WebGpu"
+end
 config.color_scheme = "rose-pine-moon"
 local window_bg_opacity = 0.8
 local builtin_schemes = wezterm.color.get_builtin_schemes()

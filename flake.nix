@@ -125,6 +125,14 @@
           config.allowUnfree = true;
         };
       nonoPackageFor = system: (pkgsFor system).callPackage ./packages/nono.nix { };
+      # WezTerm needs the nixpkgs Mesa stack on non-NixOS Linux distros; see
+      # packages/wezterm.nix. macOS keeps the Homebrew cask.
+      weztermPackageFor =
+        system:
+        if (pkgsFor system).stdenv.hostPlatform.isLinux then
+          (pkgsFor system).callPackage ./packages/wezterm.nix { }
+        else
+          null;
       # Build one pnpm-packaged Node CLI from source with a pinned dependency
       # hash. GNHF passes pruneProd to strip dev dependencies from the closure.
       pnpmToolFor =
@@ -324,6 +332,15 @@
           nono-package = pkgs.callPackage ./tests/nono-package.nix {
             nonoPackage = nonoPackageFor system;
           };
+          wezterm-package =
+            if pkgs.stdenv.hostPlatform.isLinux then
+              pkgs.callPackage ./tests/wezterm-package.nix {
+                weztermPackage = weztermPackageFor system;
+              }
+            else
+              pkgs.runCommand "wezterm-package-not-linux" { } ''
+                touch "$out"
+              '';
           nono-agent-wrappers = pkgs.callPackage ./tests/nono-agent-wrappers.nix {
             inherit agentRegistry;
             profiles = ./home/.config/nono/profiles;
@@ -373,6 +390,7 @@
           axiToolsPackage = axiToolsPackageFor system;
           gnhfPackage = gnhfPackageFor system;
           nonoPackage = nonoPackageFor system;
+          weztermPackage = weztermPackageFor system;
           chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
           ghAxiSkill = "${ghAxi}/skills/gh-axi";
           lavishSkill = "${lavish}/skills/lavish";

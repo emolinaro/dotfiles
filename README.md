@@ -116,8 +116,9 @@ cd dotfiles
 ./bootstrap.sh
 ```
 
-The Linux setup is headless. The distro package manager installs only
-system-level prerequisites; Home Manager installs the shared user environment.
+The Linux setup runs headless or on a desktop. The distro package manager
+installs only system-level prerequisites; Home Manager installs the shared
+user environment, including WezTerm with the same configuration macOS uses.
 Platform-specific package sources are selected declaratively, and
 checksum-pinned binary packages choose the correct archive for each supported
 architecture. Update checks remain under Nix control.

@@ -17,6 +17,7 @@
   superpowersSkill,
   tasksAxiSkill,
   username,
+  weztermPackage,
   ...
 }:
 
@@ -150,6 +151,7 @@ in
         pkgs.inetutils # hostname, telnet, ftp; macOS ships BSD equivalents
         pkgs.lazydocker # OrbStack provides the equivalent UI on macOS
         pkgs.procps
+        weztermPackage # macOS installs WezTerm via the Homebrew cask in configuration.nix
       ]
     )
     ++ [
@@ -553,9 +555,8 @@ in
     };
     small_model = "openai/gpt-5.6-sol";
   };
-  home.file.".config/wezterm" = lib.mkIf (!isLinux) {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
-  };
+  home.file.".config/wezterm".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/wezterm";
   home.file."Library/Fonts/HackNerdFont-Regular.ttf" = hackFontEntry "Regular";
   home.file."Library/Fonts/HackNerdFont-Bold.ttf" = hackFontEntry "Bold";
   home.file."Library/Fonts/HackNerdFont-Italic.ttf" = hackFontEntry "Italic";
