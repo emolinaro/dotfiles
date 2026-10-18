@@ -2,6 +2,8 @@ local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
 
+local is_macos = wezterm.target_triple:find("darwin", 1, true) ~= nil
+
 config.enable_kitty_graphics = true
 
 local function with_alpha(color, alpha)
@@ -20,9 +22,13 @@ local function first_non_nil(...)
 end
 
 -- ui
--- Use the WebGpu/Metal renderer: the default OpenGL front end freezes/crashes
--- when resuming from the macOS lock screen or display sleep (wezterm#7291).
-config.front_end = "WebGpu"
+-- The default OpenGL front end freezes/crashes when resuming from the macOS
+-- lock screen or display sleep (wezterm#7291), so use WebGpu there. On Linux
+-- the wgpu back end can panic during EGL init (seen on virtio-gpu), so keep
+-- the default OpenGL front end.
+if is_macos then
+  config.front_end = "WebGpu"
+end
 config.color_scheme = "rose-pine-moon"
 local window_bg_opacity = 0.8
 local builtin_schemes = wezterm.color.get_builtin_schemes()
@@ -126,25 +132,47 @@ local function snap_window(direction)
   end)
 end
 
+-- macOS uses the Command key. On Linux, Omarchy's Hyprland reserves most
+-- Super shortcuts (Super+C/V are universal copy/paste, Super+T/W/F are window
+-- actions), so the Command map never reaches WezTerm there. Linux instead
+-- follows the conventions Omarchy's own terminals use: Ctrl+Shift+C/V and
+-- Ctrl+Insert/Shift+Insert for the clipboard, Ctrl+Shift+T/N/W for tabs and
+-- windows, Ctrl+Tab to cycle tabs, F11 for full screen, and Ctrl+= / Ctrl+- /
+-- Ctrl+0 for the font size. Linux also uses Ctrl+B as the leader, matching the
+-- tmux and Herdr prefixes in this repo; Omarchy binds Ctrl+Space for its
+-- input-method passthrough, which stops WezTerm from seeing it.
+local shortcut_mod = is_macos and "CMD" or "CTRL|SHIFT"
+local font_mod = is_macos and "CMD" or "CTRL"
+local leader = is_macos and { key = "Space", mods = "CTRL" } or { key = "b", mods = "CTRL" }
+
+local platform_keys = is_macos and {
+  { key = "}", mods = "CMD", action = wezterm.action.ActivateTabRelative(1) },
+  { key = "{", mods = "CMD", action = wezterm.action.ActivateTabRelative(-1) },
+  { key = "f", mods = "CMD|CTRL", action = wezterm.action.ToggleFullScreen },
+} or {
+  { key = "Tab", mods = "CTRL", action = wezterm.action.ActivateTabRelative(1) },
+  { key = "Tab", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
+  { key = "F11", mods = "NONE", action = wezterm.action.ToggleFullScreen },
+  { key = "Insert", mods = "CTRL", action = wezterm.action.CopyTo("Clipboard") },
+  { key = "Insert", mods = "SHIFT", action = wezterm.action.PasteFrom("Clipboard") },
+}
+
 config.disable_default_key_bindings = true
-config.leader = { key = "Space", mods = "CTRL" }
+config.leader = leader
 config.keys = {
   -- clipboard
-  { key = "c", mods = "CMD", action = wezterm.action.CopyTo("Clipboard") },
-  { key = "v", mods = "CMD", action = wezterm.action.PasteFrom("Clipboard") },
+  { key = "c", mods = shortcut_mod, action = wezterm.action.CopyTo("Clipboard") },
+  { key = "v", mods = shortcut_mod, action = wezterm.action.PasteFrom("Clipboard") },
 
   -- tabs
   { key = "c", mods = "LEADER", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
-  { key = "t", mods = "CMD", action = wezterm.action.SpawnTab("CurrentPaneDomain") },
+  { key = "t", mods = shortcut_mod, action = wezterm.action.SpawnTab("CurrentPaneDomain") },
   { key = "n", mods = "LEADER", action = wezterm.action.ActivateTabRelative(1) },
   { key = "p", mods = "LEADER", action = wezterm.action.ActivateTabRelative(-1) },
-  { key = "}", mods = "CMD", action = wezterm.action.ActivateTabRelative(1) },
-  { key = "{", mods = "CMD", action = wezterm.action.ActivateTabRelative(-1) },
 
   -- windows
-  { key = "n", mods = "CMD", action = wezterm.action.SpawnWindow },
-  { key = "w", mods = "CMD", action = wezterm.action.CloseCurrentTab({ confirm = true }) },
-  { key = "f", mods = "CMD|CTRL", action = wezterm.action.ToggleFullScreen },
+  { key = "n", mods = shortcut_mod, action = wezterm.action.SpawnWindow },
+  { key = "w", mods = shortcut_mod, action = wezterm.action.CloseCurrentTab({ confirm = true }) },
   { key = "LeftArrow", mods = "CTRL|ALT", action = snap_window("left") },
   { key = "RightArrow", mods = "CTRL|ALT", action = snap_window("right") },
   { key = "UpArrow", mods = "CTRL|ALT", action = snap_window("top") },
@@ -171,10 +199,14 @@ config.keys = {
   { key = "l", mods = "LEADER|SHIFT", action = wezterm.action.AdjustPaneSize({ "Right", 5 }) },
 
   -- font size
-  { key = "=", mods = "CMD", action = wezterm.action.IncreaseFontSize },
-  { key = "-", mods = "CMD", action = wezterm.action.DecreaseFontSize },
-  { key = "0", mods = "CMD", action = wezterm.action.ResetFontSize },
+  { key = "=", mods = font_mod, action = wezterm.action.IncreaseFontSize },
+  { key = "-", mods = font_mod, action = wezterm.action.DecreaseFontSize },
+  { key = "0", mods = font_mod, action = wezterm.action.ResetFontSize },
 }
+
+for _, binding in ipairs(platform_keys) do
+  table.insert(config.keys, binding)
+end
 
 local resurrect = wezterm.plugin.require(
   "https://github.com/YedPool/resurrect.wezterm"
