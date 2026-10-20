@@ -138,12 +138,14 @@ end
 -- follows the conventions Omarchy's own terminals use: Ctrl+Shift+C/V and
 -- Ctrl+Insert/Shift+Insert for the clipboard, Ctrl+Shift+T/N/W for tabs and
 -- windows, Ctrl+Tab to cycle tabs, F11 for full screen, and Ctrl+= / Ctrl+- /
--- Ctrl+0 for the font size. Linux also uses Ctrl+B as the leader, matching the
--- tmux and Herdr prefixes in this repo; Omarchy binds Ctrl+Space for its
--- input-method passthrough, which stops WezTerm from seeing it.
+-- Ctrl+0 for the font size. Ctrl+Space is the leader on both platforms: the
+-- macOS default, and on Linux the key that the tmux, Herdr, and fcitx5
+-- configurations leave to terminal prefixes, so it reaches WezTerm intact.
+-- Spell it " " (Char), not "Space": "Space" parses to Physical(Space) and
+-- does not match the space bar event on Wayland, while " " does.
 local shortcut_mod = is_macos and "CMD" or "CTRL|SHIFT"
 local font_mod = is_macos and "CMD" or "CTRL"
-local leader = is_macos and { key = "Space", mods = "CTRL" } or { key = "b", mods = "CTRL" }
+local leader = { key = " ", mods = "CTRL" }
 
 local platform_keys = is_macos and {
   { key = "}", mods = "CMD", action = wezterm.action.ActivateTabRelative(1) },
