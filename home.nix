@@ -281,6 +281,8 @@ in
       core.pager = "delta";
       commit.verbose = true;
       interactive.diffFilter = "delta --color-only";
+      # gh is installed via home.packages on both platforms; sign in with `gh auth login`.
+      credential."https://github.com".helper = "!gh auth git-credential";
       delta = {
         navigate = true;
         line-numbers = true;
