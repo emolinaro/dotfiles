@@ -154,6 +154,78 @@ directly when needed:
 ./scripts/linux/rebuild.sh
 ```
 
+## Upgrading Nix itself
+
+Nix is installed by the Determinate installer and is deliberately outside this
+flake (`configuration.nix` sets `nix.enable = false`), so `./rebuild.sh` never
+touches the daemon or `/etc/nix/nix.conf`. Rebuilds pin your packages; they do
+not move the daemon.
+
+```sh
+./nix-upgrade.sh --check   # running and latest versions
+./nix-upgrade.sh           # upgrade to the latest stable, smoke test it
+./rebuild.sh
+```
+
+`nix-upgrade.sh` only reports success after its smoke test passes: the daemon
+answers, store writes work, and the config still evaluates and schedules
+substitutes. It refuses to upgrade while a rebuild is running unless you pass
+`--force`, because upgrading restarts the daemon. Run it when `--check` reports
+a newer release, or when a rebuild misbehaves. Pass an explicit version to pin
+the daemon instead of following stable: `./nix-upgrade.sh 3.24.1`.
+
+### Diagnose the daemon
+
+Check the daemon first when a rebuild hangs: a wedged daemon looks exactly like
+a slow download, and a bounded smoke test turns an hour of waiting into an
+immediate error.
+
+`./doctor.sh` reports the daemon version against the pin and the latest release,
+FlakeHub auth state (logged-out is expected here, since only private flakes need
+it), substituter latency, `/nix` free space, and whether a build is in flight.
+It then runs the same bounded smoke test. `./doctor.sh --quick` skips it.
+
+### Priming the store
+
+Root keeps its own eval and fetcher caches, so a `sudo` build imports the flake
+input source trees itself. Where file creation is expensive (an endpoint
+security filter, a network volume, a machine reindexing after an OS update) that
+import dominates the rebuild, and an interrupted one leaves a lock that stalls
+every later build. `./rebuild.sh` therefore primes as the invoking user first,
+and the same step is available on its own:
+
+```sh
+./nix-prime.sh
+```
+
+It runs two steps in order: `nix flake archive` to fetch every input source tree
+into the store, then `nix build` for every output. Both run as you, never as
+`root`, and each reports how long it took:
+
+```
+==> Priming flake inputs
+    'flake inputs' done in 47m12s
+==> Priming build outputs
+    'build outputs' done in 3m4s
+```
+
+A `waiting for lock` silence counts as a deadlock only when nothing is being
+built: the stalled client is killed, the Nix daemon restarted, and the step
+retried once. A lock held by a concurrent build is left alone.
+
+Run it after a flake update, when new input revisions need new source trees, or
+before a rebuild when you want the slow part visible. It is never required,
+because `./rebuild.sh` primes automatically, and it is a no-op once everything
+is present, so repeat runs cost seconds.
+
+```sh
+./nix-prime.sh --help
+./nix-prime.sh /path/to/other/flake
+NIX_LOCK_GRACE_SECONDS=300 ./nix-prime.sh   # accept longer silent lock waits
+```
+
+Skip priming inside a rebuild with `DOTFILES_SKIP_PRIME=1 ./rebuild.sh`.
+
 ## Check and reclaim disk space
 
 Run the managed disk-usage report from the dotfiles checkout:
@@ -196,6 +268,10 @@ Claude, Codex, OpenCode, and Pi without changing the main Linux package set:
 nix flake update nixpkgs-agents
 ./rebuild.sh
 ```
+
+New input revisions mean new source trees. `./rebuild.sh` primes those as your
+user before the privileged switch, so a cold import never lands inside `sudo`.
+If you want to get that work out of the way first, run `./nix-prime.sh`.
 
 Every input updates independently:
 
@@ -248,7 +324,8 @@ nix flake check --all-systems --impure --no-build
 ```
 
 Homebrew packages on macOS are not recorded in `flake.lock`; nix-darwin
-updates those through the declared Homebrew activation settings.
+updates those through the declared Homebrew activation settings. The Nix
+daemon is not recorded there either; see [Upgrading Nix itself](#upgrading-nix-itself).
 
 ## Make it yours
 
@@ -259,7 +336,7 @@ If you clone it, change these before you run `bootstrap.sh`:
 - **Git identity**, in `programs.git.settings.user` in `home.nix`
   (`emolinaro` / `40191802+emolinaro@users.noreply.github.com`).
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `scripts/macos/rebuild.sh` (the `#mac` at the end of the flake reference), and `scripts/macos/bootstrap.sh`'s first-switch command (also `#mac`).
-  All three have to match.
+  All three have to match. `scripts/lib-nix.sh` reuses the same label for the smoke test in `./doctor.sh` and `./nix-upgrade.sh`; change it there too, or override it with `DOTFILES_HOST`.
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
 That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
