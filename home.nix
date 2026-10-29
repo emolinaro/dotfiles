@@ -88,7 +88,19 @@ in
       bun
       aicPackage
       axiToolsPackage
-      (if isLinux then coreutils else coreutils-prefixed) # avoid shadowing macOS BSD tools
+      # Keep GNU tools prefixed on macOS without exposing gtimeout on PATH.
+      (
+        if isLinux then
+          coreutils
+        else
+          symlinkJoin {
+            name = "coreutils-prefixed-without-gtimeout";
+            paths = [ coreutils-prefixed ];
+            postBuild = ''
+              rm -f "$out/bin/gtimeout"
+            '';
+          }
+      )
       delta
       delve
       dive
