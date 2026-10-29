@@ -218,6 +218,12 @@ before a rebuild when you want the slow part visible. It is never required,
 because `./rebuild.sh` primes automatically, and it is a no-op once everything
 is present, so repeat runs cost seconds.
 
+Priming deliberately creates **no GC root** (`nix build --no-link`), so a later
+`./disk-clean.sh` or `nix store gc` collects the imported trees again. That is
+the trade: cleanup always reclaims everything it can, and the next rebuild
+after a cleanup pays the import again. Run the rebuild straight after a cleanup,
+or skip the cleanup when a rebuild is coming.
+
 ```sh
 ./nix-prime.sh --help
 ./nix-prime.sh /path/to/other/flake
