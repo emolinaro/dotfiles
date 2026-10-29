@@ -228,7 +228,7 @@
               pname = "quota-axi";
               src = quotaAxi;
               entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-dWRK3kNESr8osq8FDIVTeE4IcHAR/0lBudUZOrDXl9M=";
+              pnpmDepsHash = "sha256-hH4+nAWZIZa6c5IHSI15WuWdYeFZ+K9h1kdbVn/gQqg=";
             }
             {
               pname = "tasks-axi";
