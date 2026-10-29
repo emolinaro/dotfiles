@@ -14,9 +14,6 @@ set -euo pipefail
 # The daemon profile owns the clients, and sudo does not carry your PATH.
 NIX_BIN="/nix/var/nix/profiles/default/bin"
 ROOT_PROFILE="/nix/var/nix/profiles/per-user/root/profile"
-# Priming builds with --no-link on purpose, so a cleanup is always complete.
-# If a priming link is ever left behind by hand, break it before collecting.
-PRIME_LINK_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles-prime"
 JOURNAL_CAP="300M"
 DRY_RUN=0
 OPTIMISE=0
@@ -81,13 +78,6 @@ profiles_to_prune() {
 }
 
 step_collect() {
-  # A priming out-link is a GC root that would keep the whole imported closure
-  # alive. Priming does not create one, but drop it if it exists so a cleanup
-  # always collects everything it can.
-  if [[ -e "$PRIME_LINK_DIR" ]]; then
-    planned rm -rf "$PRIME_LINK_DIR"
-  fi
-
   # Root's profile is a GC root that an unprivileged run cannot prune, so it has
   # to go before the collection, otherwise its closures survive and need a
   # second full pass.
