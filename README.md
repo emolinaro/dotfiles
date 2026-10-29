@@ -239,22 +239,32 @@ It reports the space used by Nix, Homebrew, gstack, and related caches. When the
 Nix store is using too much space, reclaim it from the dotfiles checkout:
 
 ```sh
-./disk-clean.sh            # reclaim
-./disk-clean.sh --dry-run  # show what would be removed
+./disk-clean.sh               # reclaim
+./disk-clean.sh --dry-run     # show what would be removed
+./disk-clean.sh --max 5G      # stop collecting once 5G is free
+./disk-clean.sh --optimise    # also hard-link duplicates (slow)
 ```
 
 It collects old generations of your profiles and of root's profile, collects
-dead store paths, hard-links duplicate files in the store, and caps the systemd
-journal at 300 MiB. This permanently removes old generations, so you can no
-longer roll back to them; the generation that is currently active is never
-touched. Run it after switching, or when a rebuild warns that free space is
-low.
+dead store paths, and caps the systemd journal at 300 MiB. This permanently
+removes old generations, so you can no longer roll back to them; the generation
+that is currently active is never touched. Run it after switching, or when a
+rebuild warns that free space is low.
 
-The order matters and the script handles it: generations go first so their
-closures become unreachable, then the store is collected, then the surviving
-files are hard-linked together. `nix-collect-garbage -d` on its own is not
-enough: it only reaches profiles you own, so root's generations stay in
-`/nix/var/nix/profiles/per-user/root/profile` and keep their closure alive.
+The order matters and the script handles it: root's generations go first, then
+your own, then a **single** collection covers both. `nix-collect-garbage -d` on
+its own is not enough: it only reaches profiles you own, so root's generations
+stay in `/nix/var/nix/profiles/per-user/root/profile` and keep their closure
+alive. Collecting before pruning root is what needs a second full pass over the
+store, which is why this used to be slow.
+
+`--max SIZE` swaps the full collection for `nix store gc --max SIZE`, so a run
+stops as soon as enough space is back instead of always doing the maximum work.
+
+Hard-linking duplicate files is **opt-in** because `nix store optimise` stats
+every file in the store and is the slowest step by far, usually for the
+smallest win. Each step now reports how long it took, so the next run tells you
+where the time goes.
 
 ## Update packages and agent workflows
 
