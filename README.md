@@ -235,15 +235,26 @@ cd ~/.dotfiles
 ./disk-usage.sh
 ```
 
-It reports the space used by Nix, Homebrew, gstack, and related caches. If the
-Nix store is using too much space, delete old Nix generations with:
+It reports the space used by Nix, Homebrew, gstack, and related caches. When the
+Nix store is using too much space, reclaim it from the dotfiles checkout:
 
 ```sh
-nix-collect-garbage -d
+./disk-clean.sh            # reclaim
+./disk-clean.sh --dry-run  # show what would be removed
 ```
 
-This permanently removes old generations, so you can no longer roll back to
-them.
+It collects old generations of your profiles and of root's profile, collects
+dead store paths, hard-links duplicate files in the store, and caps the systemd
+journal at 300 MiB. This permanently removes old generations, so you can no
+longer roll back to them; the generation that is currently active is never
+touched. Run it after switching, or when a rebuild warns that free space is
+low.
+
+The order matters and the script handles it: generations go first so their
+closures become unreachable, then the store is collected, then the surviving
+files are hard-linked together. `nix-collect-garbage -d` on its own is not
+enough: it only reaches profiles you own, so root's generations stay in
+`/nix/var/nix/profiles/per-user/root/profile` and keep their closure alive.
 
 ## Update packages and agent workflows
 

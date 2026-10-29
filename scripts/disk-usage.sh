@@ -197,7 +197,7 @@ printf '  - /nix/store uses %s when available (much faster than walking the stor
 printf '  - NAR size can differ from on-disk usage when the store is optimised/hardlinked.\n'
 printf '  - Active closures are already inside /nix/store and are shown only for reference.\n'
 # shellcheck disable=SC2016 # backticks are intentional emphasis for the printed command
-printf '  - Run `nix-collect-garbage -d` to reclaim old Nix generations if the store looks large.\n'
+printf '  - Run `./disk-clean.sh` to reclaim old generations, dead paths, and duplicate files.\n'
 if [[ "$MEASURE_TOOL" != "dust" ]]; then
   # shellcheck disable=SC2016 # backticks are intentional emphasis for the printed name
   printf '  - Install/rebuild so `dust` is on PATH for faster non-store measurements.\n'
