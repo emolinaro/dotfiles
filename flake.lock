@@ -68,11 +68,11 @@
     "gstack": {
       "flake": false,
       "locked": {
-        "lastModified": 1793302712,
-        "narHash": "sha256-YBVIJohkx4GR9AQDkNRiY75r5LdGehzGi2+/zzNzvig=",
+        "lastModified": 1793304555,
+        "narHash": "sha256-ZUDaTnT+hgWfb9QhFMPMK0vHx5AT6RVcpE7hDNULRk8=",
         "owner": "garrytan",
         "repo": "gstack",
-        "rev": "a8d60be09f24343936b56cbb99112ba2b926a9d7",
+        "rev": "53db038c6ba6f1408e12418a4adaf61c21808607",
         "type": "github"
       },
       "original": {
