@@ -82,7 +82,13 @@ nix_restart_daemon() {
   echo "==> Restarting the Nix daemon"
   case "$(uname -s)" in
     Darwin) sudo launchctl kickstart -k "$NIX_DAEMON_SERVICE_DARWIN" ;;
-    Linux) sudo systemctl restart "$NIX_DAEMON_SERVICE_LINUX" ;;
+    Linux)
+      if sudo systemctl restart "$NIX_DAEMON_SERVICE_LINUX" 2>/dev/null; then
+        return 0
+      fi
+      echo "warning: $NIX_DAEMON_SERVICE_LINUX not found; trying determinate-nixd.service" >&2
+      sudo systemctl restart determinate-nixd.service
+      ;;
     *)
       echo "error: no known way to restart the daemon on $(uname -s)." >&2
       return 1
@@ -141,9 +147,16 @@ nix_run_guarded() {
   local grace="${NIX_LOCK_GRACE_SECONDS:-120}"
   local watch="${NIX_LOCK_WATCH_SECONDS:-1800}"
   local started=0
+  local slug="${label//[^A-Za-z0-9]/-}"
 
-  log="$(mktemp -t "nix-$label")"
+  # GNU mktemp requires the XXX template, BSD mktemp does not, so spell it out
+  # and keep the label free of spaces to work on both.
   started="$SECONDS"
+  log="$(mktemp "${TMPDIR:-/tmp}/nix-$slug.XXXXXX" 2>/dev/null)" || log=""
+  if [[ -z "$log" || ! -w "$log" ]]; then
+    echo "error: could not create a temporary log file for '$label'." >&2
+    return 1
+  fi
   "$@" >"$log" 2>&1 &
   pid=$!
   while kill -0 "$pid" 2>/dev/null && ((waited < watch)); do
