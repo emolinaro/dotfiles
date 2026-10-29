@@ -193,19 +193,19 @@
               pname = "chrome-devtools-axi";
               src = chromeDevtoolsAxi;
               entryPoint = "dist/bin/chrome-devtools-axi.js";
-              pnpmDepsHash = "sha256-U1aU9Dzij/RHsbNSjIi5TEgdbi4qJwA5XTL1W121+3g=";
+              pnpmDepsHash = "sha256-oH8W7xQzk6f6BDvWXcPIg+NcVTCbspWe5L43XeGxlsE=";
             }
             {
               pname = "gh-axi";
               src = ghAxi;
               entryPoint = "dist/bin/gh-axi.js";
-              pnpmDepsHash = "sha256-2P0ZZjbJY/cUHRWSxVwFqeL862WjTuFxXC/IdelMsXI=";
+              pnpmDepsHash = "sha256-k41ukt4LD3VxwKwyoCiKdKCAwdGW5NYDJYCMI6n/iK0=";
             }
             {
               pname = "lavish-axi";
               src = lavish;
               entryPoint = "dist/cli.mjs";
-              pnpmDepsHash = "sha256-Ag2s1xr0P2egphjqJKG02UbHlKVwA3A1tDMOjD8KnlE=";
+              pnpmDepsHash = "sha256-Od2VfrhSiF0LYqo0qTvGxUxYOoD58N/JZvx+rJNqyuc=";
               # pnpm 11.21 re-validates lockfile entries against its no-downgrade trust
               # policy and rejects chokidar@4.0.3 / langium@3.3.1 because those versions
               # were published without the provenance attestations that earlier releases
@@ -228,13 +228,13 @@
               pname = "quota-axi";
               src = quotaAxi;
               entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-hH4+nAWZIZa6c5IHSI15WuWdYeFZ+K9h1kdbVn/gQqg=";
+              pnpmDepsHash = "sha256-ztZkKfBzh8j4rcH2E/pemOFqN5g1wNH7XFwhbBEeXK8=";
             }
             {
               pname = "tasks-axi";
               src = tasksAxi;
               entryPoint = "dist/bin/tasks-axi.js";
-              pnpmDepsHash = "sha256-eAubA7AAm25Tet0V1bi5dp1MRPniIW6AsQ463/lJEyc=";
+              pnpmDepsHash = "sha256-qJcJaTNuRbFBVptL8tttQx6/y+VbIqDEq+lPTcSqTHk=";
             }
           ];
         };
@@ -245,7 +245,7 @@
           pname = "gnhf";
           src = gnhf;
           entryPoint = "dist/cli.mjs";
-          pnpmDepsHash = "sha256-CBjHhN5VxVDl6xOn2fDowPhh22MueNwb5jZ/rmKQ0Tw=";
+          pnpmDepsHash = "sha256-sXDDh4mjU72VVYFUUPsZD6CgSKAwVNeIwyL4/ePzk0M=";
           pruneProd = true;
           meta = {
             description = "Pinned GNHF CLI; pick the backend with --agent";
