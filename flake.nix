@@ -19,42 +19,6 @@
     herdr.url = "github:ogulcancelik/herdr";
     herdr.inputs.nixpkgs.follows = "nixpkgs-linux";
 
-    # Expose the public Lavish skill.
-    lavish = {
-      url = "github:kunchenguid/lavish-axi";
-      flake = false;
-    };
-
-    # Expose chrome-devtools-axi as a global agent skill.
-    chromeDevtoolsAxi = {
-      url = "github:kunchenguid/chrome-devtools-axi";
-      flake = false;
-    };
-
-    # Expose gh-axi as a global agent skill.
-    ghAxi = {
-      url = "github:kunchenguid/gh-axi";
-      flake = false;
-    };
-
-    # Expose tasks-axi as a global agent skill.
-    tasksAxi = {
-      url = "github:kunchenguid/tasks-axi";
-      flake = false;
-    };
-
-    # Expose quota-axi as a global agent skill.
-    quotaAxi = {
-      url = "github:kunchenguid/quota-axi";
-      flake = false;
-    };
-
-    # Lock gnhf so rebuilds do not silently pull new behavior.
-    gnhf = {
-      url = "github:kunchenguid/gnhf";
-      flake = false;
-    };
-
     # Lock agent workflows so rebuilds do not silently pull new behavior.
     gstack = {
       url = "github:garrytan/gstack";
@@ -76,12 +40,6 @@
       nixpkgs-agents,
       nixpkgs-linux,
       herdr,
-      lavish,
-      chromeDevtoolsAxi,
-      ghAxi,
-      tasksAxi,
-      quotaAxi,
-      gnhf,
       gstack,
       superpowers,
     }:
@@ -133,133 +91,26 @@
           (pkgsFor system).callPackage ./packages/wezterm.nix { }
         else
           null;
-      # Build one pnpm-packaged Node CLI from source with a pinned dependency
-      # hash. GNHF passes pruneProd to strip dev dependencies from the closure.
-      pnpmToolFor =
+      # The Axi CLIs and gnhf are packaged from their published npm artifacts
+      # (see packages/npm-tool.nix), so one definition serves every system and
+      # no source build or pnpm dependency hash is involved.
+      axiToolsPackageFor =
         system:
-        {
-          pname,
-          src,
-          entryPoint,
-          pnpmDepsHash,
-          pruneProd ? false,
-          meta ? { },
-          # Extra shell run inside fetchPnpmDeps before `pnpm install` (e.g. pnpm config).
-          prePnpmInstall ? "",
-        }:
         let
           pkgs = pkgsFor system;
         in
-        pkgs.stdenvNoCC.mkDerivation {
-          inherit pname src meta;
-          version = (builtins.fromJSON (builtins.readFile "${src}/package.json")).version;
-
-          pnpmDeps = pkgs.fetchPnpmDeps {
-            inherit pname src prePnpmInstall;
-            pnpm = pkgs.pnpm_11;
-            fetcherVersion = 4;
-            hash = pnpmDepsHash;
-          };
-
-          nativeBuildInputs = [
-            pkgs.makeWrapper
-            pkgs.nodejs
-            pkgs.pnpm_11
-            pkgs.pnpmConfigHook
-          ];
-
-          buildPhase = ''
-            runHook preBuild
-            pnpm build
-            runHook postBuild
-          '';
-
-          installPhase = ''
-            runHook preInstall
-            ${pkgs.lib.optionalString pruneProd "pnpm prune --prod"}
-            install -dm755 "$out/lib/node_modules/${pname}"
-            cp -r dist node_modules package.json "$out/lib/node_modules/${pname}/"
-            makeWrapper ${pkgs.lib.getExe pkgs.nodejs} "$out/bin/${pname}" --add-flags "$out/lib/node_modules/${pname}/${entryPoint}"
-            runHook postInstall
-          '';
-        };
-
-      axiToolsPackageFor =
-        system:
-        (pkgsFor system).symlinkJoin {
+        pkgs.symlinkJoin {
           name = "axi-tools";
-          paths = map (pnpmToolFor system) [
-            {
-              pname = "chrome-devtools-axi";
-              src = chromeDevtoolsAxi;
-              entryPoint = "dist/bin/chrome-devtools-axi.js";
-              pnpmDepsHash = "sha256-oH8W7xQzk6f6BDvWXcPIg+NcVTCbspWe5L43XeGxlsE=";
-            }
-            {
-              pname = "gh-axi";
-              src = ghAxi;
-              entryPoint = "dist/bin/gh-axi.js";
-              pnpmDepsHash = "sha256-k41ukt4LD3VxwKwyoCiKdKCAwdGW5NYDJYCMI6n/iK0=";
-            }
-            {
-              pname = "lavish-axi";
-              src = lavish;
-              entryPoint = "dist/cli.mjs";
-              pnpmDepsHash = "sha256-Od2VfrhSiF0LYqo0qTvGxUxYOoD58N/JZvx+rJNqyuc=";
-              # pnpm 11.21 re-validates lockfile entries against its no-downgrade trust
-              # policy and rejects chokidar@4.0.3 / langium@3.3.1 because those versions
-              # were published without the provenance attestations that earlier releases
-              # of the same packages carry. Both tarballs are old, integrity-pinned in the
-              # lockfile, and published by the original author accounts (paulmillr, msujew),
-              # so this is a false positive rather than a takeover. Exclude only these two
-              # packages and keep the policy active for everything else.
-              # Note: `pnpm config set` stringifies list values and the fetcher's yq is
-              # the Python (jq-wrapper) flavor, so append real YAML to pnpm-workspace.yaml
-              # (the fetched source does not define trustPolicyExclude yet).
-              prePnpmInstall = ''
-                cat >> pnpm-workspace.yaml <<'EOF'
-                trustPolicyExclude:
-                  - chokidar
-                  - langium
-                EOF
-              '';
-            }
-            {
-              pname = "quota-axi";
-              src = quotaAxi;
-              entryPoint = "dist/bin/quota-axi.js";
-              pnpmDepsHash = "sha256-ztZkKfBzh8j4rcH2E/pemOFqN5g1wNH7XFwhbBEeXK8=";
-            }
-            {
-              pname = "tasks-axi";
-              src = tasksAxi;
-              entryPoint = "dist/bin/tasks-axi.js";
-              pnpmDepsHash = "sha256-qJcJaTNuRbFBVptL8tttQx6/y+VbIqDEq+lPTcSqTHk=";
-            }
+          paths = [
+            (pkgs.callPackage ./packages/chrome-devtools-axi.nix { })
+            (pkgs.callPackage ./packages/gh-axi.nix { })
+            (pkgs.callPackage ./packages/lavish-axi.nix { })
+            (pkgs.callPackage ./packages/quota-axi.nix { })
+            (pkgs.callPackage ./packages/tasks-axi.nix { })
           ];
         };
 
-      gnhfPackageFor =
-        system:
-        pnpmToolFor system {
-          pname = "gnhf";
-          src = gnhf;
-          entryPoint = "dist/cli.mjs";
-          pnpmDepsHash = "sha256-sXDDh4mjU72VVYFUUPsZD6CgSKAwVNeIwyL4/ePzk0M=";
-          pruneProd = true;
-          meta = {
-            description = "Pinned GNHF CLI; pick the backend with --agent";
-            homepage = "https://github.com/kunchenguid/gnhf";
-            license = (pkgsFor system).lib.licenses.mit;
-            mainProgram = "gnhf";
-            platforms = [
-              "aarch64-darwin"
-              "x86_64-darwin"
-              "aarch64-linux"
-              "x86_64-linux"
-            ];
-          };
-        };
+      gnhfPackageFor = system: (pkgsFor system).callPackage ./packages/gnhf.nix { };
       nonoRuntimeTestFor =
         system:
         (pkgsFor system).callPackage ./tests/nono-runtime.nix {
@@ -384,19 +235,24 @@
           homeDirectory,
           herdrPackage,
         }:
+        let
+          axiTools = axiToolsPackageFor system;
+        in
         {
           inherit username homeDirectory herdrPackage;
           agentPkgs = agentPkgsFor system;
-          axiToolsPackage = axiToolsPackageFor system;
+          axiToolsPackage = axiTools;
           gnhfPackage = gnhfPackageFor system;
           nonoPackage = nonoPackageFor system;
           weztermPackage = weztermPackageFor system;
-          chromeDevtoolsAxiSkill = "${chromeDevtoolsAxi}/skills/chrome-devtools-axi";
-          ghAxiSkill = "${ghAxi}/skills/gh-axi";
-          lavishSkill = "${lavish}/skills/lavish";
-          quotaAxiSkill = "${quotaAxi}/skills/quota-axi";
+          # Skills ship inside the npm artifacts, so they cannot drift from the
+          # installed CLI.
+          chromeDevtoolsAxiSkill = "${axiTools}/lib/node_modules/chrome-devtools-axi/skills/chrome-devtools-axi";
+          ghAxiSkill = "${axiTools}/lib/node_modules/gh-axi/skills/gh-axi";
+          lavishSkill = "${axiTools}/lib/node_modules/lavish-axi/skills/lavish";
+          quotaAxiSkill = "${axiTools}/lib/node_modules/quota-axi/skills/quota-axi";
           superpowersSkill = "${superpowers}/skills";
-          tasksAxiSkill = "${tasksAxi}/skills/tasks-axi";
+          tasksAxiSkill = "${axiTools}/lib/node_modules/tasks-axi/skills/tasks-axi";
           gstackRev = gstack.rev;
           superpowersRev = superpowers.rev;
         };

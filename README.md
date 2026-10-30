@@ -301,8 +301,6 @@ Every input updates independently:
 | `nixpkgs` | Package collection for macOS |
 | `nixpkgs-linux` | Package collection for both Linux targets |
 | `nixpkgs-agents` | Unstable package collection for Linux agent CLIs |
-| `lavish`, `chromeDevtoolsAxi`, `ghAxi`, `quotaAxi`, `tasksAxi` | Axi tool sources and skills |
-| `gnhf` | GNHF CLI source |
 | `gstack`, `superpowers` | Agent workflow skills |
 | `herdr`, `home-manager`, `nix-darwin`, `nix-homebrew` | Platform tooling and Nix modules |
 
@@ -329,12 +327,44 @@ Pass an explicit version to pin something other than the latest release:
 ```
 
 The script resolves the release, prefetches every platform tarball, and
-rewrites the pinned version and hashes in `packages/<tool>.nix`. Source-built
-Axi Tools and GNHF also pin `pnpmDepsHash` in `flake.nix`, which may need
-refreshing after an input update if dependencies changed.
+rewrites the pinned version and hashes in `packages/<tool>.nix`.
+
+## Axi Tools and GNHF come from published npm artifacts
+
+`chrome-devtools-axi`, `gh-axi`, `lavish-axi`, `quota-axi`, `tasks-axi`, and
+`gnhf` are packaged from their published npm tarballs by
+`packages/npm-tool.nix` instead of being compiled from source. The tarball
+already contains `dist/` and the skill directory, so a rebuild installs the few
+runtime dependencies and skips the TypeScript toolchain entirely. This is what
+keeps a rebuild from spending close to an hour per tool on machines where file
+creation is expensive.
+
+Each tool pins two hashes in its own file: the npm tarball, and the installed
+runtime dependency tree, which is built once by npm inside a fixed-output
+derivation. Update a single tool, with no effect on the others, using the same
+pattern as the release packages:
+
+```sh
+./update-npm-tool.sh quota-axi
+./update-npm-tool.sh quota-axi 0.1.68   # pin an explicit version
+```
+
+The script resolves the version, prefetches the tarball, learns the dependency
+hash by building, rewrites `packages/<tool>.nix`, and prints the diff. Nothing
+in `flake.nix` changes, and `nix flake update` no longer invalidates these
+tools.
 
 Home Manager installs `chrome-devtools-axi`, `gh-axi`, `lavish-axi`,
-`quota-axi`, and `tasks-axi` on `PATH` after a rebuild.
+`quota-axi`, and `tasks-axi` on `PATH` after a rebuild, and links the skills
+from the same artifacts so the shipped skill cannot drift from the CLI.
+
+Which updater applies to which package:
+
+| Package | Updater |
+| --- | --- |
+| `chrome-devtools-axi`, `gh-axi`, `gnhf`, `lavish-axi`, `quota-axi`, `tasks-axi` | `./update-npm-tool.sh <package>` |
+| `no-mistakes`, `nono`, `treehouse` | `./update-release.sh <package>` |
+| `aic`, `wezterm` | Nothing to bump: `aic` is local shell code, `wezterm` wraps the Nixpkgs package |
 
 Review and validate every lock update before applying it:
 
