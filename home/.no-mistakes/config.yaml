@@ -1,6 +1,6 @@
 agent: pi
 
-review_agent_timeout: "90m"
+review_agent_timeout: "180m"
 agent_timeout: "90m"
 
 test:
